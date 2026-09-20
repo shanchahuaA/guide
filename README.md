@@ -1,7 +1,7 @@
 # guide
 
-一款轻量级微信小程序，你随身的游戏宝典
-test、
+一款轻量级微信小程序，你随身的游戏宝典666
+
 ## 项目结构
 
 - `src/main/java/org/example/guide` —— Spring Boot 后端代码
