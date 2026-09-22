@@ -6,6 +6,12 @@ target/
 .mcp.json
 .claude/
 
+### 本地敏感配置（密码、密钥),模板见 application-local.yml.example ###
+src/main/resources/application-local.yml
+
+### 本地票据（见 CLAUDE.md 与 docs/agents/issue-tracker.md）###
+.scratch/
+
 ### STS ###
 .apt_generated
 .classpath
