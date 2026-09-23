@@ -1,5 +1,0 @@
-spring:
-  datasource:
-    # 改成你自己电脑上 MySQL 的账号和密码,只写在这个文件里,不要提交
-    username: 你的MySQL账号
-    password: 你的MySQL密码
