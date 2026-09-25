@@ -4,9 +4,12 @@
 
 ## 项目结构
 
-- `src/main/java/org/example/guide` —— Spring Boot 后端代码
-- `src/main/resources/application.properties` —— 配置文件
-- `src/test/java` —— 测试代码
+- `guide/` —— Spring Boot 后端
+  - `guide/src/main/java/org/example/guide` —— 后端代码
+  - `guide/src/main/resources/application.properties` —— 配置文件
+  - `guide/src/test/java` —— 测试代码
+- `guide-mini/` —— 微信小程序前端
+- `docs/` —— 团队文档（入职指南、分支模型等）
 
 ## 分支说明
 

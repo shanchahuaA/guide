@@ -12,6 +12,7 @@ $RECYCLE.BIN/
 
 # Node.js
 node_modules/
+
 miniprogram_npm/
 
 # 微信开发者工具的本地私有配置（每人每台机器不同，见官方文档 projectconfig.html）
