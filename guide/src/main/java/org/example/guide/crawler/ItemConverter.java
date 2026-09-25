@@ -21,8 +21,10 @@ import java.util.List;
  *       {@link WikitextParams#EMPTY},熟食值退回模板公式算,采集不断。</li>
  * </ul>
  *
- * 描述与成就(#15)同样出自页面源文,但不在本票范围内 —— 本票产出的条目
- * description / achievement 是空的,这是预期状态。
+ * 描述与成就(#15)同样出自页面源文,但不由这里填:它们是**页面级**自由文本,
+ * 同一页面的多个变体(Bugle Shroom 普通版/毒版)共享同一份,而且解析失败时只是留空、
+ * 不该像熟食数值那样抛异常,所以在 {@link ItemPageParser#pageTextFor} 里单独产出,
+ * 由采集服务填到条目上。
  *
  * 图标也不在这里填:它要先下载成功了才有值,由采集服务在转换之后补上(见 ItemIconDownloader)。
  */

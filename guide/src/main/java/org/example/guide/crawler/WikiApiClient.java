@@ -343,9 +343,13 @@ public class WikiApiClient {
                     return null;
                 }
                 Revision revision = revisions.get(0);
-                // 正文落在主槽里,槽内取值的 key 就叫 "*"(MediaWiki 的约定,不是笔误)
+                // 正文落在主槽里,槽内取值的 key 叫 "content"(MediaWiki 对 rvslots 的约定)。
+                // ⚠️ 这里曾经写成 get("*") —— 那是 action=parse 的 parse.wikitext["*"] 的形状,
+                // 两种端点的响应体不一样。写错时本方法对**每个**页面都返回 null,而调用方
+                // (fetchPageWikitext)把"取不到"当成正常降级,于是熟食覆盖值静默全退回公式、
+                // flag=cookable 永不置位 —— 没有任何报错,离线自检也照不出来。
                 return revision.slots() == null || revision.slots().main() == null
-                        ? null : revision.slots().main().get("*");
+                        ? null : revision.slots().main().get("content");
             }
         }
 

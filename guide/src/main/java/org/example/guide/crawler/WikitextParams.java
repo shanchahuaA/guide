@@ -13,7 +13,8 @@ package org.example.guide.crawler;
  * @param hungerCooked    HungerCooked 覆盖值;页面没写时为 null,熟食饱食退回"生值×2"
  * @param bonusCooked     BonusCooked 覆盖值;页面没写时为 null,熟食加成退回"生值×1.5,无生值时 10"
  * @param hasCookingBonus HasCookingBonus 的开关值(yes/no/breaks,已归一成小写);页面没写时为 null(模板默认 yes)
- * @param cookingNotes    烹饪说明原文(带 wikitext 标记);本票不消费它,由 #15 写进 description
+ * @param cookingNotes    烹饪说明原文(带 wikitext 标记);不在这里消费,由
+ *                        {@link ItemPageParser#pageTextFor} 拼进 description(见 #15)
  */
 public record WikitextParams(
         Float hungerCooked,

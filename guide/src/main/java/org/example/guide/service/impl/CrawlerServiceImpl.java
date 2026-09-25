@@ -161,6 +161,16 @@ public class CrawlerServiceImpl implements ICrawlerService {
             // 图标按 display 对应;这张图没下成功就是 null,条目照常落库(icon 留空)
             converted.item().setIcon(iconPathByDisplay.get(nameEn));
 
+            // 描述与成就同样出自页面源文(#15)。页级自由文本取不到就留空,
+            // 绝不因为一段散文把这条数据挡在库外 —— 与熟食侧"数值解析不出就抛"刻意相反。
+            // 传 nameEn 是为了把散文里的 {{PAGENAME}} 还原成物品名(不传会留下字面量 "PAGENAME")
+            if (wikitextByPage.containsKey(page)) {
+                ItemPageParser.PageText pageText =
+                        itemPageParser.pageTextFor(wikitextByPage.get(page), nameEn);
+                converted.item().setDescription(pageText.description());
+                converted.item().setAchievement(pageText.achievement());
+            }
+
             if (itemService.batchImportItems(List.of(converted.item()))) {
                 report.setSuccessCount(report.getSuccessCount() + 1);
             } else {
