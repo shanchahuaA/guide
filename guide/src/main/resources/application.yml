@@ -31,3 +31,8 @@ guide:
   crawler:
     # 数据源：MediaWiki 的 api.php。采集只走 API，不碰 HTML 页面（后者有 Cloudflare 的 JS 挑战）
     api-base-url: https://peak.wiki.gg/api.php
+    # 图标下载到后端本地的哪个目录（相对后端进程的工作目录；从 guide/ 下启动 → guide/icons/）
+    # 该目录进 .gitignore：图标是二进制，可由采集再生成一份
+    icon-dir: icons
+    # 图标对外的 URL 前缀，与 WebMvcConfig 的静态资源映射、条目 icon 列三处保持一致
+    icon-url-prefix: /icons

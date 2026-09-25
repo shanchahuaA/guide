@@ -11,18 +11,27 @@ import java.util.List;
 /**
  * 数据源行 → 图鉴条目。
  *
- * 本票只做**生食侧**的转换:五维标签(type / biome / rarity / source / location)、
- * 生食状态效果、USES 使用次数、flag=removed 旗标。
+ * 转换分两级:
+ * <ul>
+ *   <li>{@link #convert(CargoItemRow)} —— 只用数据源**结构化行**就能定的那一半:
+ *       五维标签(type / biome / rarity / source / location)、生食状态效果、USES、
+ *       flag=removed 旗标。图标下载(见 #16)也挂在这一级之后;</li>
+ *   <li>{@link #convert(CargoItemRow, WikitextParams)} —— 再加上**页面源文**里才有的那一半
+ *       (熟食覆盖值、可烹饪判据,见 #14)。源文取不到时传
+ *       {@link WikitextParams#EMPTY},熟食值退回模板公式算,采集不断。</li>
+ * </ul>
  *
- * 描述与成就(wikitext 管道)和熟食数值分别由后续票据补上,这里不碰 ——
- * 所以本票产出的条目 description / achievement / icon 都是空的,这是预期状态。
+ * 描述与成就(#15)同样出自页面源文,但不在本票范围内 —— 本票产出的条目
+ * description / achievement 是空的,这是预期状态。
+ *
+ * 图标也不在这里填:它要先下载成功了才有值,由采集服务在转换之后补上(见 ItemIconDownloader)。
  */
 @Component
 public class ItemConverter {
 
     /**
      * 状态效果代码。状态在 CONTEXT.md 里是**封闭集合**(十个状态 + 使用次数),
-     * 所以代码写死在这里;熟食后缀码(*_COOKED)由后续票据在同一处补上。
+     * 所以代码写死在这里;熟食后缀码(*_COOKED)按同样的写法落在 CookedEffects 里。
      */
     private static final String HUNGER = "HUNGER";
     private static final String BONUS = "BONUS";
@@ -36,12 +45,28 @@ public class ItemConverter {
     private static final String THORNS = "THORNS";
     private static final String USES = "USES";
 
+    private final CookedEffects cookedEffects;
+
+    public ItemConverter(CookedEffects cookedEffects) {
+        this.cookedEffects = cookedEffects;
+    }
+
     /**
-     * 转换一行数据。
+     * 只靠结构化行转换,熟食值一律按模板公式算(不看页面源文)。
+     * 源文那一趟整体不可得时的兜底路径,离线核对单行数据时也用这个入口。
      *
      * @throws IllegalArgumentException 该行连英文名都没有时抛出,由上层记进失败明细
      */
     public ConvertedItem convert(CargoItemRow row) {
+        return convert(row, WikitextParams.EMPTY);
+    }
+
+    /**
+     * 转换一行数据(含页面源文里的熟食覆盖值)。
+     *
+     * @throws IllegalArgumentException 该行连英文名都没有时抛出,由上层记进失败明细
+     */
+    public ConvertedItem convert(CargoItemRow row, WikitextParams params) {
         // 英文名取数据源的 display:3 个毒蘑菇变体在数据源里本来就是独立行、display 与普通版不同,
         // 靠它天然独立成条,不需要额外解析
         String nameEn = row.getDisplay();
@@ -52,22 +77,24 @@ public class ItemConverter {
         }
 
         List<String> unknownDictionaryValues = new ArrayList<>();
+        List<String> typeValues = splitMultiValue(row.getType());
 
         Item item = new Item();
         item.setNameEn(nameEn);
         item.setWeight(row.getWeight());
         // 中文名一律留空,由后续的翻译对照表工作流填充
         item.setNameZh(null);
-        item.setTag(buildTags(row, unknownDictionaryValues));
-        item.setEffect(buildEffects(row));
+        item.setTag(buildTags(row, params, typeValues, unknownDictionaryValues));
+        item.setEffect(buildEffects(row, params, typeValues));
 
         return new ConvertedItem(item, unknownDictionaryValues);
     }
 
-    private List<ItemTag> buildTags(CargoItemRow row, List<String> unknownDictionaryValues) {
+    private List<ItemTag> buildTags(CargoItemRow row, WikitextParams params, List<String> typeValues,
+                                    List<String> unknownDictionaryValues) {
         List<ItemTag> tags = new ArrayList<>();
 
-        for (String value : splitMultiValue(row.getType())) {
+        for (String value : typeValues) {
             addTag(tags, TagDictionary.TYPE, value, unknownDictionaryValues);
         }
         for (String value : splitMultiValue(row.getBiome())) {
@@ -85,6 +112,11 @@ public class ItemConverter {
         if (row.isRemoved()) {
             // 已移除条目照常入库,列表不过滤 —— 图鉴收录游戏里已经看不到的东西,这是明确的产品决定
             addTag(tags, TagDictionary.FLAG, TagDictionary.FLAG_REMOVED, unknownDictionaryValues);
+        }
+        // flag=cookable:存在非零熟食数值(见 CONTEXT.md)。
+        // 显式写的 0("煮掉了"这类有效信息)不算 —— 只写了 0 的条目仍不带这个旗标。
+        if (CookedEffects.containsNonZero(cookedEffects.build(row, params, typeValues))) {
+            addTag(tags, TagDictionary.FLAG, TagDictionary.FLAG_COOKABLE, unknownDictionaryValues);
         }
 
         return tags;
@@ -109,7 +141,7 @@ public class ItemConverter {
         tags.add(tag);
     }
 
-    private List<Effect> buildEffects(CargoItemRow row) {
+    private List<Effect> buildEffects(CargoItemRow row, WikitextParams params, List<String> typeValues) {
         List<Effect> effects = new ArrayList<>();
 
         // 生食状态效果:数值原样落库,负号语义是"消除/减少该状态"(见 CONTEXT.md)
@@ -128,6 +160,9 @@ public class ItemConverter {
         if (row.getUses() != null && row.getUses() != 0f) {
             addEffect(effects, USES, row.getUses(), null, null);
         }
+
+        // 熟食效果(总量口径)同一批跟进来,生熟在库里是同一个 effect 数组里的两种码
+        effects.addAll(cookedEffects.build(row, params, typeValues));
 
         return effects;
     }
