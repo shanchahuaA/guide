@@ -26,3 +26,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     # 数据库下划线字段 → java驼峰属性
     map-underscore-to-camel-case: true
+
+guide:
+  crawler:
+    # 数据源：MediaWiki 的 api.php。采集只走 API，不碰 HTML 页面（后者有 Cloudflare 的 JS 挑战）
+    api-base-url: https://peak.wiki.gg/api.php
