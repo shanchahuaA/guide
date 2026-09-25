@@ -259,13 +259,20 @@ public class WikiApiClient {
         }
         for (int from = 0; from < pageNames.size(); from += WIKITEXT_TITLES_PER_REQUEST) {
             int to = Math.min(from + WIKITEXT_TITLES_PER_REQUEST, pageNames.size());
-            fetchWikitextBatch(pageNames.subList(from, to), wikitextByPage);
+            // 每包各自返回一张小表再由本方法汇总:与 fetchImageUrls 同形,
+            // 也免得"同一个标题出现在两个包里时谁覆盖谁"取决于调用顺序
+            wikitextByPage.putAll(fetchWikitextBatch(pageNames.subList(from, to)));
         }
         log.info("熟食:{} 个页面里取到 {} 份源文", pageNames.size(), wikitextByPage.size());
         return wikitextByPage;
     }
 
-    private void fetchWikitextBatch(List<String> pageNames, Map<String, String> into) {
+    /**
+     * 拉一个包的页面源文。
+     *
+     * @return 请求时的页面名 → 页面源文;这个包里没取到源文的名不出现
+     */
+    private Map<String, String> fetchWikitextBatch(List<String> pageNames) {
         String query = "action=query"
                 + "&format=json"
                 + "&formatversion=2"
@@ -301,15 +308,17 @@ public class WikiApiClient {
             }
         }
 
+        Map<String, String> wikitextByPage = new LinkedHashMap<>();
         for (String pageName : pageNames) {
             String wikitext = wikitextByTitle.get(normalized.getOrDefault(pageName, pageName));
             if (wikitext == null) {
                 wikitext = wikitextByTitle.get(pageName);
             }
             if (wikitext != null) {
-                into.put(pageName, wikitext);
+                wikitextByPage.put(pageName, wikitext);
             }
         }
+        return wikitextByPage;
     }
 
     /** cargoquery 的响应外壳:每行形如 {"title": {字段别名: 取值}} */

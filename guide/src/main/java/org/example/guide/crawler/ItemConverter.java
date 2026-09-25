@@ -79,18 +79,22 @@ public class ItemConverter {
         List<String> unknownDictionaryValues = new ArrayList<>();
         List<String> typeValues = splitMultiValue(row.getType());
 
+        // 熟食效果只算一次,标签侧(可烹饪判据)与效果侧共用同一份结果 ——
+        // 两处都调一次 build 会让"什么算熟食值"这件事有两个需要同步的地方
+        List<Effect> cookedEffectsOfItem = cookedEffects.build(row, params, typeValues);
+
         Item item = new Item();
         item.setNameEn(nameEn);
         item.setWeight(row.getWeight());
         // 中文名一律留空,由后续的翻译对照表工作流填充
         item.setNameZh(null);
-        item.setTag(buildTags(row, params, typeValues, unknownDictionaryValues));
-        item.setEffect(buildEffects(row, params, typeValues));
+        item.setTag(buildTags(row, typeValues, cookedEffectsOfItem, unknownDictionaryValues));
+        item.setEffect(buildEffects(row, cookedEffectsOfItem));
 
         return new ConvertedItem(item, unknownDictionaryValues);
     }
 
-    private List<ItemTag> buildTags(CargoItemRow row, WikitextParams params, List<String> typeValues,
+    private List<ItemTag> buildTags(CargoItemRow row, List<String> typeValues, List<Effect> cookedEffectsOfItem,
                                     List<String> unknownDictionaryValues) {
         List<ItemTag> tags = new ArrayList<>();
 
@@ -115,7 +119,7 @@ public class ItemConverter {
         }
         // flag=cookable:存在非零熟食数值(见 CONTEXT.md)。
         // 显式写的 0("煮掉了"这类有效信息)不算 —— 只写了 0 的条目仍不带这个旗标。
-        if (CookedEffects.containsNonZero(cookedEffects.build(row, params, typeValues))) {
+        if (CookedEffects.containsNonZero(cookedEffectsOfItem)) {
             addTag(tags, TagDictionary.FLAG, TagDictionary.FLAG_COOKABLE, unknownDictionaryValues);
         }
 
@@ -141,7 +145,7 @@ public class ItemConverter {
         tags.add(tag);
     }
 
-    private List<Effect> buildEffects(CargoItemRow row, WikitextParams params, List<String> typeValues) {
+    private List<Effect> buildEffects(CargoItemRow row, List<Effect> cookedEffectsOfItem) {
         List<Effect> effects = new ArrayList<>();
 
         // 生食状态效果:数值原样落库,负号语义是"消除/减少该状态"(见 CONTEXT.md)
@@ -162,7 +166,7 @@ public class ItemConverter {
         }
 
         // 熟食效果(总量口径)同一批跟进来,生熟在库里是同一个 effect 数组里的两种码
-        effects.addAll(cookedEffects.build(row, params, typeValues));
+        effects.addAll(cookedEffectsOfItem);
 
         return effects;
     }
