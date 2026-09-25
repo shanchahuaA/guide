@@ -97,17 +97,9 @@ public class ItemPageParser {
      * <p>解析是**不抛异常**的:这是展示用的自由文本,取不到就留空(或有几段算几段),
      * 不该因为它把一条数据挡在库外 —— 与熟食侧"数值解析不出就抛"的取舍刻意相反。
      *
+     * @param pageName 条目英文名(display 或页面名),用于把散文里的 {@code {{PAGENAME}}}
+     *                 还原成物品名;为 null 时该占位符剥成空串,不留 "PAGENAME" 字面量
      * @return 任何一段都取不到时返回 {@link PageText#EMPTY}
-     */
-    public PageText pageTextFor(String pageWikitext) {
-        return pageTextFor(pageWikitext, null);
-    }
-
-    /**
-     * 页面级自由文本,并把 {@code {{PAGENAME}}} 还原成条目名。
-     *
-     * @param pageName 条目英文名(display 或页面名),用于替换散文里的 {@code {{PAGENAME}}};
-     *                 为 null 时该占位符剥成空串,description 里不会留下 "PAGENAME" 字面量
      */
     public PageText pageTextFor(String pageWikitext, String pageName) {
         if (pageWikitext == null || pageWikitext.isBlank()) {

@@ -210,6 +210,12 @@ public final class WikitextUtil {
      * 剥离后若留下字面量 "PAGENAME"，description 会读成"The PAGENAME is a natural food"
      * —— 用户看到的是一个模板占位符，而不是物品名。
      *
+     * <p><b>替换顺序是 load-bearing 的</b>，下面每一步的顺序都有理由，改动前先看注释：
+     * 先"整块丢弃"后"局部替换"（丢弃类规则要拿到完整原文才能匹配，先删别的会切碎它们），
+     * 图片链接先于普通链接，{@code FIXED_TEXT} 先于 {@code DISPLAY_ONLY_NO_ARG}
+     * （否则 {@code {{Peak game}}} 会被当成无参模板删空、句子留窟窿），
+     * 粗体先于斜体（反之 {@code '''X'''} 会残留单撇号）。
+     *
      * @param pageName 条目英文名;为 null 时 {@code {{PAGENAME}}} 剥成空串（不留占位符）
      */
     public static String stripMarkup(String raw, String pageName) {
@@ -271,25 +277,5 @@ public final class WikitextUtil {
      */
     private static final Pattern EMPTY_SLOT =
             Pattern.compile("\\s{2,}|\\s+([.,;:])|^\\s*([.,;:])\\s*");
-
-    /**
-     * 剥成纯文本，并把段落折成一行。
-     *
-     * 与 {@link #stripMarkup} 的区别只有一处：后者保留换行（取值级调用方按行看），
-     * 这里再把内部换行折成单空格 —— 列表项之间直接换行会拼出
-     * "…the Gloom.\n37.5% chance…" 这种带换行的串。
-     *
-     * @return 单行纯文本;剥完什么都不剩时返回 null
-     */
-    public static String stripMarkupToLine(String raw, String pageName) {
-        String stripped = stripMarkup(raw, pageName);
-        if (stripped == null || stripped.isEmpty()) {
-            return null;
-        }
-        String folded = TO_WHITESPACE.matcher(stripped).replaceAll(" ").trim();
-        return folded.isEmpty() ? null : folded;
-    }
-
-    private static final Pattern TO_WHITESPACE = Pattern.compile("\\s+");
 }
 
