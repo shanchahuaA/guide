@@ -70,6 +70,7 @@ public final class TagDictionary {
             entry("Ancient Luggage", "古代行李"),
             entry("Explorer's Luggage", "探险家行李"),
             entry("Ancient Statue", "古代雕像"),
+            entry("Ancient Statues", "古代雕像"),
             entry("Clown Luggage", "小丑行李"),
             entry("Scout Statue", "童军雕像"),
             entry("Stone Scout", "石头童军"),
