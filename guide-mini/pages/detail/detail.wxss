@@ -1,0 +1,156 @@
+/* pages/detail/detail.wxss */
+
+/* 条目不存在（后端返 code=-100）时的兜底，避免整页空白 */
+.empty {
+  padding: 120rpx 24rpx;
+  font-size: 28rpx;
+  color: #9a9384;
+  text-align: center;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 24rpx;
+}
+
+/* 大图标格，和网格里的 .tile 同款 */
+.hero-tile {
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 200rpx;
+  height: 200rpx;
+  background: #f0ebdb;
+  border: 2rpx solid #ded7c2;
+  border-radius: 32rpx;
+}
+
+.hero-icon {
+  position: absolute;
+  top: 14%;
+  left: 14%;
+  width: 72%;
+  height: 72%;
+}
+
+.hero-text {
+  flex: 1;
+  min-width: 0;
+  margin-left: 28rpx;
+}
+
+.hero-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #2b2823;
+}
+
+.hero-name-en {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #9a9384;
+}
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+}
+
+.chip {
+  margin: 8rpx 12rpx 0 0;
+  padding: 4rpx 18rpx;
+  font-size: 22rpx;
+  color: #6b6353;
+  background: #ffffff;
+  border: 2rpx solid #e3ddc9;
+  border-radius: 22rpx;
+}
+
+.section {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+}
+
+.section-title {
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2b2823;
+}
+
+/* 生 / 熟 两列 */
+.compare {
+  display: flex;
+}
+
+.compare-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.compare-col + .compare-col {
+  margin-left: 24rpx;
+  padding-left: 24rpx;
+  border-left: 2rpx solid #f0ece0;
+}
+
+.compare-head {
+  margin-bottom: 12rpx;
+  font-size: 24rpx;
+  color: #9a9384;
+}
+
+.effect-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8rpx 0;
+}
+
+.effect-name {
+  font-size: 26rpx;
+  color: #4a453b;
+}
+
+.effect-value {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+/* 负值 = 消除该状态，正值 = 施加 */
+.effect-value.neg {
+  color: #2e9e6b;
+}
+
+.effect-value.pos {
+  color: #d9822b;
+}
+
+.kv {
+  display: flex;
+  align-items: baseline;
+  padding: 10rpx 0;
+}
+
+.k {
+  flex-shrink: 0;
+  width: 120rpx;
+  font-size: 26rpx;
+  color: #9a9384;
+}
+
+.v {
+  flex: 1;
+  font-size: 26rpx;
+  color: #3d3a33;
+}
+
+.paragraph {
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: #4a453b;
+}

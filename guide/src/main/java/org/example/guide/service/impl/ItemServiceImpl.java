@@ -8,6 +8,7 @@ import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.session.ResultHandler;
 import org.example.guide.mapper.ItemMapper;
 import org.example.guide.pojo.Item;
+import org.example.guide.pojo.dto.ItemDetailDto;
 import org.example.guide.pojo.dto.ItemListDto;
 import org.example.guide.service.IItemService;
 import org.example.guide.utils.ItemFields;
@@ -39,6 +40,20 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
                                   .thenComparing(Item::getId))
                 .map(ItemListDto::from)
                 .toList();
+    }
+
+    @Override
+    public ItemDetailDto getDetailDto(String slug) {
+        if (slug == null || slug.isBlank()) {
+            return null;
+        }
+        // slug 是计算值、不是列，SQL 里没有可匹配的东西 —— 只能拉全量再按派生值找。
+        // 图鉴是读多写少的小表（134 条），换个"给 slug 建列"的方案反而要重灌数据
+        return baseMapper.selectList(null).stream()
+                .filter(item -> slug.equals(ItemFields.slugOf(item)))
+                .findFirst()
+                .map(ItemDetailDto::from)
+                .orElse(null);
     }
 
     @Override

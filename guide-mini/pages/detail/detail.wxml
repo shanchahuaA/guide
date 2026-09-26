@@ -1,0 +1,58 @@
+<!--pages/detail/detail.wxml-->
+<view wx:if="{{notFound}}" class="empty">找不到这个条目</view>
+
+<block wx:elif="{{item}}">
+<view class="hero">
+  <view class="hero-tile">
+    <image wx:if="{{item.icon}}" class="hero-icon" src="{{item.icon}}" mode="aspectFit" lazy-load />
+  </view>
+  <view class="hero-text">
+    <view class="hero-name">{{item.nameZh}}</view>
+    <view class="hero-name-en">{{item.nameEn}}</view>
+    <view class="hero-chips">
+      <view class="chip" wx:for="{{item.chips}}" wx:for-item="chip" wx:key="*this">{{chip}}</view>
+    </view>
+  </view>
+</view>
+
+<!-- 使用效果：生食在左、熟食在右。服务端已经拆成 raw / cooked 两个数组（契约 §2.1），
+     不可烹饪的条目 cooked 是空数组，整列因此不显示 -->
+<view class="section" wx:if="{{item.rawEffects.length || item.cookedEffects.length}}">
+  <view class="section-title">使用效果</view>
+  <view class="compare">
+    <view class="compare-col">
+      <view class="compare-head">生食</view>
+      <view class="effect-row" wx:for="{{item.rawEffects}}" wx:for-item="fx" wx:key="code">
+        <text class="effect-name">{{fx.label}}</text>
+        <text class="effect-value {{fx.value < 0 ? 'neg' : 'pos'}}">{{fx.value > 0 ? '+' : ''}}{{fx.value}}</text>
+      </view>
+    </view>
+    <view class="compare-col" wx:if="{{item.cookedEffects.length}}">
+      <view class="compare-head">熟食</view>
+      <view class="effect-row" wx:for="{{item.cookedEffects}}" wx:for-item="fx" wx:key="code">
+        <text class="effect-name">{{fx.label}}</text>
+        <text class="effect-value {{fx.value < 0 ? 'neg' : 'pos'}}">{{fx.value > 0 ? '+' : ''}}{{fx.value}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="section">
+  <view class="section-title">属性</view>
+  <view class="kv"><text class="k">重量</text><text class="v">{{item.weight}}</text></view>
+  <view class="kv"><text class="k">稀有度</text><text class="v">{{item.rarity || '—'}}</text></view>
+  <view class="kv"><text class="k">生态</text><text class="v">{{item.biomes || '—'}}</text></view>
+  <view class="kv"><text class="k">来源</text><text class="v">{{item.sources || '—'}}</text></view>
+</view>
+
+<!-- 详情只下发中文描述 descriptionZh，英文 description 有意剔除（契约 §2） -->
+<view class="section" wx:if="{{item.descriptionZh}}">
+  <view class="section-title">介绍</view>
+  <view class="paragraph">{{item.descriptionZh}}</view>
+</view>
+
+<view class="section" wx:if="{{item.achievement}}">
+  <view class="section-title">成就</view>
+  <view class="paragraph">{{item.achievement}}</view>
+</view>
+</block>

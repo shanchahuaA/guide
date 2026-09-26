@@ -32,7 +32,12 @@ public class Item {
     @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Effect> effect;
 
+    /** 英文描述。页面级长文本，**不下发给小程序**（契约 §2） */
     private String description;
+
+    /** 中文描述。详情的**唯一**描述字段，英文那份不下发（契约 §2.2） */
+    @TableField("description_zh")
+    private String descriptionZh;
 
     private String achievement;
 

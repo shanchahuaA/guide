@@ -243,6 +243,15 @@ function Get-Tag($item, [string] $code) {
     return ,$found
 }
 
+# 详情接口的 raw / cooked 是**已经拆好**的数组（契约 §2.1），入参就是数组本身，
+# 不能复用上面按 item.effect 取值的 Get-Effect —— 那个的入参是条目、读的是 effect 列。
+function Get-EffectByCode($effects, [string] $code) {
+    foreach ($e in (As-Array $effects)) {
+        if ((Get-Field $e 'code') -eq $code) { return $e }
+    }
+    return $null
+}
+
 function Test-HasTagValue($item, [string] $code, [string] $value) {
     foreach ($t in (Get-Tag $item $code)) {
         if ((Get-Field $t 'value') -eq $value) { return $true }
@@ -646,30 +655,121 @@ foreach ($case in @(
     Assert-Equal $ignoredCount 134 ($case.label + ' 被忽略：仍返回全量 134 条')
 }
 
-# ── 详情：路径参数是 slug 不是 id ──
+# ── 详情：路径参数是 slug 不是 id；data **直接就是条目对象** ──
+#
+# ⚠️ 契约 §2 明确 data 不再包一层 item：这里必须 Get-Data 剥掉信封。
+# 早先的写法读的是 `$detail.Json.item` —— 那个键根本不存在，恒得 $null，
+# 于是下面每一条断言全部被 `if ($null -ne $detailItem)` 挡在外面、**一条都不跑**。
+# 这与 #27 踩的"少剥一层 data → 静默空转"是同一个坑的另一种发作方式。
 Write-Host ''
 Write-Host '  详情：'
 $detail = Invoke-Json 'GET' '/api/items/hot_dog' 60
-$detailItem = Get-Field $detail.Json 'item'
-Assert-True ($null -ne $detailItem) '/api/items/hot_dog 返回 item' ("实际 " + (Format-Actual $detailItem))
+Assert-True ($detail.Ok -and $detail.Status -eq 200) '/api/items/hot_dog HTTP 200' `
+    ("实际 status=" + $detail.Status + " error=" + $detail['Error'])
+$detailItem = Get-Data $detail
+Assert-True ($null -ne $detailItem) '/api/items/hot_dog 的 data 直接是条目对象（不包 item）' `
+    ("实际 data=" + (Format-Actual $detailItem))
 if ($null -ne $detailItem) {
     Assert-Equal (Get-Field $detailItem 'slug') 'hot_dog' '详情 slug=hot_dog'
+    Assert-Equal (Get-Field $detailItem 'nameEn') 'Hot Dog' '详情 nameEn=Hot Dog'
     Assert-True ((Get-Field $detailItem 'isCookable') -eq $true) 'Hot Dog isCookable=true' `
         ("实际 " + (Format-Actual (Get-Field $detailItem 'isCookable')))
-    # 中文译文已回填；万一某条漏了，接口会回落到英文原值而不是留空 —— 这里只要求非空
-    $desc = [string](Get-Field $detailItem 'description')
-    Assert-True ($desc.Length -gt 0) '详情带 description' '详情里 description 是空的'
+
+    # 字段面 = 契约 §2 的 12 个。英文 description 是**有意剔除**的（中文那份才是唯一描述字段），
+    # 库里 id 也不下发 —— 多一个少一个都算契约漂移。
+    # 判据用"键在不在"而不是"值非不非空"：achievement 可空（库里只 28 条有），键仍必须在。
+    # Where-Object 过滤出来的标量在 StrictMode 下 .Count 不可靠，所以用显式 foreach 记账。
+    $DETAIL_FIELDS = @('slug', 'nameZh', 'nameEn', 'icon', 'weight', 'primaryType', 'isCookable',
+                       'raw', 'cooked', 'descriptionZh', 'achievement', 'tags')
+    $detailMissing = @()
+    foreach ($f in $DETAIL_FIELDS) {
+        if ($null -eq $detailItem.PSObject.Properties[$f]) { $detailMissing += $f }
+    }
+    Assert-True ($detailMissing.Count -eq 0) ('详情带齐契约 §2 的 12 个字段（' + ($DETAIL_FIELDS -join ' / ') + '）') `
+        ("缺字段：" + ($detailMissing -join ', '))
+    Assert-True ($null -eq (Get-Field $detailItem 'description')) '详情不下发英文 description（只给 descriptionZh）' `
+        ("实际 description=" + (Format-Actual (Get-Field $detailItem 'description')))
+
+    # raw / cooked 两栏都要非空 —— 这是 autoResultMap 漏了的话会静默全 null 的回归保护（契约 §8.5）
+    $rawEffects = As-Array (Get-Field $detailItem 'raw')
+    $cookedEffects = As-Array (Get-Field $detailItem 'cooked')
+    Assert-True ($rawEffects.Count -gt 0) 'Hot Dog 的 raw 非空' ("实际 " + $rawEffects.Count + " 条")
+    Assert-True ($cookedEffects.Count -gt 0) 'Hot Dog 的 cooked 非空' ("实际 " + $cookedEffects.Count + " 条")
+
+    # 元素五个字段，且 code 已剥掉 _COOKED 后缀（契约 §2.1）
+    $badEffectShape = @()
+    $stillSuffixed = @()
+    foreach ($group in @($rawEffects, $cookedEffects)) {
+        foreach ($e in $group) {
+            foreach ($f in @('code', 'nameZh', 'value')) {
+                if ($null -eq (Get-Field $e $f)) { $badEffectShape += (Get-Field $e 'code') + '.' + $f }
+            }
+            $c = [string](Get-Field $e 'code')
+            if ($c.EndsWith('_COOKED')) { $stillSuffixed += $c }
+        }
+    }
+    Assert-True ($badEffectShape.Count -eq 0) 'raw / cooked 元素都带 code / nameZh / value' `
+        ("缺字段 " + $badEffectShape.Count + " 处：" + (($badEffectShape | Select-Object -First 5) -join ', '))
+    Assert-True ($stillSuffixed.Count -eq 0) 'raw / cooked 的 code 已剥掉 _COOKED 后缀' `
+        ("仍有后缀：" + (($stillSuffixed | Select-Object -First 5) -join ', '))
+
+    # 已知答案（契约 §2 样例，已对库核对）：熟值是**总量**、不是增量
+    $rawHunger = Get-EffectByCode $rawEffects 'HUNGER'
+    Assert-Equal (Get-Field $rawHunger 'value') -30 'Hot Dog raw HUNGER=-30'
+    $cookedHunger = Get-EffectByCode $cookedEffects 'HUNGER'
+    Assert-Equal (Get-Field $cookedHunger 'value') -60 'Hot Dog cooked HUNGER=-60（熟食总量）'
+    $cookedHungerName = [string](Get-Field $cookedHunger 'nameZh')
+    Assert-True ($cookedHungerName.Length -gt 0) 'Hot Dog cooked HUNGER 带中文名（服务端效果字典）' `
+        'cooked HUNGER 的 nameZh 是空的'
+
+    # tags 是**全量维度**下发（契约 §2.2）：详情页的生态 / 来源 / 稀有度展示区靠它。
+    # 注意不是"每个条目都恰好六个维度" —— 库里 location 只 18 条有，最多的条目也只有 5 维。
+    # 这里钉的是"有的维度都带出来了"，取样用 Ancient Idol（它有 location）
+    $detailDims = @()
+    foreach ($t in (As-Array (Get-Field $detailItem 'tags'))) { $detailDims += (Get-Field $t 'code') }
+    Assert-True ($detailDims -contains 'type') 'Hot Dog 详情的 tags 含 type 维度' ("实际 " + (($detailDims | Sort-Object -Unique) -join ', '))
+
+    # descriptionZh 是唯一下发的描述，必须是中文且非空
+    $dzh = [string](Get-Field $detailItem 'descriptionZh')
+    Assert-True ($dzh.Length -gt 0) '详情带非空的 descriptionZh' '详情里 descriptionZh 是空的'
+}
+
+# tags 的六维覆盖：库里 location 只有 18 条有，取一条带 location 的确认它也下发了
+$idol = Invoke-Json 'GET' '/api/items/ancient_idol' 60
+$idolItem = Get-Data $idol
+if ($null -ne $idolItem) {
+    $idolDims = @()
+    foreach ($t in (As-Array (Get-Field $idolItem 'tags'))) { $idolDims += (Get-Field $t 'code') }
+    foreach ($d in @('type', 'biome', 'location')) {
+        Assert-True ($idolDims -contains $d) ("Ancient Idol 详情的 tags 含 $d 维度（有该维度的条目要带出来）") `
+            ("实际 " + (($idolDims | Sort-Object -Unique) -join ', '))
+    }
+} else {
+    Add-Fail 'Ancient Idol 详情可取' '取不到 /api/items/ancient_idol'
+}
+
+# 不可烹饪：cooked 必须是**空数组**、isCookable=false，前端据此隐藏熟食那栏（契约 §2.1 / Q7）
+$firstAidDetail = Invoke-Json 'GET' '/api/items/first_aid_kit' 60
+$firstAidItem = Get-Data $firstAidDetail
+Assert-True ($null -ne $firstAidItem) 'first_aid_kit 详情可取' ("实际 " + (Format-Actual $firstAidItem))
+if ($null -ne $firstAidItem) {
+    Assert-True ((Get-Field $firstAidItem 'isCookable') -eq $false) 'first_aid_kit isCookable=false' `
+        ("实际 " + (Format-Actual (Get-Field $firstAidItem 'isCookable')))
+    Assert-True ((As-Array (Get-Field $firstAidItem 'cooked')).Count -eq 0) 'first_aid_kit 的 cooked 是空数组（前端据此隐藏熟食栏）' `
+        ("实际 " + (As-Array (Get-Field $firstAidItem 'cooked')).Count + " 条")
+    Assert-True ((As-Array (Get-Field $firstAidItem 'raw')).Count -gt 0) 'first_aid_kit 的 raw 仍非空' `
+        ("实际 " + (As-Array (Get-Field $firstAidItem 'raw')).Count + " 条")
 }
 
 # slug 里那批被改写过的字符要真的能取到：Bugle? 的 slug 是 bugle_（问号被换成下划线）
 $bugleQuery = Invoke-Json 'GET' '/api/items/bugle_' 60
-Assert-True ($null -ne (Get-Field $bugleQuery.Json 'item')) '被改写过的 slug（bugle_）也能取到详情' `
+Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）也能取到详情' `
     '取不到 bugle_：slug 规则与 icon 文件名的字符白名单没对齐'
 
-# 不存在的 slug 要走统一响应包的失败分支，不是 500
+# 不存在的 slug 要走统一响应包的失败分支，不是 500、也不是 200 带 data:null（契约 §2.3）
 $missing = Invoke-Json 'GET' '/api/items/does_not_exist' 60
 Assert-True ($missing.Ok -and (Get-Field $missing.Json 'success') -eq $false -and (Get-Field $missing.Json 'code') -eq -100) `
-    '不存在的 slug 返回 success=false / code=-100' `
+    '不存在的 slug 返回 success=false / code=-100（不是 200 带 data:null）' `
     ("实际 status=" + $missing.Status + " json=" + (Format-Actual $missing.Json))
 
 # ── 标签字典与生态 ──
