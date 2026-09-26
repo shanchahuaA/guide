@@ -8,13 +8,26 @@ spring:
       enabled: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/peak_guide?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    url: ""
     # 账号和密码在 application-local.yml 里覆盖
     username: ""
     password: ""
+  data:
+    redis:
+      # 命令超时。不设这一条时用的是 lettuce 的默认值（1 分钟），于是 Redis 运行中掉线后，
+      # ItemCache.getAll() 里那个"读缓存失败就回源 MySQL"的 catch 要等一分钟才拿到控制权 ——
+      # 降级路径是对的，但请求已经挂住了。
+      #
+      # 一次请求要卡**两次**：先读（未命中/失败）再回填写，两次都等满这个超时，实测 1 分钟 × 2
+      # = 120s。所以这里给 500ms 时每个请求约 1s（验收口径是"停掉 Redis 后 2 秒内返回"）。
+      # 本机 Redis 正常响应 8ms，500ms 已是 60 倍余量，够不着正常的慢查询。
+      timeout: 500ms
+      # 建连超时。掉线后要建新连接，不设则按 lettuce 默认等 10s；
+      # 端口不通时本机是秒拒，这一条只兜住"连得上但迟迟不响应"的情形。
+      connect-timeout: 1s
 
 server:
-  port: 8080
+  port:
 
 mybatis-plus:
   # 1. 找Mapper.xml文件（和原生mybatis作用一样）

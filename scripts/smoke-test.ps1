@@ -827,7 +827,8 @@ if (-not $cacheReachable) {
     # `/admin/**`，不覆盖 `/cache/**`，所以它不会"以后自然收口"），已停用映射。
     # 验收本来就是"看 key 在不在、删掉再看回填"，redis-cli 两条命令的事，
     # 不需要一个常驻接口代劳。连接用 Spring Boot 默认值 127.0.0.1:6379
-    # （两份 yml 都没有 spring.data.redis.* 配置，实现就是靠默认值连上的）。
+    # （两份 yml 都没有配 spring.data.redis.host/port，实现就是靠默认值连上的；
+    # application.yml 里只多了 timeout / connect-timeout 两个超时项，不改变连哪台）。
     $redisDel = & $script:RedisCli DEL 'guide:item:all' 2>&1
     $redisDelOk = ($LASTEXITCODE -eq 0) -and (("$redisDel").Trim() -eq '1')
     Assert-True $redisDelOk '删 key 成功（模拟 Redis 被清空）' `
