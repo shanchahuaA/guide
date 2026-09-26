@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.session.ResultHandler;
+import org.example.guide.cache.ItemCache;
 import org.example.guide.mapper.ItemMapper;
 import org.example.guide.pojo.Item;
 import org.example.guide.pojo.dto.ItemDetailDto;
@@ -27,6 +28,28 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
     @Autowired
     private ItemMapper itemMapper;
 
+    /**
+     * 图鉴全量条目的取数口。
+     *
+     * <p>列表与详情**都**改走它（契约 §8.3）：缓存只负责"把全量条目取出来"，
+     * 分组、派生 slug、拆生熟、裁 DTO 仍然在这一层做。
+     *
+     * <p>方向是单向的：本类注入 {@link ItemCache}，{@code ItemCache} 只注入 {@code ItemMapper}。
+     * 反过来让缓存组件注入 service 会构成循环依赖，所以缓存那边**不碰**这个类。
+     */
+    @Autowired
+    private ItemCache itemCache;
+
+    /**
+     * 全量条目，走缓存（命中即返，未命中回源 MySQL 并回填）。
+     *
+     * <p>{@link #getItemList()} 有意**不改**：它是早期自测端点 {@code /testItemList} 的取数口，
+     * 留着一条不经缓存的直查库路径，正好当"缓存里的数据与库一致"的对照物。
+     */
+    private List<Item> allItems() {
+        return itemCache.getAll();
+    }
+
     @Override
     public List<Item> getItemList(){
         return baseMapper.selectList(null);
@@ -34,7 +57,7 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
 
     @Override
     public List<ItemListDto> getListItemDtos(){
-        return baseMapper.selectList(null).stream()
+        return allItems().stream()
                 // 组序：ItemFields.PRIMARY_TYPE_ORDER 的下标；组内按 id 升序。不定顺序的话每次查询的返回次序都可能不同
                 .sorted(Comparator.comparingInt((Item item) -> ItemFields.PRIMARY_TYPE_ORDER.indexOf(ItemFields.primaryTypeOf(item)))
                                   .thenComparing(Item::getId))
@@ -48,8 +71,9 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
             return null;
         }
         // slug 是计算值、不是列，SQL 里没有可匹配的东西 —— 只能拉全量再按派生值找。
-        // 图鉴是读多写少的小表（134 条），换个"给 slug 建列"的方案反而要重灌数据
-        return baseMapper.selectList(null).stream()
+        // 图鉴是读多写少的小表（134 条），换个"给 slug 建列"的方案反而要重灌数据。
+        // 这份全量走缓存：原来注释里写的"比加缓存都划算"已经过期 —— 缓存本轮落下来了（契约 §8.3）
+        return allItems().stream()
                 .filter(item -> slug.equals(ItemFields.slugOf(item)))
                 .findFirst()
                 .map(ItemDetailDto::from)

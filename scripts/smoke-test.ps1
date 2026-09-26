@@ -766,6 +766,83 @@ $bugleQuery = Invoke-Json 'GET' '/api/items/bugle_' 60
 Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）也能取到详情' `
     '取不到 bugle_：slug 规则与 icon 文件名的字符白名单没对齐'
 
+# ── Redis 缓存：读到的到底是缓存、还是每次都回源 ─────────────────────────────
+#
+# ⚠️ 这一段**不要求 Redis 一定在跑**：契约 §8.3 明写"Redis 连不上时接口照常返（回源 MySQL）"，
+# 所以下面每一条都在两种状态下成立 —— 有 Redis 时验"缓存真的被用上了"，
+# 没有 Redis 时验"降级路径没把接口带崩"。脚本不因为 Redis 不在就变红。
+#
+# ⚠️ 为什么专门验"删 key 再请求"，而不是"验响应里有缓存标记"：
+# 缓存有没有生效**从接口响应上完全看不出来**（这正是它的设计意图 —— 契约 §0.1 不变）。
+# 所以在服务端加标记会污染契约，"关掉 Redis 接口照常返"是另一个代理能代跑的活。
+# 剩下唯一能在这里钉死的，就是**单 key 的语义本身**：契约 §8.3 规定图鉴全量只占
+# `guide:item:all` 一个 key、存 JSON 数组、无 TTL —— 这三条都能从 HTTP 外壳上观察。
+#
+# ⚠️ 这套断言是**为 #28 并行开发准备的**：它要求 DEL 之后 MySQL 是唯一数据源，
+# 所以必须排在**所有按库内容取的断言之后**（这里已经是第 4 组的尾部，
+# 下一位改这个脚本时请把新断言加在这一段**之前**，否则参考值可能取到空表）。
+Write-Host ''
+Write-Host '  缓存（单 key 语义）：'
+$CACHE_KEY_PATH = '/cache/item-all'
+$cacheBefore = Invoke-Json 'GET' $CACHE_KEY_PATH 60
+# ⚠️ 必须剥统一响应包的 data 一层（Get-Data）：信封里只有 success / code / message / data，
+# 直接取 `$cacheBefore.Json.reachable` 恒得 $null → 判成"Redis 不可达"→ 整组断言**静默跳过**。
+# 这与前面列表 / 字典那几处踩的是同一个坑（见 Get-Data 上方）。
+$cacheBeforeData = Get-Data $cacheBefore
+$cacheReachable = $cacheBefore.Ok -and (Get-Field $cacheBeforeData 'reachable') -eq $true
+
+if (-not $cacheReachable) {
+    # 不算通过也不算失败：脚本要能在"只起了后端、没起 Redis"的机器上跑。
+    # 这条路径的验收靠"停掉 Redis 再启动应用"那一组（见票面），不在这里重复。
+    Add-Note ('Redis 不可达，跳过缓存单 key 断言（接口照常走回源 MySQL）')
+} else {
+    $cacheKey   = Get-Field $cacheBeforeData 'key'
+    $cacheTtl   = Get-Field $cacheBeforeData 'ttl'
+    $cacheCount = Get-Field $cacheBeforeData 'count'
+    $cacheBytes = Get-Field $cacheBeforeData 'bytes'
+
+    # key 名是契约 §8.3 的字面量：拆主类型会让跨界条目一份数据两处存、拆组合则 key 爆炸
+    Assert-Equal $cacheKey 'guide:item:all' '图鉴全量只占 guide:item:all 一个 key'
+    # 无 TTL：ttl = -1 就是"没有过期时间"（-2 是"key 不存在"）
+    Assert-Equal $cacheTtl -1 'key 不设过期时间（无 TTL）'
+    # 缓存里就是全量：与 /api/items 的条数一致
+    Assert-Equal $cacheCount $allItems.Count '缓存里的条数 = /api/items 的条数（全量都灌进去了）'
+    Assert-GreaterOrEqual $cacheBytes 1000 '缓存里存的是条目 JSON（不是空串）'
+
+    # 手动删掉 key，下一次请求必须自动回填，且结果与删之前**一字不差** ——
+    # 这一条验的是"回源"真的接上了：删完之后没有任何东西可读，还能返回同样这些条目，
+    # 只能是从 MySQL 重新取的。比对用 JSON 文本而不是只比条数：
+    # 条数只证明"有 134 条"，证明不了"回填回来的就是刚才那 134 条"
+    $beforeEvictJson = $all.Json | ConvertTo-Json -Depth 10 -Compress
+    $evicted = Invoke-Json 'POST' ($CACHE_KEY_PATH + '/evict') 60
+    Assert-True ($evicted.Ok -and (Get-Field (Get-Data $evicted) 'evicted') -eq $true) '删 key 成功（模拟 Redis 被清空）' `
+        ("实际 " + (Format-Actual (Get-Data $evicted)))
+
+    $afterEvict = Invoke-Json 'GET' '/api/items' 60
+    $afterEvictItems = As-Array (Get-Field (Get-Data $afterEvict) 'items')
+    Assert-Equal $afterEvictItems.Count 134 '删 key 后仍返回全量 134 条（回源 MySQL，不是空表）'
+    Assert-True (($afterEvict.Json | ConvertTo-Json -Depth 10 -Compress) -eq $beforeEvictJson) `
+        '回源的结果与删 key 之前一字不差' '删 key 前后两次 /api/items 的响应体不同'
+
+    # 回填：再问一次缓存组件，key 应当又在了，且条数仍是全量
+    $cacheAfter = Invoke-Json 'GET' $CACHE_KEY_PATH 60
+    Assert-Equal (Get-Field (Get-Data $cacheAfter) 'count') $afterEvictItems.Count '下一次请求自动回填，条数与刚取回的一致'
+
+    # JSON 列往返（本票最容易出错的地方）：回源的这份要能正常拆出生熟两栏，
+    # 说明从缓存读回来的 tag / effect 仍是实体、没有退化成 Map
+    $afterEvictDetail = Invoke-Json 'GET' '/api/items/hot_dog' 60
+    $afterEvictDetailItem = Get-Data $afterEvictDetail
+    Assert-True ((As-Array (Get-Field $afterEvictDetailItem 'raw')).Count -gt 0) `
+        '回填后的缓存仍能正确拆出 raw（JSON 列往返没退化成 Map）' `
+        ("实际 " + (As-Array (Get-Field $afterEvictDetailItem 'raw')).Count + " 条")
+    Assert-True ((Get-Field $afterEvictDetailItem 'isCookable') -eq $true) `
+        '回填后的缓存里 flag=cookable 标签仍能判出来（tags 元素没退化成 Map）' `
+        ("实际 " + (Format-Actual (Get-Field $afterEvictDetailItem 'isCookable')))
+
+    Write-Host ''
+    Write-Host '  缓存单 key 断言完成 —— 下面轮到字典组（不依赖库内容，也不依赖缓存里还有没有东西）'
+}
+
 # 不存在的 slug 要走统一响应包的失败分支，不是 500、也不是 200 带 data:null（契约 §2.3）
 $missing = Invoke-Json 'GET' '/api/items/does_not_exist' 60
 Assert-True ($missing.Ok -and (Get-Field $missing.Json 'success') -eq $false -and (Get-Field $missing.Json 'code') -eq -100) `

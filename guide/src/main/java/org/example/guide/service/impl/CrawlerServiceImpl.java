@@ -1,5 +1,6 @@
 package org.example.guide.service.impl;
 
+import org.example.guide.cache.ItemCache;
 import org.example.guide.crawler.CargoItemRow;
 import org.example.guide.crawler.ConvertedItem;
 import org.example.guide.crawler.ItemConverter;
@@ -31,17 +32,20 @@ public class CrawlerServiceImpl implements ICrawlerService {
     private final ItemConverter itemConverter;
     private final IItemService itemService;
     private final ItemIconDownloader iconDownloader;
+    private final ItemCache itemCache;
 
     public CrawlerServiceImpl(WikiApiClient wikiApiClient,
                               ItemPageParser itemPageParser,
                               ItemConverter itemConverter,
                               IItemService itemService,
-                              ItemIconDownloader iconDownloader) {
+                              ItemIconDownloader iconDownloader,
+                              ItemCache itemCache) {
         this.wikiApiClient = wikiApiClient;
         this.itemPageParser = itemPageParser;
         this.itemConverter = itemConverter;
         this.itemService = itemService;
         this.iconDownloader = iconDownloader;
+        this.itemCache = itemCache;
     }
 
     /**
@@ -183,12 +187,20 @@ public class CrawlerServiceImpl implements ICrawlerService {
     }
 
     /**
-     * 缓存失效占位:缓存尚未接入(见 issue #4),接入后在这里删掉图鉴的全量缓存。
-     * 现在至少留一条日志痕迹,证明采集确实走到了这一步。
+     * 缓存失效：采集跑完删掉图鉴的全量缓存（契约 §8.3、CONTEXT.md 缓存节）。
+     *
+     * <p>放在最后一步、且**只有这一步**：采集过程中途失效会让读请求回源到"半新半旧"的库，
+     * 跑完再删则下一次请求一次到位地看到采集后的新数据，不用重启应用。
+     *
+     * <p>失败不上抛 —— 采集本体已经成功，缓存删不掉只是"新数据要等下一次失效才生效"；
+     * 把它冒出去会让一份完整的 {@link CrawlReport} 变成一个 500。
      */
     private void evictItemCache() {
-        // TODO issue #4 接入缓存后:删除 guide:item: 系列 key
-        log.info("缓存失效占位:缓存尚未接入,本次不做任何事");
+        try {
+            itemCache.evict();
+        } catch (Exception e) {
+            log.warn("采集完成但图鉴缓存失效失败，接口可能仍返回旧数据", e);
+        }
     }
 
     private static String failureReason(Exception e) {
