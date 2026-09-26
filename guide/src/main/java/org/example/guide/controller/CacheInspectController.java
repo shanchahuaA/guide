@@ -50,19 +50,28 @@ public class CacheInspectController {
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, data);
     }
 
-    /**
-     * 删掉图鉴的全量缓存 —— 脚本用它模拟"Redis 被清空 / key 过期"，
-     * 随后请求 {@code /api/items} 应当自动回源并回填。
-     *
-     * <p>是 {@code POST} 不是 {@code GET}：这是个破坏性动作（删缓存），
-     * 挂在可以随手打开的 URL 后面迟早会被误触发。
-     */
-    @PostMapping("/cache/item-all/evict")
-    public BaseResult evict() {
-        itemCache.evict();
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("evicted", true);
-        data.put("key", ItemCache.KEY);
-        return BaseResult.setResult(ResultCodeEnum.SUCCESS, data);
-    }
+    // ------------------------------------------------------------------
+    // 以下端点已停用（映射注释掉），保留代码仅作记录。
+    //
+    // 停用原因：这是个**破坏性**动作（删缓存），却和只读的 inspect 一样落在
+    // 全放行的路径下 —— ShiroConfig 的过滤链当前是 `/** = anon`，
+    // 而 CLAUDE.md 记录的收口方案只覆盖 `/admin/**`，不覆盖 `/cache/**`。
+    // 也就是说它不会「以后自然收口」，而是一直敞着：任何能打到这个地址的人
+    // 都能清掉图鉴缓存。影响可控（下次请求回源 MySQL，不丢数据），但它是
+    // 可写口，不是只读探针 —— 与 `/testItemList` 不是一回事。
+    //
+    // 验收改为走 `redis-cli` 直接删 key，不需要一个常驻接口来代劳。
+    // 将来若 #5（Shiro 登录与拦截）完成、`/cache/**` 有了鉴权，可以放开。
+    // ------------------------------------------------------------------
+    //
+    // /** 删掉图鉴的全量缓存 —— 模拟"Redis 被清空 / key 过期"，
+    //  * 随后请求 {@code /api/items} 应当自动回源并回填。 */
+    // @PostMapping("/cache/item-all/evict")
+    // public BaseResult evict() {
+    //     itemCache.evict();
+    //     Map<String, Object> data = new LinkedHashMap<>();
+    //     data.put("evicted", true);
+    //     data.put("key", ItemCache.KEY);
+    //     return BaseResult.setResult(ResultCodeEnum.SUCCESS, data);
+    // }
 }

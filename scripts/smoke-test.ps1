@@ -53,6 +53,13 @@ $MIN_ROWS = 130
 
 $BaseUrl = $BaseUrl.TrimEnd('/')
 
+# redis-cli 的可执行路径：缓存那组断言用它删 key（那个破坏性的 POST 验收端点已停用）。
+# 允许用环境变量覆盖；默认取本机开发环境的路径，找不到也不报错 —— 到用的时候
+# 会作为一条断言失败呈现（此时 Redis 不可达那组本来就已经跳过了）。
+$script:RedisCli = if ($env:GUIDE_REDIS_CLI) { $env:GUIDE_REDIS_CLI }
+    elseif (Test-Path 'D:\redis\redis-cli.exe') { 'D:\redis\redis-cli.exe' }
+    else { 'redis-cli' }
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 断言记账
 # ─────────────────────────────────────────────────────────────────────────────
@@ -814,9 +821,17 @@ if (-not $cacheReachable) {
     # 只能是从 MySQL 重新取的。比对用 JSON 文本而不是只比条数：
     # 条数只证明"有 134 条"，证明不了"回填回来的就是刚才那 134 条"
     $beforeEvictJson = $all.Json | ConvertTo-Json -Depth 10 -Compress
-    $evicted = Invoke-Json 'POST' ($CACHE_KEY_PATH + '/evict') 60
-    Assert-True ($evicted.Ok -and (Get-Field (Get-Data $evicted) 'evicted') -eq $true) '删 key 成功（模拟 Redis 被清空）' `
-        ("实际 " + (Format-Actual (Get-Data $evicted)))
+
+    # 删 key 走 redis-cli，不再打那个 POST /cache/item-all/evict 端点 ——
+    # 那个端点是破坏性动作却落在全放行的 `/** = anon` 下（Shiro 收口方案只覆盖
+    # `/admin/**`，不覆盖 `/cache/**`，所以它不会"以后自然收口"），已停用映射。
+    # 验收本来就是"看 key 在不在、删掉再看回填"，redis-cli 两条命令的事，
+    # 不需要一个常驻接口代劳。连接用 Spring Boot 默认值 127.0.0.1:6379
+    # （两份 yml 都没有 spring.data.redis.* 配置，实现就是靠默认值连上的）。
+    $redisDel = & $script:RedisCli DEL 'guide:item:all' 2>&1
+    $redisDelOk = ($LASTEXITCODE -eq 0) -and (("$redisDel").Trim() -eq '1')
+    Assert-True $redisDelOk '删 key 成功（模拟 Redis 被清空）' `
+        ("redis-cli 返回：`"$redisDel`"（期望 1，exit=$LASTEXITCODE）；RedisCli = " + $script:RedisCli)
 
     $afterEvict = Invoke-Json 'GET' '/api/items' 60
     $afterEvictItems = As-Array (Get-Field (Get-Data $afterEvict) 'items')
