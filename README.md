@@ -9,6 +9,7 @@
   - `guide/src/main/resources/application.properties` —— 配置文件
   - `guide/src/test/java` —— 测试代码
 - `guide-mini/` —— 微信小程序前端
+- `scripts/` —— 验收脚本（`smoke-test.ps1`：对运行中的后端发真实请求的 HTTP 冒烟脚本，用法见 `scripts/README.md`）
 - `docs/` —— 团队文档（入职指南、分支模型等）
 
 ## 分支说明
