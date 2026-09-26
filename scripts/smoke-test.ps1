@@ -156,15 +156,36 @@ function Wait-BackendReady {
 # 那种坏法是静默的：不报错，只是后面每一条按 nameEn 找条目的断言都找不到人。
 # Invoke-RestMethod 把顶层数组原样还原成 Object[]，`.Count` 才是 134。
 #
-# ⚠️ 中文断言要注意：后端的 Content-Type 是 `application/json`，**不带 charset**，
+# 中文断言要注意：后端的 Content-Type 是 `application/json`，**不带 charset**，
 # 于是 PS 5.1 按 ISO-8859-1 解码响应体，`message` / `nameZh` 这类中文字段在脚本里读出来是乱码
 # （实测 `"操作成功"` 变成 `"æä½æå"`，服务端本身是对的）。
 # 所以断言一律挑 ASCII 字段比对（slug / nameEn / code / primaryType），
 # 非要验中文取值就自己把 RawContentStream 按 UTF-8 解一遍。
-function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec) {
+#
+# $Headers / $Body 都可省略 —— 省略时就是一个裸 GET，上面四组断言照旧。
+# 教学端点要的是 POST + token 头 + JSON body，两条都从这里的参数走：
+#   $Headers 是散列表（如 @{ token = 'oXXX' }），$Body 是任意对象，
+#   非 null 时序列化成 JSON 文本再发，并显式写 Content-Type。
+#
+# ⚠️ 序列化必须用 [System.Text.Encoding]::UTF8.GetBytes 拿**字节**、且 $Body 传 -Body 而不是
+# 塞进 -Headers：PS 5.1 的 Invoke-RestMethod 把字符串当 body 时按 ISO-8859-1 编码，
+# 中文入参（第 4 组后面加的 AI 教学断言里会有）到服务端就成了乱码。
+# [string]$body 这一句也是必需的：PSCustomObject 直接传 -Body 会被当成"字段=值"的多部分解析。
+function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec, $Headers, $Body) {
     $uri = $BaseUrl + $path
+    $params = @{
+        Uri         = $uri
+        Method      = $method
+        TimeoutSec  = $timeoutSec
+        UseBasicParsing = $true
+    }
+    if ($null -ne $Headers) { $params.Headers = $Headers }
+    if ($null -ne $Body) {
+        $params.ContentType = 'application/json'
+        $params.Body = [System.Text.Encoding]::UTF8.GetBytes(([string](ConvertTo-Json -InputObject $Body -Compress -Depth 10)))
+    }
     try {
-        $json = Invoke-RestMethod -Uri $uri -Method $method -TimeoutSec $timeoutSec -UseBasicParsing
+        $json = Invoke-RestMethod @params
         return @{
             Ok     = $true
             Status = 200
@@ -788,6 +809,12 @@ Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）
 # ⚠️ 这套断言是**为 #28 并行开发准备的**：它要求 DEL 之后 MySQL 是唯一数据源，
 # 所以必须排在**所有按库内容取的断言之后**（这里已经是第 4 组的尾部，
 # 下一位改这个脚本时请把新断言加在这一段**之前**，否则参考值可能取到空表）。
+#
+# ⚠️ AI 教学（`/api/teach/**`）那一组新断言要插在**第 4 组内、这一行之上**：
+# 教学接口按 token 认人、按等级抽题，取的是库里的 user 行与题库 —— 落在这一段后面的话，
+# 前面的 DEL 'guide:item:all' 已经把图鉴缓存清空过一次，参考值可能取到空表。
+# 教学端点用 Invoke-Json 的 $Headers / $Body 两个参数发（POST + token 头 + JSON body），
+# 用法见 Invoke-Json 上方注释。
 Write-Host ''
 Write-Host '  缓存（单 key 语义）：'
 $CACHE_KEY_PATH = '/cache/item-all'
