@@ -39,8 +39,10 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
             return new ArrayList<>();
         }
         LambdaQueryWrapper<Item> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(Item::getNameZh, keyword)
-               .or().like(Item::getNameEn, keyword);
+        // 必须嵌套成 (name_zh LIKE ? OR name_en LIKE ?)：MyBatis-Plus 不给顶层 .or() 链自动加括号，
+        // 之后追加的条件只会绑到右操作数上（SQL 优先级下等价于 A OR (B AND C)），name_zh 命中的行就绕过了那个条件
+        wrapper.and(w -> w.like(Item::getNameZh, keyword)
+                          .or().like(Item::getNameEn, keyword));
         return baseMapper.selectList(wrapper);
     }
 
