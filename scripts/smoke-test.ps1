@@ -623,39 +623,28 @@ foreach ($i in $allItems) {
 Assert-True ($orderBreaks.Count -eq 0) 'primaryType 按契约的分组顺序返回（FOOD → CONSUMABLE → … → ENEMY）' `
     ("有 " + $orderBreaks.Count + " 处顺序回退，第一处是 " + (($orderBreaks | Select-Object -First 1) -join ''))
 
-# ── 筛选参数让结果收窄（spec.md 测试决定里点名的检查点）──
+# ── 筛选参数不生效：接口只返全量，一级导航与关键词搜索都在小程序本地做 ──
+#
+# ⚠️ 这一段**只断言"服务端忽略这些参数"**，不在这里验筛选本身。
+# 契约 §0.5 与 Q2 已经收口：/api/items **不接受任何筛选参数**，一次返全量 134 条、不分页；
+# 带不带 ?primaryType= / ?keyword= 都必须返回同一份全量。
+#
+# 为什么专门写一段"参数被忽略"的断言而不是把这段删掉：旧版脚本在这里断言的是
+# `primaryType=FOOD 的结果非空且少于全量`。服务端忽略参数后返回的是全量 134 条，
+# 那条断言因为 `134 < 134` 是假而报 FAIL —— 一并的 `primaryType 入参不区分大小写` 则是**假 PASS**：
+# 返回的全量里当然能找到 EQUIPMENT。假 PASS 比 FAIL 危险，它会把"参数被静默忽略"这种漂移藏起来，
+# 所以这里把口径反过来钉死：带参数 = 不带参数 = 全量 134 条。
 Write-Host ''
-Write-Host '  筛选与模糊查询：'
-$food = Invoke-Json 'GET' '/api/items?primaryType=FOOD' 60
-$foodItems = As-Array (Get-Field (Get-Data $food) 'items')
-Assert-True ($foodItems.Count -gt 0 -and $foodItems.Count -lt $allItems.Count) `
-    'primaryType=FOOD 收窄：非空且少于全量' `
-    ("实际 " + $foodItems.Count + " 条，全量 " + $allItems.Count + " 条")
-$strayFood = @()
-foreach ($i in $foodItems) { if ((Get-Field $i 'primaryType') -ne 'FOOD') { $strayFood += (Get-Field $i 'nameEn') } }
-Assert-True ($strayFood.Count -eq 0) 'primaryType=FOOD 的结果全是 FOOD' `
-    ("混进了 " + $strayFood.Count + " 条非 FOOD：" + (($strayFood | Select-Object -First 5) -join ', '))
-
-# 入参大小写不敏感：前端从别处拿到的小写值不该筛出空结果
-$equipment = Invoke-Json 'GET' '/api/items?primaryType=equipment' 60
-Assert-GreaterOrEqual (As-Array (Get-Field (Get-Data $equipment) 'items')).Count 1 'primaryType 入参不区分大小写（equipment 小写也能筛到）'
-
-# 模糊查询：英文名忽略大小写
-$searchEn = Invoke-Json 'GET' '/api/items?keyword=hot%20dog' 60
-$searchEnItems = As-Array (Get-Field (Get-Data $searchEn) 'items')
-Assert-True ($null -ne (Get-Item $searchEnItems 'Hot Dog')) 'keyword=hot dog（小写）能搜到 Hot Dog' '搜索结果里没有 Hot Dog'
-
-# 模糊查询：中文名按原样匹配
-$searchZh = Invoke-Json 'GET' '/api/items?keyword=%E8%8A%A6%E8%8D%9F' 60
-$searchZhItems = As-Array (Get-Field (Get-Data $searchZh) 'items')
-Assert-True ($null -ne (Get-Item $searchZhItems 'Aloe Vera')) 'keyword=芦荟（中文）能搜到 Aloe Vera' '中文搜索结果里没有 Aloe Vera'
-
-# 叠加：主类型 + 关键字，结果应比单条件更窄
-$combo = Invoke-Json 'GET' '/api/items?primaryType=FOOD&keyword=%E8%8F%87' 60
-$comboItems = As-Array (Get-Field (Get-Data $combo) 'items')
-Assert-True ($comboItems.Count -gt 0 -and $comboItems.Count -lt $foodItems.Count) `
-    'primaryType 与 keyword 可叠加，结果比单筛更窄' `
-    ("叠加后 " + $comboItems.Count + " 条，单筛 FOOD " + $foodItems.Count + " 条")
+Write-Host '  筛选参数（已收口为"服务端忽略"）：'
+foreach ($case in @(
+        @{ path = '/api/items?primaryType=FOOD';       label = 'primaryType=FOOD' },
+        @{ path = '/api/items?primaryType=equipment';  label = 'primaryType=equipment（小写）' },
+        @{ path = '/api/items?keyword=hot%20dog';      label = 'keyword=hot dog' },
+        @{ path = '/api/items?primaryType=FOOD&keyword=%E8%8F%87'; label = 'primaryType + keyword 叠加' })) {
+    $ignored = Invoke-Json 'GET' $case.path 60
+    $ignoredCount = (As-Array (Get-Field (Get-Data $ignored) 'items')).Count
+    Assert-Equal $ignoredCount 134 ($case.label + ' 被忽略：仍返回全量 134 条')
+}
 
 # ── 详情：路径参数是 slug 不是 id ──
 Write-Host ''
@@ -684,26 +673,56 @@ Assert-True ($missing.Ok -and (Get-Field $missing.Json 'success') -eq $false -an
     ("实际 status=" + $missing.Status + " json=" + (Format-Actual $missing.Json))
 
 # ── 标签字典与生态 ──
+#
+# ⚠️ 取字段必须剥 data 这一层（Get-Data）：信封里没有 tags / biomes，
+# 直接取 `$tags.Json.tags` 恒得 $null → As-Array 成空数组 → 逐条断言一条都不进、静默全 PASS。
+# 上面 Get-Data 的注释里记的就是这个坑。
 Write-Host ''
 Write-Host '  字典：'
 $tags = Invoke-Json 'GET' '/api/tags' 60
-$tagList = As-Array (Get-Field $tags.Json 'tags')
-Assert-True ($tagList.Count -gt 0) '/api/tags 返回非空' ("实际 " + $tagList.Count + " 条")
+Assert-True ($tags.Ok -and $tags.Status -eq 200) '/api/tags HTTP 200' `
+    ("实际 status=" + $tags.Status + " error=" + $tags['Error'])
+$tagList = As-Array (Get-Field (Get-Data $tags) 'tags')
+
+# 字典是静态的，条目数就是 TagDictionary 的定稿清单：type 12 / biome 11 / rarity 7 / source 19 / location 9 / flag 2
+Assert-Equal $tagList.Count 60 '/api/tags 返回字典全量 60 条（六维定稿清单）'
+
+# 六个维度一个都不能少；每个元素都必须带非空 code / value / nameZh
 $dimensions = @()
-foreach ($t in $tagList) { $dimensions += (Get-Field $t 'code') }
+$badTagElement = @()
+foreach ($t in $tagList) {
+    $dimensions += (Get-Field $t 'code')
+    foreach ($f in @('code', 'value', 'nameZh')) {
+        $v = [string](Get-Field $t $f)
+        if ([string]::IsNullOrWhiteSpace($v)) { $badTagElement += ((Get-Field $t 'code') + '/' + (Get-Field $t 'value') + '.' + $f) }
+    }
+}
 foreach ($d in @('type', 'biome', 'rarity', 'source', 'location', 'flag')) {
     Assert-True ($dimensions -contains $d) ("/api/tags 含 $d 维度") ("实际维度：" + (($dimensions | Sort-Object -Unique) -join ', '))
 }
+Assert-True ($badTagElement.Count -eq 0) '每个标签元素都带非空 code / value / nameZh（字典里的取值都有中文名）' `
+    ("有 " + $badTagElement.Count + " 处缺字段：" + (($badTagElement | Select-Object -First 5) -join ', '))
 
 $biomes = Invoke-Json 'GET' '/api/biomes' 60
-$biomeList = As-Array (Get-Field $biomes.Json 'biomes')
-Assert-GreaterOrEqual $biomeList.Count 1 '/api/biomes 返回非空'
-$badCount = @()
+Assert-True ($biomes.Ok -and $biomes.Status -eq 200) '/api/biomes HTTP 200' `
+    ("实际 status=" + $biomes.Status + " error=" + $biomes['Error'])
+$biomeList = As-Array (Get-Field (Get-Data $biomes) 'biomes')
+Assert-Equal $biomeList.Count 11 '/api/biomes 返回 11 个生态'
+
+$badBiome = @()
+$biomeExtra = @()
 foreach ($b in $biomeList) {
-    if ((Get-Field $b 'count') -isnot [int] -and (Get-Field $b 'count') -isnot [long]) { $badCount += (Get-Field $b 'value') }
+    if ([string]::IsNullOrWhiteSpace([string](Get-Field $b 'value')))   { $badBiome += '(value 为空)' }
+    if ([string]::IsNullOrWhiteSpace([string](Get-Field $b 'nameZh'))) { $badBiome += (Get-Field $b 'value') }
+    # 契约 Q17：不带条目计数。多出来的任何字段都算接口漂移 —— 元素形状只有 value / nameZh 两个
+    foreach ($p in $b.PSObject.Properties) {
+        if ($p.Name -notin @('value', 'nameZh')) { $biomeExtra += ((Get-Field $b 'value') + '.' + $p.Name) }
+    }
 }
-Assert-True ($badCount.Count -eq 0) '每个生态都带条目数 count（这是 /api/biomes 相对 /api/tags 唯一多出来的东西）' `
-    ("有 " + $badCount.Count + " 个生态没有 count：" + (($badCount | Select-Object -First 5) -join ', '))
+Assert-True ($badBiome.Count -eq 0) '每个生态的 value / nameZh 都非空' `
+    ("有 " + $badBiome.Count + " 个生态缺字段：" + (($badBiome | Select-Object -First 5) -join ', '))
+Assert-True ($biomeExtra.Count -eq 0) '每个生态只有 value / nameZh（契约 Q17：不带条目计数）' `
+    ("多带字段的有 " + $biomeExtra.Count + " 处：" + (($biomeExtra | Select-Object -First 5) -join ', '))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 汇总

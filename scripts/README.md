@@ -1,4 +1,4 @@
-# HTTP 冒烟验收脚本（T6 / issue #17）
+﻿# HTTP 冒烟验收脚本（T6 / issue #17）
 
 对**运行中的后端**发真实请求，一次穿过控制器、采集、转换、持久层、静态资源映射，
 用「已知答案断言」给转换逻辑做端到端回归保护。票面见 #17，断言清单来自父票 #11 的「测试决定」一节。
@@ -37,6 +37,20 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -BaseUrl http://
 > 所以"字段缺失（null）"与"值不对"是两种不同的 FAIL，不会混成一个。
 > 每条形如 `POISON_COOKED=0` 的断言前面都有"该 effect 存在"的前置断言，
 > 不存在"因为取不到值而侥幸通过"的可能。
+
+## 第 4 组（图鉴接口）的两次收口
+
+第 4 组早期是按"接口接受筛选参数"写的，契约收口后那批断言已经与契约冲突，分两次订正：
+
+- **#28 本轮**：`?primaryType=` / `?keyword=` 那批改成"**参数被忽略**"的显式断言
+  （带参数 = 不带参数 = 全量 134 条），`/api/biomes` 的 `count` 断言改成"**不带 count**、
+  元素形状只有 value / nameZh"。原来的写法里有 3 条 FAIL、3 条**假 PASS** ——
+  服务端忽略参数后返回全量，`primaryType 入参不区分大小写` 这种断言靠"全量里当然有 EQUIPMENT"
+  侥幸通过，比 FAIL 更危险（会把"参数被静默忽略"这种漂移藏起来）。
+- **#29**：详情相关的断言（`raw` / `cooked` / `isCookable` / `data` 直接是条目对象）按契约 §2 订正。
+
+`/api/tags`、`/api/biomes` 的取值直接取自 `TagDictionary` 的定稿清单（type 12 / biome 11 /
+rarity 7 / source 19 / location 9 / flag 2，与生态 11 个），**不查库**：字典是静态的，不随采集变化。
 
 | # | 接缝 | 断言 | 来自 | 为什么 |
 |---|---|---|---|---|

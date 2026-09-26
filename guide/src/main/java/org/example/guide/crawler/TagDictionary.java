@@ -1,5 +1,7 @@
 package org.example.guide.crawler;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -106,6 +108,13 @@ public final class TagDictionary {
             entry(FLAG_COOKABLE, "可烹饪"),
             entry(FLAG_REMOVED, "已移除"));
 
+    /*
+     * 维度枚举顺序。Map.of / Map.ofEntries 的迭代顺序是**未指定**的（每次 JVM 启动都可能不同），
+     * 而 GET /api/tags 会把字典原样下发给小程序，返回次序每次变会让前端面板的标签跟着跳。
+     * 所以枚举不直接遍历 map，按这张表的顺序取（契约 §4 的六维清单就是它）。
+     */
+    private static final List<String> DIMENSION_ORDER = List.of(TYPE, BIOME, RARITY, SOURCE, LOCATION, FLAG);
+
     private static final Map<String, Map<String, String>> DICTIONARIES = Map.of(
             TYPE, TYPE_ZH,
             BIOME, BIOME_ZH,
@@ -125,6 +134,37 @@ public final class TagDictionary {
     public static String lookupZh(String dimension, String value) {
         Map<String, String> dictionary = DICTIONARIES.get(dimension);
         return dictionary == null ? null : dictionary.get(value);
+    }
+
+    /**
+     * 按维度枚举字典全量,给"返字典全量"的接口用（契约 §4 的 GET /api/tags）。
+     *
+     * <p>顺序按 {@link #DIMENSION_ORDER},维度内按 {@code value} 升序 —— 两处都必须稳定,
+     * 否则小程序筛选面板的标签次序每次启动都不一样。
+     *
+     * <p>返回的是本类内部的**只读**四个 map,没有拷贝一份:它们的生命周期与 JVM 相同,只增不改。
+     *
+     * @param dimension 维度词,取本类的六个常量之一
+     * @throws IllegalArgumentException 传了这六个之外的值 —— 枚举未知维度是**调用方的 bug**,
+     *                                  与"字典里查不到某个数据源取值"是两回事（后者照存并警告,见类注释）。
+     *                                  这里当场抛,是为了让打错的维度词在下一次启动就暴露,
+     *                                  而不是悄悄返一个空数组、上线后表现为"某一格筛选永远是空的"
+     */
+    public static Map<String, String> entries(String dimension) {
+        Map<String, String> dictionary = DICTIONARIES.get(dimension);
+        if (dictionary == null) {
+            throw new IllegalArgumentException("未知的标签维度: " + dimension + ",合法取值见 TagDictionary 的六个维度常量");
+        }
+        return dictionary;
+    }
+
+    /**
+     * 枚举全部维度时用的固定顺序（见 {@link #DIMENSION_ORDER}）。
+     *
+     * <p>想遍历全部六个维度就用它,不要遍历 {@link #DICTIONARIES}：后者的迭代顺序是未指定的。
+     */
+    public static List<String> dimensions() {
+        return new ArrayList<>(DIMENSION_ORDER);
     }
 
     /** 把 location 的原始取值归一成最终落库的码(剥标记之后调用) */
