@@ -174,9 +174,9 @@ function Wait-BackendReady {
 function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec, $Headers, $Body) {
     $uri = $BaseUrl + $path
     $params = @{
-        Uri         = $uri
-        Method      = $method
-        TimeoutSec  = $timeoutSec
+        Uri             = $uri
+        Method          = $method
+        TimeoutSec      = $timeoutSec
         UseBasicParsing = $true
     }
     if ($null -ne $Headers) { $params.Headers = $Headers }
@@ -810,8 +810,8 @@ Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）
 # 所以必须排在**所有按库内容取的断言之后**（这里已经是第 4 组的尾部，
 # 下一位改这个脚本时请把新断言加在这一段**之前**，否则参考值可能取到空表）。
 #
-# ⚠️ AI 教学（`/api/teach/**`）那一组新断言要插在**第 4 组内、这一行之上**：
-# 教学接口按 token 认人、按等级抽题，取的是库里的 user 行与题库 —— 落在这一段后面的话，
+# ⚠️ AI 教学（`/api/teach/**`）那一组新断言就插在这一行之上 —— 即第 4 组内、Redis 段之前。
+# 教学接口按 token 认人、按等级抽题，取的是库里的 user 行与题库；落到 Redis 段后面的话，
 # 前面的 DEL 'guide:item:all' 已经把图鉴缓存清空过一次，参考值可能取到空表。
 # 教学端点用 Invoke-Json 的 $Headers / $Body 两个参数发（POST + token 头 + JSON body），
 # 用法见 Invoke-Json 上方注释。
