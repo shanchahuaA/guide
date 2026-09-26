@@ -6,10 +6,11 @@
     对**运行中的后端**发真实请求，一次穿过控制器、采集、转换、持久层、静态资源映射，
     用「已知答案断言」给转换逻辑做端到端回归保护。
 
-    断言分三组：
+    断言分四组：
       1. POST /admin/crawl        —— 采集报告的统计与明细
       2. GET  /testItemList       —— 全量列表的已知答案断言（转换逻辑的端到端回归）
       3. GET  /icons/Hot_Dog.png  —— 图标静态路径是 200 PNG
+      4. GET  /api/items|tags|biomes —— 小程序契约：筛选收窄、模糊查询、按 slug 取详情
 
     全部断言打印 PASS/FAIL 明细，最后汇总退出码：全过 0，有 FAIL 非 0。
 
@@ -147,6 +148,12 @@ function Wait-BackendReady {
 # 结果 `.Count` 是 1、`$items[0].nameEn` 是 134 个名字拼成的一长串。
 # 那种坏法是静默的：不报错，只是后面每一条按 nameEn 找条目的断言都找不到人。
 # Invoke-RestMethod 把顶层数组原样还原成 Object[]，`.Count` 才是 134。
+#
+# ⚠️ 中文断言要注意：后端的 Content-Type 是 `application/json`，**不带 charset**，
+# 于是 PS 5.1 按 ISO-8859-1 解码响应体，`message` / `nameZh` 这类中文字段在脚本里读出来是乱码
+# （实测 `"操作成功"` 变成 `"æä½æå"`，服务端本身是对的）。
+# 所以断言一律挑 ASCII 字段比对（slug / nameEn / code / primaryType），
+# 非要验中文取值就自己把 RawContentStream 按 UTF-8 解一遍。
 function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec) {
     $uri = $BaseUrl + $path
     try {
@@ -168,6 +175,22 @@ function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec) {
             Error  = $_.Exception.Message
         }
     }
+}
+
+# 统一响应包是 {success, code, message, data}（契约 §0.1），业务字段在 data **里面**。
+#
+# ⚠️ 少剥这一层的断言不会红，只会**静默空转**：`Get-Field $resp['Json'] 'items'` 恒为 $null，
+# 经 As-Array 变成空数组，于是逐条循环一条都不进、每条断言都"通过"。
+# 本轮实测踩到过：`/api/items 返回全量 134 条` 报"实际 0"，而同组的逐条断言全绿。
+#
+# ⚠️ 信封本身是 Invoke-Json 返回的 **hashtable**，取它的字段只能用 `$resp['Error']` 这种**下标**写法，
+# 两种想当然的写法都是坑：
+#   - `Get-Field $resp 'Error'` 恒得 $null 且不报错 —— hashtable 的 PSObject.Properties 里
+#     只有 Count / Keys / Values 这些，业务键**不在**里面；
+#   - `$resp.Error` 属性写法会在 Set-StrictMode Latest 下**当场抛** —— Error 只在失败分支才有。
+# Get-Field 只拿来读解出来的 JSON 对象（PSCustomObject），不要往信封上套。
+function Get-Data($response) {
+    return Get-Field ($response['Json']) 'data'
 }
 
 # 只取 JSON 里的字段，字段不存在时返回 $null（Set-StrictMode 下不能裸访问不存在的属性）。
@@ -275,12 +298,12 @@ Write-Host ("  触发真实采集，最长等 " + $CrawlTimeoutSeconds + " 秒�
 $crawl = Invoke-Json 'POST' '/admin/crawl' $CrawlTimeoutSeconds
 
 Assert-True ($crawl.Ok -and $crawl.Status -eq 200) '采集接口 HTTP 200' `
-    ("实际 status=" + $crawl.Status + " error=" + (Get-Field $crawl 'Error'))
+    ("实际 status=" + $crawl.Status + " error=" + $crawl['Error'])
 
 if (-not ($crawl.Ok -and $crawl.Status -eq 200)) {
     Write-Host ''
     Write-Host '采集接口没通，后面的列表断言没有意义，直接收尾。' -ForegroundColor Red
-    Write-Host ("错误：" + (Get-Field $crawl 'Error'))
+    Write-Host ("错误：" + $crawl['Error'])
     exit 1
 }
 
@@ -357,7 +380,7 @@ Section '2. GET /testItemList — 全量列表的已知答案断言'
 
 $list = Invoke-Json 'GET' '/testItemList' 120
 Assert-True ($list.Ok -and $list.Status -eq 200) '列表接口 HTTP 200' `
-    ("实际 status=" + $list.Status + " error=" + (Get-Field $list 'Error'))
+    ("实际 status=" + $list.Status + " error=" + $list['Error'])
 
 if (-not ($list.Ok -and $list.Status -eq 200)) {
     Write-Host ''
@@ -508,6 +531,179 @@ if ($iconStatus -eq 200) {
     $head = if ($bytes -is [System.Array]) { (($bytes | Select-Object -First 8 | ForEach-Object { $_.ToString('X2') }) -join ' ') } else { '(不是字节数组)' }
     Assert-True $isPng '响应体以 PNG 魔数开头（真的是图，不是错误页）' ("实际前 8 字节：" + $head)
 }
+
+# ── 第 4 组：图鉴接口（小程序契约）────────────────────────────────────────────
+
+Section '4. GET /api/items|tags|biomes — 小程序契约'
+
+# 前端 guide-mini/utils/api.js 启动时并发拉这三个端点，读的是 data.items / data.tags / data.biomes，
+# 所以这一组既验服务端行为，也验响应形状对得上前端已经写死的取法。
+
+$PRIMARY_TYPES = @('FOOD', 'CONSUMABLE', 'EQUIPMENT', 'DEPLOYABLE', 'AMULET', 'MYSTICAL', 'MISC', 'ENEMY')
+
+$all = Invoke-Json 'GET' '/api/items' 60
+Assert-True ($all.Ok -and $all.Status -eq 200) '/api/items HTTP 200' `
+    ("实际 status=" + $all.Status + " error=" + $all['Error'])
+
+$allItems = As-Array (Get-Field (Get-Data $all) 'items')
+
+# 全量口径就是 134（CONTEXT.md 图鉴条目节）。这一条**不设容差**：第 1 组的 fetchedRows 用 ≥130
+# 是怕 wiki 增删物品造成误报，而"图鉴有多少条"是产品口径本身，变了就该当场看见
+Assert-Equal $allItems.Count 134 '/api/items 返回全量 134 条'
+
+# 字段面 = 契约 §1 的 6 个，多一个少一个都算接口契约漂移：
+# 多带 description / descriptionZh 会让 payload 涨三倍，多带 id 是把"换机器重灌就变"的库内序号下发
+$LIST_FIELDS = @('slug', 'nameZh', 'nameEn', 'icon', 'weight', 'primaryType')
+$FORBIDDEN_FIELDS = @('description', 'descriptionZh', 'tags', 'id')
+
+$fieldMissing = @()
+$fieldLeaked = @()
+$badPrimaryType = @()
+$badSlug = @()
+$slugs = @()
+foreach ($i in $allItems) {
+    $nameEn = Get-Field $i 'nameEn'
+    foreach ($f in $LIST_FIELDS) {
+        if ($null -eq (Get-Field $i $f)) { $fieldMissing += ($nameEn + '.' + $f) }
+    }
+    foreach ($f in $FORBIDDEN_FIELDS) {
+        if ($null -ne (Get-Field $i $f)) { $fieldLeaked += ($nameEn + '.' + $f) }
+    }
+    if ((Get-Field $i 'primaryType') -notin $PRIMARY_TYPES) { $badPrimaryType += $nameEn }
+    $s = Get-Field $i 'slug'
+    if ($null -eq $s -or $s -eq '') { $badSlug += $nameEn } else { $slugs += $s }
+}
+
+Assert-True ($fieldMissing.Count -eq 0) ("每行都带齐列表的 6 个字段（" + ($LIST_FIELDS -join ' / ') + "）") `
+    ("缺字段的有 " + $fieldMissing.Count + " 处：" + (($fieldMissing | Select-Object -First 5) -join ', '))
+Assert-True ($fieldLeaked.Count -eq 0) '列表不带 description / descriptionZh / tags / id（长文本、tags 与库内 id 都不下发）' `
+    ("多带字段的有 " + $fieldLeaked.Count + " 处：" + (($fieldLeaked | Select-Object -First 5) -join ', '))
+Assert-True ($badPrimaryType.Count -eq 0) '每行的 primaryType 都是 8 个取值之一' `
+    ("有 " + $badPrimaryType.Count + " 行的 primaryType 不在取值表里：" + (($badPrimaryType | Select-Object -First 5) -join ', '))
+Assert-True ($badSlug.Count -eq 0) '每行都有非空 slug（由 nameEn 派生）' `
+    ("有 " + $badSlug.Count + " 行没有 slug：" + (($badSlug | Select-Object -First 5) -join ', '))
+Assert-Equal @($slugs | Sort-Object -Unique).Count $allItems.Count 'slug 唯一（详情按 slug 取，撞车就取错条目）'
+
+# ── slug 的已知答案：库里那几组按"删特殊字符"会硬撞的名字 ──
+Write-Host ''
+Write-Host '  slug 与主类型：'
+foreach ($case in @(
+        @{ nameEn = 'Hot Dog';                  slug = 'hot_dog' },
+        @{ nameEn = 'Bugle?';                   slug = 'bugle_' },
+        @{ nameEn = 'Bugle Shroom (Poisonous)'; slug = 'bugle_shroom_(poisonous)' })) {
+    $target = Get-Item $allItems $case.nameEn
+    Assert-True ($null -ne $target) ($case.nameEn + ' 在列表里') ('列表里查不到 ' + $case.nameEn)
+    if ($null -ne $target) {
+        Assert-Equal (Get-Field $target 'slug') $case.slug ($case.nameEn + ' → slug ' + $case.slug)
+    }
+}
+
+# 跨界条目：Scorpion 同时带 Food 与 Enemy，一级导航只能有一个落点，落在食物（契约 §0.5）
+$scorpion = Get-Item $allItems 'Scorpion'
+Assert-True ($null -ne $scorpion) 'Scorpion 在列表里' '列表里查不到 Scorpion'
+if ($null -ne $scorpion) {
+    Assert-Equal (Get-Field $scorpion 'primaryType') 'FOOD' 'Scorpion（Food + Enemy）归 FOOD'
+}
+
+# 已移除条目不过滤（明确的产品决定，契约 §0.5）
+foreach ($removed in @('Bugle?', 'Warp Compass')) {
+    Assert-True ($null -ne (Get-Item $allItems $removed)) ($removed + ' 在列表里（已移除条目不过滤）') `
+        ('列表里查不到 ' + $removed)
+}
+
+# 返回顺序：按 primaryType 分组（组序见契约 §0.5）。
+# "组内按 id 升序"这半边客户端验不了 —— 接口有意不下发 id（契约 §1），这里只钉分组这一层
+$lastGroupIndex = 0
+$orderBreaks = @()
+foreach ($i in $allItems) {
+    $groupIndex = [array]::IndexOf($PRIMARY_TYPES, (Get-Field $i 'primaryType'))
+    if ($groupIndex -lt $lastGroupIndex) { $orderBreaks += (Get-Field $i 'nameEn') }
+    $lastGroupIndex = $groupIndex
+}
+Assert-True ($orderBreaks.Count -eq 0) 'primaryType 按契约的分组顺序返回（FOOD → CONSUMABLE → … → ENEMY）' `
+    ("有 " + $orderBreaks.Count + " 处顺序回退，第一处是 " + (($orderBreaks | Select-Object -First 1) -join ''))
+
+# ── 筛选参数让结果收窄（spec.md 测试决定里点名的检查点）──
+Write-Host ''
+Write-Host '  筛选与模糊查询：'
+$food = Invoke-Json 'GET' '/api/items?primaryType=FOOD' 60
+$foodItems = As-Array (Get-Field (Get-Data $food) 'items')
+Assert-True ($foodItems.Count -gt 0 -and $foodItems.Count -lt $allItems.Count) `
+    'primaryType=FOOD 收窄：非空且少于全量' `
+    ("实际 " + $foodItems.Count + " 条，全量 " + $allItems.Count + " 条")
+$strayFood = @()
+foreach ($i in $foodItems) { if ((Get-Field $i 'primaryType') -ne 'FOOD') { $strayFood += (Get-Field $i 'nameEn') } }
+Assert-True ($strayFood.Count -eq 0) 'primaryType=FOOD 的结果全是 FOOD' `
+    ("混进了 " + $strayFood.Count + " 条非 FOOD：" + (($strayFood | Select-Object -First 5) -join ', '))
+
+# 入参大小写不敏感：前端从别处拿到的小写值不该筛出空结果
+$equipment = Invoke-Json 'GET' '/api/items?primaryType=equipment' 60
+Assert-GreaterOrEqual (As-Array (Get-Field (Get-Data $equipment) 'items')).Count 1 'primaryType 入参不区分大小写（equipment 小写也能筛到）'
+
+# 模糊查询：英文名忽略大小写
+$searchEn = Invoke-Json 'GET' '/api/items?keyword=hot%20dog' 60
+$searchEnItems = As-Array (Get-Field (Get-Data $searchEn) 'items')
+Assert-True ($null -ne (Get-Item $searchEnItems 'Hot Dog')) 'keyword=hot dog（小写）能搜到 Hot Dog' '搜索结果里没有 Hot Dog'
+
+# 模糊查询：中文名按原样匹配
+$searchZh = Invoke-Json 'GET' '/api/items?keyword=%E8%8A%A6%E8%8D%9F' 60
+$searchZhItems = As-Array (Get-Field (Get-Data $searchZh) 'items')
+Assert-True ($null -ne (Get-Item $searchZhItems 'Aloe Vera')) 'keyword=芦荟（中文）能搜到 Aloe Vera' '中文搜索结果里没有 Aloe Vera'
+
+# 叠加：主类型 + 关键字，结果应比单条件更窄
+$combo = Invoke-Json 'GET' '/api/items?primaryType=FOOD&keyword=%E8%8F%87' 60
+$comboItems = As-Array (Get-Field (Get-Data $combo) 'items')
+Assert-True ($comboItems.Count -gt 0 -and $comboItems.Count -lt $foodItems.Count) `
+    'primaryType 与 keyword 可叠加，结果比单筛更窄' `
+    ("叠加后 " + $comboItems.Count + " 条，单筛 FOOD " + $foodItems.Count + " 条")
+
+# ── 详情：路径参数是 slug 不是 id ──
+Write-Host ''
+Write-Host '  详情：'
+$detail = Invoke-Json 'GET' '/api/items/hot_dog' 60
+$detailItem = Get-Field $detail.Json 'item'
+Assert-True ($null -ne $detailItem) '/api/items/hot_dog 返回 item' ("实际 " + (Format-Actual $detailItem))
+if ($null -ne $detailItem) {
+    Assert-Equal (Get-Field $detailItem 'slug') 'hot_dog' '详情 slug=hot_dog'
+    Assert-True ((Get-Field $detailItem 'isCookable') -eq $true) 'Hot Dog isCookable=true' `
+        ("实际 " + (Format-Actual (Get-Field $detailItem 'isCookable')))
+    # 中文译文已回填；万一某条漏了，接口会回落到英文原值而不是留空 —— 这里只要求非空
+    $desc = [string](Get-Field $detailItem 'description')
+    Assert-True ($desc.Length -gt 0) '详情带 description' '详情里 description 是空的'
+}
+
+# slug 里那批被改写过的字符要真的能取到：Bugle? 的 slug 是 bugle_（问号被换成下划线）
+$bugleQuery = Invoke-Json 'GET' '/api/items/bugle_' 60
+Assert-True ($null -ne (Get-Field $bugleQuery.Json 'item')) '被改写过的 slug（bugle_）也能取到详情' `
+    '取不到 bugle_：slug 规则与 icon 文件名的字符白名单没对齐'
+
+# 不存在的 slug 要走统一响应包的失败分支，不是 500
+$missing = Invoke-Json 'GET' '/api/items/does_not_exist' 60
+Assert-True ($missing.Ok -and (Get-Field $missing.Json 'success') -eq $false -and (Get-Field $missing.Json 'code') -eq -100) `
+    '不存在的 slug 返回 success=false / code=-100' `
+    ("实际 status=" + $missing.Status + " json=" + (Format-Actual $missing.Json))
+
+# ── 标签字典与生态 ──
+Write-Host ''
+Write-Host '  字典：'
+$tags = Invoke-Json 'GET' '/api/tags' 60
+$tagList = As-Array (Get-Field $tags.Json 'tags')
+Assert-True ($tagList.Count -gt 0) '/api/tags 返回非空' ("实际 " + $tagList.Count + " 条")
+$dimensions = @()
+foreach ($t in $tagList) { $dimensions += (Get-Field $t 'code') }
+foreach ($d in @('type', 'biome', 'rarity', 'source', 'location', 'flag')) {
+    Assert-True ($dimensions -contains $d) ("/api/tags 含 $d 维度") ("实际维度：" + (($dimensions | Sort-Object -Unique) -join ', '))
+}
+
+$biomes = Invoke-Json 'GET' '/api/biomes' 60
+$biomeList = As-Array (Get-Field $biomes.Json 'biomes')
+Assert-GreaterOrEqual $biomeList.Count 1 '/api/biomes 返回非空'
+$badCount = @()
+foreach ($b in $biomeList) {
+    if ((Get-Field $b 'count') -isnot [int] -and (Get-Field $b 'count') -isnot [long]) { $badCount += (Get-Field $b 'value') }
+}
+Assert-True ($badCount.Count -eq 0) '每个生态都带条目数 count（这是 /api/biomes 相对 /api/tags 唯一多出来的东西）' `
+    ("有 " + $badCount.Count + " 个生态没有 count：" + (($badCount | Select-Object -First 5) -join ', '))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 汇总

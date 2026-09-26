@@ -2,12 +2,21 @@ package org.example.guide.service;
 
 import com.baomidou.mybatisplus.spring.service.IService;
 import org.example.guide.pojo.Item;
+import org.example.guide.pojo.dto.ItemListDto;
 
 import java.util.List;
 
 public interface IItemService extends IService<Item> {
     /** 查询全部物品（前端列表展示用） */
     List<Item> getItemList();
+
+    /**
+     * 全量条目的列表视图（GET /api/items 用）。
+     *
+     * 按 primaryType 分组、组内按 id 升序 —— 不排序的话每次查询的返回次序都可能不同。
+     * 已移除的条目照常返回，这是明确的产品决定。
+     */
+    List<ItemListDto> getListItemDtos();
 
     /** 按 id 查询单个物品详情 */
     Item getItemById(Long id);

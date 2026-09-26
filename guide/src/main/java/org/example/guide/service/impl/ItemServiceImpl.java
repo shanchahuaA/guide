@@ -8,13 +8,16 @@ import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.session.ResultHandler;
 import org.example.guide.mapper.ItemMapper;
 import org.example.guide.pojo.Item;
+import org.example.guide.pojo.dto.ItemListDto;
 import org.example.guide.service.IItemService;
+import org.example.guide.utils.ItemFields;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,16 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
     @Override
     public List<Item> getItemList(){
         return baseMapper.selectList(null);
+    }
+
+    @Override
+    public List<ItemListDto> getListItemDtos(){
+        return baseMapper.selectList(null).stream()
+                // 组序：ItemFields.PRIMARY_TYPE_ORDER 的下标；组内按 id 升序。不定顺序的话每次查询的返回次序都可能不同
+                .sorted(Comparator.comparingInt((Item item) -> ItemFields.PRIMARY_TYPE_ORDER.indexOf(ItemFields.primaryTypeOf(item)))
+                                  .thenComparing(Item::getId))
+                .map(ItemListDto::from)
+                .toList();
     }
 
     @Override

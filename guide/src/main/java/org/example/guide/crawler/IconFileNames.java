@@ -48,12 +48,23 @@ public final class IconFileNames {
     }
 
     /**
+     * 按白名单改写过的名字,不含扩展名。
+     *
+     * <p>两个消费方共用它,规则只有一份：{@link #fileName} 加扩展名得到本地文件名,
+     * slug 规则加一次小写得到条目在 URL 里的标识。两边各自抄一遍正则迟早会分叉,
+     * 而分叉的后果是"图标下得下来、slug 却取不到详情"这种只在少数名字上发作的错。
+     */
+    public static String sanitize(String display) {
+        return UNSAFE.matcher(display.replace(' ', '_')).replaceAll("_");
+    }
+
+    /**
      * 本地文件名,同时也是 {@code icon} 列里 URL 路径的最后一段。
      *
      * @return 形如 {@code Hot_Dog.png} / {@code Bugle Shroom (Poisonous).png} / {@code Bugle_.png}
      */
     public static String fileName(String display) {
-        return UNSAFE.matcher(display.replace(' ', '_')).replaceAll("_") + SUFFIX;
+        return sanitize(display) + SUFFIX;
     }
 
     /** 文件名里含有被换掉的字符时为 true */
