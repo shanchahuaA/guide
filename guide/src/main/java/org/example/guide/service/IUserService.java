@@ -10,6 +10,9 @@ public interface IUserService  extends IService<User> {
     /** 按 openid 查用户（openid 即主键），无则返回 null */
     User findByOpenid(String openid);
 
+    /** 按 openid 取用户，没有就以 level=0 新建 —— 登录用，不会撞主键 */
+    User findOrCreateByOpenid(String openid);
+
     /** 答题通过后升级：直接改 level 字段 */
     boolean updateLevel(String openid, Integer level);
 

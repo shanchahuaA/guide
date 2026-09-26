@@ -1,0 +1,11 @@
+<!--pages/teach/teach.wxml-->
+<!-- 身份条：profile 拿到之前不渲染，避免闪一行 "连对 /" 的空壳。
+     profile 为 null 只发生在未登录 / 后端没起，此时整条不显示 -->
+<view class="identity section" wx:if="{{profile}}">
+  <view class="identity-text">
+    <text class="identity-level">{{profile.levelName}}</text>
+    <text class="identity-streak">连对 {{profile.streak}}/{{profile.streakTarget}}</text>
+  </view>
+  <!-- 演示用跳级后门：连点三次升一级（契约 §7.6） -->
+  <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
+</view>

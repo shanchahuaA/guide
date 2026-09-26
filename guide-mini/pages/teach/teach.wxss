@@ -1,0 +1,44 @@
+/* pages/teach/teach.wxss */
+
+page {
+  background-color: #f7f4ea;
+  background-image: radial-gradient(#e2dcc6 1.5rpx, transparent 1.5rpx);
+  background-size: 20rpx 20rpx;
+  /* 顶部身份条 + 底部给自定义 tabBar 留高度 */
+  padding-bottom: 140rpx;
+}
+
+/* 身份条：常驻在页面顶部，和详情页的 section 同一套卡片语言（无阴影） */
+.identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24rpx 24rpx 0;
+}
+
+.identity-text {
+  display: flex;
+  align-items: baseline;
+}
+
+.identity-level {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #2b2823;
+}
+
+.identity-streak {
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  color: #9a9384;
+}
+
+/* 跳级按钮（仅演示）：一枚描边小胶囊 */
+.jump {
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  color: #6b6353;
+  background: #f0ebdb;
+  border: 2rpx solid #ded7c2;
+  border-radius: 28rpx;
+}

@@ -794,6 +794,60 @@ $bugleQuery = Invoke-Json 'GET' '/api/items/bugle_' 60
 Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）也能取到详情' `
     '取不到 bugle_：slug 规则与 icon 文件名的字符白名单没对齐'
 
+# ── 第 4 组（续）：登录与教学身份（契约 §6 / §7.1）──────────────────────────
+#
+# ⚠️ 必须插在 Redis 段**之前**（见下面 Redis 段开头的说明）：Redis 段会 DEL
+# 'guide:item:all' 并假设库里是唯一数据源，那之后按库内容取的参考值可能取到空表。
+#
+# ⚠️ 这一组需要后端连着真微信服务器（code2Session）+ MySQL：
+#   - appid / secret 没配（application-local.yml 缺 guide.wechat.*）→ code2Session 报错
+#   - 网络不通 / 测试 js_code 无效 → 同样换不到 openid
+#   这时候 login 拿不到 token，下面几条会 FAIL —— 是**真失败**不是脚本误报，
+#   因为票面要求"登录拿到非空 openid 与 token"。
+#   openid 是后端从微信换出来的，脚本造不出来，所以只能拿真 js_code 去换。
+#
+# ⚠️ 还要有 `user` 表（openid 主键 / level / api_key / create_time / nickname / avatar）。
+#   仓库里没有建表 SQL，表结构的唯一真相是 pojo/User.java；换机器要照它手写 DDL。
+#   表不存在时 login 会返 code=-100（MySQL 报 Table 'xxx.user' doesn't exist），
+#   下面"拿到非空 token"那条会 FAIL —— 同样是真失败，先把表建出来。
+Section '4b. 登录与教学身份'
+
+$loginCode = 'smoke-test-' + [guid]::NewGuid().ToString('N')
+$login = Invoke-Json 'POST' '/api/auth/login' 60 $null @{ js_code = $loginCode }
+$loginData = Get-Data $login
+$loginOpenid = Get-Field $loginData 'openid'
+$loginToken  = Get-Field $loginData 'token'
+
+Assert-True ($login.Ok -and $login.Status -eq 200) '登录接口 HTTP 200' `
+    ("实际 status=" + $login.Status + " error=" + $login['Error'])
+Assert-True ($null -ne $loginOpenid -and $loginOpenid -ne '') '登录拿到非空 openid' `
+    'code2Session 没换到 openid：多半是 appid/secret 没配在 application-local.yml，或测试 js_code 无效'
+Assert-True ($null -ne $loginToken -and $loginToken -ne '') '登录拿到非空 token（占位串，值即 openid）' `
+    '契约 §6 要求 token 这个 key 必须存在，缺了前端会存进 undefined'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    # 没 token 后面的教学断言没有意义：直接说明并跳过，不静默空转。
+    # 注意判 null 也要写上：login 失败时 data 是 null，Get-Field 返回的就是 $null，
+    # 只写 `-eq ''` 的话 $null 穿不过去，下面会拿着空 token 去发请求。
+    Write-Host '  登录没拿到 token，跳过身份条断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    # 无 token → code = 401（HTTP 状态仍是 200，用响应包里的 code 表达未登录）
+    $noToken = Invoke-Json 'GET' '/api/teach/profile' 60
+    Assert-True ((Get-Field $noToken.Json 'code') -eq 401) 'profile 不带 token 时 code=401' `
+        ("实际 code=" + (Get-Field $noToken.Json 'code'))
+    Assert-True ((Get-Field $noToken.Json 'success') -eq $false) 'profile 不带 token 时 success=false' `
+        ("实际 success=" + (Get-Field $noToken.Json 'success'))
+
+    # 带 token → 200 + level / streak / streakTarget
+    $profileResp = Invoke-Json 'GET' '/api/teach/profile' 60 @{ token = $loginToken }
+    $profileData = Get-Data $profileResp
+    Assert-True ((Get-Field $profileResp.Json 'code') -eq 200) 'profile 带 token 时 code=200' `
+        ("实际 code=" + (Get-Field $profileResp.Json 'code') + " message=" + (Get-Field $profileResp.Json 'message'))
+    Assert-True ($null -ne (Get-Field $profileData 'level')) 'profile 带 level' '契约 §7.1 要 level'
+    Assert-True ($null -ne (Get-Field $profileData 'streak')) 'profile 带 streak' '契约 §7.1 要 streak'
+    Assert-True ($null -ne (Get-Field $profileData 'streakTarget')) 'profile 带 streakTarget' '契约 §7.1 要 streakTarget'
+}
+
 # ── Redis 缓存：读到的到底是缓存、还是每次都回源 ─────────────────────────────
 #
 # ⚠️ 这一段**不要求 Redis 一定在跑**：契约 §8.3 明写"Redis 连不上时接口照常返（回源 MySQL）"，
