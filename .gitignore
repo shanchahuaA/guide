@@ -5,6 +5,16 @@ target/
 !**/src/test/**/target/
 .mcp.json
 .claude/
+.commandcode/
+
+### AI 工具 / 代理产出（本地保留，不进仓库；见 docs/agents/）###
+/CLAUDE.md
+/CONTEXT.md
+/docs/spec.md
+/docs/agents/domain.md
+/docs/agents/issue-tracker.md
+/docs/agents/triage-labels.md
+/docs/接口契约.md
 
 ### 本地敏感配置（密码、密钥),模板见 application-local.yml.example ###
 **/src/main/resources/application-local.yml
