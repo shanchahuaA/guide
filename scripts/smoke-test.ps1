@@ -196,10 +196,20 @@ function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec, $Heade
         if ($_.Exception.Response) {
             try { $status = [int]$_.Exception.Response.StatusCode } catch { }
         }
+        # 非 2xx 时 Invoke-RestMethod 会抛异常，响应体在 $_.ErrorDetails.Message（PS 5.1）。
+        # Shiro 的 TokenAuthFilter 对未登录回 HTTP 401 + 响应壳 code=401，教学端点那几条 401
+        # 断言读的就是这里解析出来的 code。取不到（或不是 JSON）就留 $null —— 只看 Status 的
+        # 断言不受影响，取不到的旁边会记一条 INFO，不当失败。
+        $errorJson = $null
+        try {
+            if ($_.ErrorDetails -and $_.ErrorDetails.Message) {
+                $errorJson = ConvertFrom-Json -InputObject ([string]$_.ErrorDetails.Message)
+            }
+        } catch { $errorJson = $null }
         return @{
             Ok     = $false
             Status = $status
-            Json   = $null
+            Json   = $errorJson
             Error  = $_.Exception.Message
         }
     }
@@ -810,6 +820,22 @@ Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）
 #   仓库里没有建表 SQL，表结构的唯一真相是 pojo/User.java；换机器要照它手写 DDL。
 #   表不存在时 login 会返 code=-100（MySQL 报 Table 'xxx.user' doesn't exist），
 #   下面"拿到非空 token"那条会 FAIL —— 同样是真失败，先把表建出来。
+
+# 未登录断言的公共形态：Shiro 的 tokenAuthc 在过滤链上把请求拦下，回 **HTTP 401**
+# + 响应壳 code=401（不再是控制器里 HTTP 200 + code=401 那套）。
+# ⚠️ PS 5.1 从异常里不一定取得到响应体（见 Invoke-Json），所以 **HTTP 状态是硬断言**，
+# 响应壳只在真取到时加验一条，取不到记 INFO —— 不让取体失败变成一次假 FAIL。
+function Assert-Unauthorized($resp, [string] $name) {
+    Assert-True ($resp.Status -eq 401) ($name + ' HTTP 401（Shiro tokenAuthc 拦下）') `
+        ("实际 status=" + $resp.Status + " error=" + $resp['Error'])
+    $code = Get-Field $resp.Json 'code'
+    if ($null -ne $code) {
+        Assert-Equal $code 401 ($name + ' 响应壳里 code=401')
+    } else {
+        Add-Note ($name + ' 的 401 响应体在 PS 5.1 里取不到，只验了 HTTP 状态')
+    }
+}
+
 Section '4b. 登录与教学身份'
 
 $loginCode = 'smoke-test-' + [guid]::NewGuid().ToString('N')
@@ -831,12 +857,8 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     # 只写 `-eq ''` 的话 $null 穿不过去，下面会拿着空 token 去发请求。
     Write-Host '  登录没拿到 token，跳过身份条断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
 } else {
-    # 无 token → code = 401（HTTP 状态仍是 200，用响应包里的 code 表达未登录）
-    $noToken = Invoke-Json 'GET' '/api/teach/profile' 60
-    Assert-True ((Get-Field $noToken.Json 'code') -eq 401) 'profile 不带 token 时 code=401' `
-        ("实际 code=" + (Get-Field $noToken.Json 'code'))
-    Assert-True ((Get-Field $noToken.Json 'success') -eq $false) 'profile 不带 token 时 success=false' `
-        ("实际 success=" + (Get-Field $noToken.Json 'success'))
+    # 无 token → Shiro tokenAuthc 拦下：HTTP 401（响应壳 code 也是 401）
+    Assert-Unauthorized (Invoke-Json 'GET' '/api/teach/profile' 60) 'profile 不带 token 时'
 
     # 带 token → 200 + level / streak / streakTarget
     $profileResp = Invoke-Json 'GET' '/api/teach/profile' 60 @{ token = $loginToken }
@@ -858,14 +880,9 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
 # ⚠️ 仍然按 token 分支：拿不到 token（appid/secret 没配）时这一整段跳过，不静默空转。
 Section '4c. 教学问答的 Key 与鉴权'
 
-# 未登录时三个端点都必须是 401（HTTP 状态仍是 200，用响应包里的 code 表达未登录）
-$askNoToken = Invoke-Json 'POST' '/api/teach/ask' 60 $null @{ question = 'probe' }
-Assert-True ((Get-Field $askNoToken.Json 'code') -eq 401) 'ask 不带 token 时 code=401' `
-    ("实际 code=" + (Get-Field $askNoToken.Json 'code'))
-
-$keyNoToken = Invoke-Json 'POST' '/api/teach/apikey' 60 $null @{ apiKey = 'sk-probe' }
-Assert-True ((Get-Field $keyNoToken.Json 'code') -eq 401) 'apikey 不带 token 时 code=401' `
-    ("实际 code=" + (Get-Field $keyNoToken.Json 'code'))
+# 未登录时端点必须 401 —— 由 Shiro 的 tokenAuthc 在过滤链上拦下（HTTP 401 + 响应壳 code=401）
+Assert-Unauthorized (Invoke-Json 'POST' '/api/teach/ask' 60 $null @{ question = 'probe' }) 'ask 不带 token 时'
+Assert-Unauthorized (Invoke-Json 'POST' '/api/teach/apikey' 60 $null @{ apiKey = 'sk-probe' }) 'apikey 不带 token 时'
 
 if ($null -eq $loginToken -or $loginToken -eq '') {
     Write-Host '  登录没拿到 token，跳过问答的鉴权断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow

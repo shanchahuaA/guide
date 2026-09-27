@@ -22,9 +22,11 @@ import java.util.Map;
 /**
  * AI 教学的身份、问答与练习（契约 §7.0 / §7.1 / §7.2 / §7.3 / §7.4 / §7.6）。
  *
- * <p><b>鉴权是手工的</b>：Shiro 过滤链仍是 {@code /** = anon}（收口归 #5），
- * 这里直接校验请求头 {@code token}（占位串，值即 openid）。缺 token 返
- * {@code code = 401}、HTTP 状态仍是 200 —— 前端靠响应包里的 code 判未登录。
+ * <p><b>鉴权：Shiro 过滤链已收口 {@code /api/teach/**}（{@code tokenAuthc}）</b>（2026-09-27 合入）——
+ * 缺 token 或查不到人时由 {@code config/TokenAuthFilter} 直接回 HTTP 401 + 响应壳
+ * {@code code = 401}，请求根本到不了这里。控制器里保留的手工校验（{@code userByToken} /
+ * {@code unauthorized}）只是兜底：过滤链被绕过、或单测直调控制器方法时才会用到；
+ * 它同时负责取出 User 行（等级、Key），所以不能整个删掉。
  */
 @RestController
 public class TeachController {
