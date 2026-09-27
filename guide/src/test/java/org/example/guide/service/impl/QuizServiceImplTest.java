@@ -39,8 +39,8 @@ import static org.mockito.Mockito.when;
  * <p>状态机本身的四条路径在 {@code QuizStreakTest} 里，题库解析与重试在 {@code QuizGeneratorTest} 里；
  * 这里只钉"编排有没有接上"。
  *
- * <p>判题结果的连对/排除集不在响应里（响应只有正确项与解析），所以断言改成**抓写进缓存的那个
- * {@link QuizProgress}** —— 那才是状态真正落地的地方，比断言响应字段更贴事实。
+ * <p>判题响应按契约 §7.3 回带 {@code streak / level / upgraded}，但**排除集只落缓存**，所以
+ * "答对/答错后状态对不对"仍以**抓写进缓存的 {@link QuizProgress}** 为准 —— 那才是状态真正落地的地方。
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -75,7 +75,7 @@ class QuizServiceImplTest {
 
         assertThat(result.getCode()).isEqualTo(200);
         // 票面 AC：/quiz/next 的响应里只有题号 / 题干 / 选项三样，没有答案
-        assertThat(result.getData()).containsOnlyKeys("id", "stem", "options");
+        assertThat(result.getData()).containsOnlyKeys("questionId", "stem", "options");
         assertThat(result.getData().get("options")).isEqualTo(List.of("A", "B", "C", "D"));
     }
 
@@ -87,7 +87,7 @@ class QuizServiceImplTest {
 
         // 反复抽，已答对的题号 0 不该再出现
         for (int i = 0; i < 20; i++) {
-            assertThat(service().next(OPENID).getData().get("id")).isEqualTo(1);
+            assertThat(service().next(OPENID).getData().get("questionId")).isEqualTo(1);
         }
     }
 
@@ -127,11 +127,15 @@ class QuizServiceImplTest {
 
         BaseResult result = service().answer(OPENID, 3, 1);
 
-        // 响应只有正确项与解析（契约 §7.3）—— 连对/等级由 profile 下发
-        assertThat(result.getData()).containsOnlyKeys("correct", "answerIndex", "explanation");
+        // 契约 §7.3：正确项 + 解析 + 作答后的 streak / level / upgraded
+        assertThat(result.getData()).containsOnlyKeys(
+                "correct", "correctIndex", "explanation", "streak", "level", "upgraded");
         assertThat(result.getData().get("correct")).isEqualTo(true);
-        assertThat(result.getData().get("answerIndex")).isEqualTo(1);
+        assertThat(result.getData().get("correctIndex")).isEqualTo(1);
         assertThat(result.getData().get("explanation")).isEqualTo("解析");
+        assertThat(result.getData().get("streak")).isEqualTo(1);
+        assertThat(result.getData().get("level")).isEqualTo(0);
+        assertThat(result.getData().get("upgraded")).isEqualTo(false);
 
         QuizProgress written = capturedProgress();
         assertThat(written.getStreak()).isEqualTo(1);
@@ -160,8 +164,12 @@ class QuizServiceImplTest {
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
         when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(9, new HashSet<>()));
 
-        service().answer(OPENID, 3, 1);
+        BaseResult result = service().answer(OPENID, 3, 1);
 
+        // 响应里的 level / upgraded / streak 也反映这次升级（契约 §7.3）
+        assertThat(result.getData().get("level")).isEqualTo(1);
+        assertThat(result.getData().get("upgraded")).isEqualTo(true);
+        assertThat(result.getData().get("streak")).isEqualTo(0);
         verify(userService).updateLevel(OPENID, 1);
         QuizProgress written = capturedProgress();
         assertThat(written.getStreak()).isZero();

@@ -98,12 +98,12 @@ public class QuizServiceImpl implements IQuizService {
     }
 
     @Override
-    public BaseResult answer(String openid, Integer questionId, Integer optionIndex) {
+    public BaseResult answer(String openid, Integer questionId, Integer choice) {
         User user = userService.findByOpenid(openid);
         if (user == null) {
             return fail("请先登录");
         }
-        if (questionId == null || optionIndex == null) {
+        if (questionId == null || choice == null) {
             return fail("请先选择答案");
         }
 
@@ -114,7 +114,7 @@ public class QuizServiceImpl implements IQuizService {
             return fail("题目已过期，请重新开始");
         }
 
-        boolean correct = optionIndex.equals(question.getAnswerIndex());
+        boolean correct = choice.equals(question.getAnswerIndex());
         QuizStreak.Outcome outcome = QuizStreak.advance(correct, level, questionId, quizProgressCache.get(openid));
         if (outcome.levelUp()) {
             userService.updateLevel(openid, outcome.level());
@@ -124,7 +124,10 @@ public class QuizServiceImpl implements IQuizService {
         QuizAnswerDto dto = new QuizAnswerDto(
                 outcome.correct(),
                 question.getAnswerIndex(),
-                question.getExplanation());
+                question.getExplanation(),
+                outcome.streak(),
+                outcome.level(),
+                outcome.levelUp());
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, dto.toMap());
     }
 

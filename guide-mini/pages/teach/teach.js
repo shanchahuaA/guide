@@ -105,7 +105,7 @@ Page({
       return
     }
     this.setData({ quizLoading: true, quizResult: null, selectedIndex: null })
-    api.request('/api/teach/quiz/next', { header: { token } })
+    api.request('/api/teach/quiz/next', { method: 'POST', header: { token } })
       .then(quiz => this.setData({ quiz: quiz || null, quizLoading: false }))
       .catch(err => {
         this.setData({ quizLoading: false })
@@ -123,7 +123,7 @@ Page({
     api.request('/api/teach/quiz/answer', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') },
-      data: { questionId: quiz.id, optionIndex }
+      data: { questionId: quiz.questionId, choice: optionIndex }
     }).then(result => {
       this.setData({ quizResult: result, selectedIndex: optionIndex })
       // 连对与等级都可能变，就地把身份条刷新（loadProfile 里 quizResult 已在，不会重抽题）

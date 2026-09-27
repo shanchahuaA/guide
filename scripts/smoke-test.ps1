@@ -947,21 +947,21 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $null = & $script:RedisCli DEL $progressKey 2>&1
 
         # 抽题：响应只有题号 / 题干 / 选项，**没有答案**（票面 AC）
-        $quizNext = Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader
+        $quizNext = Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader
         Assert-True ((Get-Field $quizNext.Json 'code') -eq 200) 'quiz/next code=200' `
             ("实际 code=" + (Get-Field $quizNext.Json 'code') + " message=" + (Get-Field $quizNext.Json 'message'))
         $quizNextData = Get-Data $quizNext
-        Assert-True ($null -ne (Get-Field $quizNextData 'id')) 'quiz/next 带题号 id' '响应里没有 id'
+        Assert-True ($null -ne (Get-Field $quizNextData 'questionId')) 'quiz/next 带题号 questionId' '响应里没有 questionId'
         Assert-True ($null -ne (Get-Field $quizNextData 'stem') -and (Get-Field $quizNextData 'stem') -ne '') 'quiz/next 带题干 stem' '响应里没有 stem'
         $quizOptions = As-Array (Get-Field $quizNextData 'options')
         Assert-Equal $quizOptions.Count 4 'quiz/next 带四个选项'
 
         # 响应里**绝不能**有答案字段：抓包就能看到它，下发答案等于把连对白送
         $quizLeaked = @()
-        foreach ($f in @('answerIndex', 'explanation', 'correct', 'answer')) {
+        foreach ($f in @('correctIndex', 'explanation', 'correct', 'answer')) {
             if ($null -ne (Get-Field $quizNextData $f)) { $quizLeaked += $f }
         }
-        Assert-True ($quizLeaked.Count -eq 0) 'quiz/next 响应不含任何答案字段（answerIndex / explanation / correct）' `
+        Assert-True ($quizLeaked.Count -eq 0) 'quiz/next 响应不含任何答案字段（correctIndex / explanation / correct）' `
             ('多带了：' + ($quizLeaked -join ', '))
         $quizKeys = @($quizNextData.PSObject.Properties | ForEach-Object { $_.Name })
         Assert-Equal $quizKeys.Count 3 'quiz/next 只有题号 / 题干 / 选项三个键' ('实际键：' + ($quizKeys -join ', '))
@@ -970,10 +970,10 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $quizFailed = $false
         $lastAnswer = $null
         for ($n = 1; $n -le 10; $n++) {
-            $q = Get-Data (Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader)
-            $qId = Get-Field $q 'id'
+            $q = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader)
+            $qId = Get-Field $q 'questionId'
             $correctIndex = ([int]$qId) % 4
-            $ans = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $qId; optionIndex = $correctIndex })
+            $ans = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $qId; choice = $correctIndex })
             if ((Get-Field $ans 'correct') -ne $true) {
                 $quizFailed = $true
                 Add-Fail ('第 ' + $n + ' 题按已知答案作答却判错') ('id=' + $qId + ' 正确项=' + $correctIndex + ' 实际 correct=' + (Format-Actual (Get-Field $ans 'correct')))
@@ -982,7 +982,11 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
             $lastAnswer = $ans
         }
         if (-not $quizFailed) {
-            # 题型 AC：等级涨 1、连对归零。判题响应里不带这两样，看身份条（profile 是唯一权威）
+            # 契约 §7.3：判题响应自带 correctIndex / streak / level / upgraded，前端据此就地刷身份条
+            foreach ($f in @('correctIndex', 'streak', 'level', 'upgraded')) {
+                Assert-True ($null -ne (Get-Field $lastAnswer $f)) ('quiz/answer 带 ' + $f) ('响应里没有 ' + $f)
+            }
+            # 题型 AC：等级涨 1、连对归零（身份条是权威，再用 profile 复核一份）
             $expectedLevel = [Math]::Min($startLevel + 1, 2)
             $profileAfterQuiz = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
             Assert-Equal (Get-Field $profileAfterQuiz 'level') $expectedLevel ('连对满 10 后 level = ' + $expectedLevel)

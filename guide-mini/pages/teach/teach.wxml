@@ -44,13 +44,13 @@
   <block wx:elif="{{quiz}}">
     <view class="quiz-stem">{{quiz.stem}}</view>
 
-    <view class="quiz-option {{quizResult ? (index === quizResult.answerIndex ? 'is-correct' : (index === selectedIndex ? 'is-wrong' : '')) : ''}}"
+    <view class="quiz-option {{quizResult ? (index === quizResult.correctIndex ? 'is-correct' : (index === selectedIndex ? 'is-wrong' : '')) : ''}}"
           wx:for="{{quiz.options}}" wx:key="index"
           data-index="{{index}}" bindtap="onChooseOption">{{item}}</view>
 
     <view class="quiz-result" wx:if="{{quizResult}}">
       <text class="quiz-verdict {{quizResult.correct ? 'is-right' : 'is-wrong'}}">{{quizResult.correct ? '答对了' : '答错了'}}</text>
-      <text class="quiz-explanation">正确答案：{{quiz.options[quizResult.answerIndex]}}</text>
+      <text class="quiz-explanation">正确答案：{{quiz.options[quizResult.correctIndex]}}</text>
       <text class="quiz-explanation">{{quizResult.explanation}}</text>
       <button class="btn" bindtap="onNextQuestion">下一题</button>
     </view>

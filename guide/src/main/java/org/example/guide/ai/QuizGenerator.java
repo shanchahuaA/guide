@@ -26,39 +26,45 @@ import java.util.List;
 @Component
 public class QuizGenerator {
 
-    /** 每级题目数（票面口径）：向模型要的数量 */
+    /** 每级题目数（契约 §9.3 / 票面）：向模型要的数量 */
     static final int QUESTIONS_PER_LEVEL = 30;
 
     /**
-     * 题库**至少**要有的题数。这不是"向模型要多少"（那是 {@link #QUESTIONS_PER_LEVEL}），
-     * 而是"少于这个数就没法用"：连对 10 题升一级，题库短于 10 时一个周期都走不完；
-     * 而"本周期内已答对的题不再出"又要求周期内不重复出题 —— 两者叠加，短题库会让抽题无解。
-     * 所以解析出来少于它就直接当这次生成失败、走重试，绝不把短题库写进缓存。
+     * 题库**至少**要有的题数。契约「每级 30 题」是硬口径，所以它等于 {@link #QUESTIONS_PER_LEVEL} ——
+     * 解析出来少于这个数就当这次生成失败、走重试，绝不把短题库写进缓存。
      *
-     * <p>数值与 {@code QuizStreak.TARGET} 一致，但**不在 ai 包里反向依赖 service 包**去引用它
-     * （那会让 ai 与 service 互相依赖），所以这里保留一个字面量并在两处注释里对齐。
+     * <p>（短题库另有隐患：连对 10 题升一级，而"本周期内已答对的题不再出"要求周期内不重复，
+     * 题库短于一个周期会让抽题无解。）
      */
-    static final int MIN_QUESTIONS = 10;
+    static final int MIN_QUESTIONS = QUESTIONS_PER_LEVEL;
 
     /** 四选一 */
     private static final int OPTION_COUNT = 4;
 
-    /** 最多调几次。首次 + 两次重试 */
-    static final int MAX_ATTEMPTS = 3;
+    /** 最多调几次（契约 §7.5「解析连败两次」）：首次失败后重试一次，再败即放弃 */
+    static final int MAX_ATTEMPTS = 2;
 
     /**
      * 系统提示词。**必须出现 "json" 字样** —— DeepSeek 的 {@code json_object} 模式会校验这一点，
      * 提示词里没有 json 时请求会被直接拒掉。
+     *
+     * <p>第 6 条的**分级考察点写死**在这里（契约 Q35、CONTEXT.md 题库节）：模型的等级自判不可靠，
+     * 想让三级的题真的不同，就得把"某一级考什么"钉进提示词。数据侧
+     * {@link ItemContextBuilder#buildAll} 已把名称/重量/生态/生熟数值/持续时间都喂进来。
      */
     private static final String SYSTEM_PROMPT = """
             你是 PEAK 游戏的出题老师，负责根据给定的图鉴数据出题，只返回 json，不要任何多余文字。
 
             要求：
-            1. 题量以用户要求为准，一次至少 10 道，尽量凑够要求的数量。
+            1. 题量以用户要求为准，一次至少 30 道，尽量凑够要求的数量。
             2. 题目必须能在给定数据里找到依据，不要编造物品或数值。
             3. 每题给一个题干、恰好四个选项、一个正确项下标（0 到 3）、一段解析。
             4. 四个选项要似是而非，干扰项可以取同类的另一个物品或相近的数值。
             5. 解析简短点题即可，说明依据。
+            6. 难度按用户给的等级分级，考察点写死如下，严格按该等级的考察点出题，不要越级：
+               - 等级 0（菜鸟）：考图标与名称；
+               - 等级 1（入门）：考重量与生态；
+               - 等级 2（高手）：考生熟数值与持续时间。
 
             返回的 json 结构（严格遵守）：
             {"questions":[{"stem":"题干","options":["A","B","C","D"],"answerIndex":0,"explanation":"解析"}]}
@@ -77,31 +83,29 @@ public class QuizGenerator {
      *
      * @param apiKey 用户自己的 DeepSeek Key（服务端不持有 Key）
      * @param items  全量图鉴条目（来自图鉴缓存）
-     * @param level  等级，仅用于提示词里的一句上下文
+     * @param level  等级，写进提示词决定考察点（分级依据见 {@code SYSTEM_PROMPT} 第 6 条）
      * @return 解析出的题目，题号按顺序重新编号（丢弃解析不了的题目后从 0 连续）；数量不少于 {@link #MIN_QUESTIONS}
      * @throws AiException 调用失败（不重试），或重试 {@link #MAX_ATTEMPTS} 次仍解析不出够用的题目
      */
     public List<QuizQuestion> generate(String apiKey, List<Item> items, int level) {
         String context = ItemContextBuilder.buildAll(items);
-        String userPrompt = "请根据下面的图鉴数据出 " + QUESTIONS_PER_LEVEL + " 道题（面向等级 " + level + " 的玩家）：\n\n" + context;
+        String userPrompt = "请根据下面的图鉴数据出 " + QUESTIONS_PER_LEVEL + " 道题"
+                + "（面向等级 " + level + " 的玩家，按该等级的考察点出题）：\n\n" + context;
 
-        AiException last = null;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             // 调用的 AiException 不 catch，直接冒出去：Key 无效重试也是无效
             String raw = deepSeekClient.chatJson(apiKey, SYSTEM_PROMPT, userPrompt);
             try {
                 List<QuizQuestion> questions = parse(raw);
-                // 题数不够也当失败重试：短题库会让"已答对的题不再出"在一个周期内无题可出
-                if (questions.size() < MIN_QUESTIONS) {
-                    last = new AiException(ResultCodeEnum.FAILURE.getCode(), "AI 出的题太少，请重试", null);
-                    continue;
+                // 题数不够也当失败重试：契约「每级 30 题」是硬口径
+                if (questions.size() >= MIN_QUESTIONS) {
+                    return questions;
                 }
-                return questions;
-            } catch (AiException e) {
-                last = e;
+            } catch (AiException ignored) {
+                // 解析失败也走重试；败到上限后统一报契约 §7.5 的文案
             }
         }
-        throw last;
+        throw new AiException(ResultCodeEnum.FAILURE.getCode(), "AI 出题失败，请重试", null);
     }
 
     /**

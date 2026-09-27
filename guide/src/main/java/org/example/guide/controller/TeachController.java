@@ -101,7 +101,7 @@ public class TeachController {
      *
      * <p>题库懒生成在 {@code IQuizService.next} 里：该级题库不在缓存时才调大模型。
      */
-    @GetMapping("/api/teach/quiz/next")
+    @PostMapping("/api/teach/quiz/next")
     public BaseResult quizNext(@RequestHeader(value = "token", required = false) String token) {
         User user = userByToken(token);
         if (user == null) {
@@ -111,9 +111,9 @@ public class TeachController {
     }
 
     /**
-     * 作答（契约 §7.3）。body 传 {@code {questionId, optionIndex}}，对错由后端比对下标。
+     * 作答（契约 §7.3）。body 传 {@code {questionId, choice}}，对错由后端比对下标。
      *
-     * <p>返回里带正确项与解析，同时带作答后的 {@code streak / level / levelName} ——
+     * <p>返回里带正确项与解析，同时带作答后的 {@code streak / level / upgraded} ——
      * 前端据此就地把身份条刷新，不必再打一次 profile。
      */
     @PostMapping("/api/teach/quiz/answer")
@@ -123,7 +123,7 @@ public class TeachController {
         if (user == null) {
             return unauthorized();
         }
-        return quizService.answer(user.getOpenid(), asInt(body, "questionId"), asInt(body, "optionIndex"));
+        return quizService.answer(user.getOpenid(), asInt(body, "questionId"), asInt(body, "choice"));
     }
 
     /** JSON 体里的数字可能是 Integer / Double / String（前端序列化不定），统一收敛成 Integer */

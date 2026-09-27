@@ -21,10 +21,10 @@ public interface IQuizService {
     /**
      * 判题并推进连对状态。对错由后端比对下标，不交给大模型。
      *
-     * @param questionId  抽题时下发的题号
-     * @param optionIndex 用户选择的下标（0-3）
+     * @param questionId 抽题时下发的题号（契约 §7.3 的 {@code questionId}）
+     * @param choice     用户选择的下标（0-3，契约 §7.3 的 {@code choice}）
      */
-    BaseResult answer(String openid, Integer questionId, Integer optionIndex);
+    BaseResult answer(String openid, Integer questionId, Integer choice);
 
     /** 当前连对数，给身份条用；没有进度时返回 0 */
     int streakOf(String openid);
