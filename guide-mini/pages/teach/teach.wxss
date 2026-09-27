@@ -106,3 +106,65 @@ page {
   /* 答案是多行长文本，保留换行 */
   white-space: pre-wrap;
 }
+
+/* ── 「练习」分段（契约 §7.3）──────────────────────────────────────────── */
+
+.quiz-stem {
+  font-size: 30rpx;
+  line-height: 1.6;
+  color: #2b2823;
+  margin-bottom: 20rpx;
+}
+
+.quiz-option {
+  margin-bottom: 16rpx;
+  padding: 22rpx 24rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #3d3830;
+  background: #f7f4ea;
+  border: 2rpx solid #e6e0cc;
+  border-radius: 16rpx;
+}
+
+/* 答完才上色：正确答案绿、选错的红。未作答时全部是中性色 */
+.quiz-option.is-correct {
+  color: #2f6b3a;
+  background: #eaf4ec;
+  border-color: #b8d8bf;
+}
+
+.quiz-option.is-wrong {
+  color: #9b3b33;
+  background: #f7eae8;
+  border-color: #e0b7b1;
+}
+
+.quiz-result {
+  margin-top: 8rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid #efe9d6;
+}
+
+.quiz-verdict {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.quiz-verdict.is-right {
+  color: #2f6b3a;
+}
+
+.quiz-verdict.is-wrong {
+  color: #9b3b33;
+}
+
+.quiz-explanation {
+  display: block;
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: #6b6353;
+  margin-bottom: 8rpx;
+}

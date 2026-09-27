@@ -72,6 +72,25 @@ public final class ItemContextBuilder {
     }
 
     /**
+     * 全量条目，不做任何筛选 —— 出题（#42）要的上下文。
+     *
+     * <p>与 {@link #build} 的差别只在"筛不筛"：问答按问题粗筛是为了省 token，
+     * 而出题要在**全部 134 条**里挑素材，筛掉一部分等于凭空缩小出题范围。
+     * 与 {@link #build} 撞名（一个筛、一个不筛），所以另起一个名字，不靠 boolean 开关糊在一起。
+     */
+    public static String buildAll(List<Item> items) {
+        if (items == null || items.isEmpty()) {
+            return "（图鉴数据暂时不可用）";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("以下是图鉴的全部 ").append(items.size()).append(" 条数据：\n\n");
+        for (Item item : items) {
+            sb.append(render(item)).append('\n');
+        }
+        return sb.toString();
+    }
+
+    /**
      * 名字命中：中文名或英文名出现在问题里、或问题里的词出现在名字里。
      *
      * <p>两个方向都要判 —— "蘑菇"是条目"喇叭菇"的**后半截**，只判"名字出现在问题里"会漏；

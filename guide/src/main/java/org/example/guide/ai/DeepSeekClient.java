@@ -71,12 +71,32 @@ public class DeepSeekClient {
      * @throws AiException 调用失败。**错误码映射只在这一处**，见 {@link #toFailure}
      */
     public String chat(String apiKey, String systemPrompt, String userPrompt) {
+        return chat(apiKey, systemPrompt, userPrompt, false);
+    }
+
+    /**
+     * 和 {@link #chat} 同一件事，只多上送 {@code response_format = {"type":"json_object"}}。
+     *
+     * <p>出题（#42）要的是一段**能解析成题库的 JSON**，自然语言答案没法用。开启 JSON 模式后
+     * DeepSeek 只吐一个 JSON 对象（注意：它的 {@code json_object} 模式要求提示词里出现 "json" 字样，
+     * 见 {@code QuizGenerator} 的系统提示词）。
+     *
+     * <p>解析与重试不在这里 —— 那是出题方的编排，本类只负责"用 JSON 模式调一次"。
+     */
+    public String chatJson(String apiKey, String systemPrompt, String userPrompt) {
+        return chat(apiKey, systemPrompt, userPrompt, true);
+    }
+
+    private String chat(String apiKey, String systemPrompt, String userPrompt, boolean jsonMode) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model);
         body.put("stream", STREAM);
         body.put("messages", List.of(
                 Map.of("role", "system", "content", systemPrompt),
                 Map.of("role", "user", "content", userPrompt)));
+        if (jsonMode) {
+            body.put("response_format", Map.of("type", "json_object"));
+        }
 
         RawResponse response = exchange(apiKey, body);
         return readContent(response);

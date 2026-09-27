@@ -1,0 +1,850 @@
+﻿# 工作文件，不提交（见 .gitignore）。PEAK 游戏本体官方词条表，不进仓库。
+# 来源：D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\resources.assets → SerializedTermsData（官方共 15 种语言，本表只留英文与简体中文）
+# 游戏版本：2.4.c cd63edc4c。偏移量随版本变化，本表由 gen_peaks_terms.py 按标记重新定位生成。
+# 表头三列：key（游戏词条键）, en（英文原值）, zh（官方简体译名）。
+key,en,zh
+CURRENT_LANGUAGE,English,简体中文
+HOSTGAME,HOST GAME,创建游戏
+PLAYOFFLINE,PLAY OFFLINE,离线游玩
+SETTINGS,SETTINGS,设置
+CREDITS,CREDITS,制作人员名单
+QUIT,QUIT,退出
+NEWISLANDIN,NEW ISLAND IN,新岛屿即将出现：
+AGAMEMADEBY,A GAME MADE BY,制作方
+ACOLLABBETWEEN,A COLLAB BETWEEN,合作方
+THANKSFORPLAYING,THANKS FOR PLAYING!,感谢游玩！
+THISGAMEUSESVOICECHAT,THIS GAME USES VOICE CHAT,本游戏包含语音聊天功能
+PLEASEUSE,PLEASE USE HEADPHONES AND A MICROPHONE,请使用耳机与麦克风获取更佳体验
+SELECTMIC,SELECT MICROPHONE,选择麦克风
+CONTINUE,CONTINUE,继续
+VERSIONOUTOFDATE,VERSION OUT OF DATE,版本过时
+CLOSETHEGAME,Close and update the game.,关闭并更新游戏。
+OK,OK,好
+RESUME,RESUME,恢复
+INVITEFRIENDS,INVITE FRIENDS,邀请好友
+ACCOLADES,ACCOLADES,荣誉
+CONTROLS,CONTROLS,操作方式
+LEAVEGAME,LEAVE GAME,离开游戏
+MOVE,MOVE,移动
+AIM,AIM,瞄准
+CLIMB,CLIMB,攀爬
+HELPINGHAND,HELPING HAND,伸出援手
+INTERACT,INTERACT,互动
+DROPTHROW,DROP / THROW (HOLD),丢下/投掷（按住）
+JUMP,JUMP,跳跃
+CROUCH,CROUCH,蹲伏
+SPRINTLEAP,SPRINT / LEAP (WHILE CLIMBING),冲刺/跳跃（攀爬时）
+PING,PING LOCATION,标记位置
+EMOTE,EMOTE,表情
+BACK,BACK,返回
+CONTROLSNOTSUPPORTED,"Controls remapping is not currently supported.
+You can use Steam Input to remap gamepads.","目前尚不支持控制按键重设。
+您可使用 Steam Input 对手柄进行重映射。"
+PEAKSSUMMITTTED,PEAKS SUMMITTED: #,已登上顶峰：#
+NAME_PARTICIPATION,PARTICIPATION BADGE,参与奖章
+DESC_PARTICIPATION,Have a friend escape the island without you.,让一名好友逃离岛屿而不带上你。
+NAME_BEACHCOMBER,BEACHCOMBER BADGE,赶海人奖章
+DESC_BEACHCOMBER,Climb past the SHORE.,爬过海岸。
+NAME_TRAILBLAZER,TRAILBLAZER BADGE,辟路者奖章
+DESC_TRAILBLAZER,Climb past the TROPICS.,爬过雨林。
+NAME_ALPINIST,ALPINIST BADGE,登山家奖章
+DESC_ALPINIST,Climb past the ALPINE.,爬过雪山。
+NAME_VOLCANOLOGY,VOLCANOLOGY BADGE,火山学奖章
+DESC_VOLCANOLOGY,Climb past the CALDERA.,爬过火山。
+NAME_PEAKBADGE,PEAK BADGE,顶峰奖章
+DESC_PEAKBADGE,Reach the PEAK.,抵达顶峰。
+NAME_COOKING,COOKING BADGE,烹饪奖章
+DESC_COOKING,Cook 20 meals at campfires.,在营火处做 20 次饭。
+NAME_HAPPY CAMPER,HAPPY CAMPER BADGE,欢乐露营奖章
+DESC_HAPPY CAMPER,Receive 5 Morale Boosts from campfires.,从营火处获得 5 次士气提升。
+NAME_BOULDERING,BOULDERING BADGE,攀岩奖章
+DESC_BOULDERING,Place 10 pitons.,放置 10 根岩钉。
+NAME_TOXICOLOGY,TOXICOLOGY BADGE,毒理学奖章
+DESC_TOXICOLOGY,Restore 200 total poison by using items.,使用道具恢复总计 200 点中毒值。
+NAME_FORAGING,FORAGING BADGE,觅食奖章
+DESC_FORAGING,Eat 5 different berries in a single expedition.,单次探险食用 5 种不同浆果。
+NAME_ESOTERICA,ESOTERICA BADGE,玄学奖章
+DESC_ESOTERICA,Obtain a mystical item.,获得一件神秘道具。
+NAME_LONE WOLF,LONE WOLF BADGE,独狼奖章
+DESC_LONE WOLF,Escape the island in a solo expedition.,在单人探险中逃离岛屿。
+NAME_CLUTCH,CLUTCH BADGE,救星奖章
+DESC_CLUTCH,Resurrect 3 scouts in a single expedition.,单次探险复活 3 名童子军。
+NAME_BALLOONBADGE,BALLOON BADGE,气球奖章
+DESC_BALLOONBADGE,Escape the island without taking fall damage.,逃离岛屿且未遭受掉落伤害。
+NAME_LEAVE NO TRACE,LEAVE NO TRACE BADGE,环保奖章
+DESC_LEAVE NO TRACE,Escape the island without placing anything on the mountain.,逃离岛屿且未在山上放置任何东西。
+NAME_HASTY,HASTY BADGE,匆忙奖章
+DESC_HASTY,Escape the island in under an hour.,在一小时内逃离岛屿。
+NAME_BINGBONGBADGE,BING BONG BADGE,宾邦奖章
+DESC_BINGBONGBADGE,Help Bing Bong escape the island.,帮助宾邦逃离岛屿。
+NAME_NATURALIST,NATURALIST BADGE,自然主义奖章
+DESC_NATURALIST,Escape the island without eating any packaged food.,逃离岛屿且未食用任何包装食品。
+NAME_GOURMAND,GOURMAND BADGE,美食家奖章
+DESC_GOURMAND,"Escape the island after cooking and eating a coconut half, a honeycomb, a yellow winterberry, and an egg.",逃离岛屿前烹饪并食用半边椰子、蜂巢蜜、黄雪莓、煎蛋。
+NAME_MYCOLOGY,MYCOLOGY BADGE,真菌学奖章
+DESC_MYCOLOGY,Eat four different non-toxic mushrooms in a single expedition.,单次探险食用四种无毒蘑菇。
+NAME_FIRST AID,FIRST AID BADGE,急救奖章
+DESC_FIRST AID,Heal your friends for 100 points of injury in a single expedition.,单次探险为好友治疗 100 点伤害。
+NAME_SURVIVALIST,SURVIVALIST BADGE,生存专家奖章
+DESC_SURVIVALIST,Escape the island without ever losing consciousness.,逃离岛屿且未曾失去意识。
+NAME_ANIMAL SERENADING,ANIMAL SERENADING BADGE,对牛弹琴奖章
+DESC_ANIMAL SERENADING,Play the bugle for a capybara.,为水豚演奏喇叭。
+NAME_ARBORIST,ARBORIST BADGE,树艺师奖章
+DESC_ARBORIST,Reach the top of a really big tree.,登顶一棵真正够大的树。
+NAME_MENTORSHIP,MENTORSHIP BADGE,师徒奖章
+DESC_MENTORSHIP,Have a 1-on-1 with the Scoutmaster.,和童军领队来个一对一。
+NAME_KNOT TYING,KNOT TYING BADGE,打结奖章
+DESC_KNOT TYING,Place 100m of rope in a single expedition.,单次探险放置 100m 绳索。
+NAME_EMERGENCY PREPAREDNESS,EMERGENCY PREPAREDNESS BADGE,应急准备奖章
+DESC_EMERGENCY PREPAREDNESS,Heal an unconscious friend with an item to save them from death.,使用道具救治一名昏迷好友助其离死亡。
+NAME_HIGH ALTITUDE,HIGH ALTITUDE BADGE,高海拔奖章
+DESC_HIGH ALTITUDE,Climb 5000m total.,总计攀爬 5000m。
+NAME_PLUNDERER,PLUNDERER BADGE,盗贼奖章
+DESC_PLUNDERER,Open 15 luggages in a single expedition.,单次探险开启 15 件行李箱。
+NAME_BOOKWORM,BOOKWORM BADGE,书呆子奖章
+DESC_BOOKWORM,Read the Scoutmaster’s final journal entry.,阅读童军领队最后的日志记录。
+NAME_ENDURANCE,ENDURANCE BADGE,坚韧奖章
+DESC_ENDURANCE,Climb 50m upwards without touching the ground.,未接触地面向上攀爬 50m。
+BADGELOCKED,You don't have this badge yet!,尚未获得此奖章！
+NAME_AIRLINE FOOD,AIRLINE FOOD,飞机餐
+NAME_ANTI-ROPE SPOOL,ANTI-ROPE SPOOL,反重绳索
+NAME_ANTIDOTE,ANTIDOTE,解毒剂
+NAME_GREEN CRISPBERRY,GREEN CRISPBERRY,绿脆莓
+NAME_RED CRISPBERRY,RED CRISPBERRY,红脆莓
+NAME_YELLOW CRISPBERRY,YELLOW CRISPBERRY,黄脆莓
+NAME_BACKPACK,BACKPACK,背包
+NAME_BANDAGES,BANDAGES,绷带
+NAME_BEEHIVE,BEEHIVE,蜂巢
+NAME_BLUE BERRYNANA,BLUE BERRYNANA,蓝莓蕉
+NAME_BROWN BERRYNANA,BROWN BERRYNANA,棕莓蕉
+NAME_BERRYNANA PEEL,BERRYNANA PEEL,莓蕉皮
+NAME_PINK BERRYNANA,PINK BERRYNANA,粉莓蕉
+NAME_YELLOW BERRYNANA,YELLOW BERRYNANA,黄莓蕉
+NAME_BING BONG,BING BONG,宾邦
+NAME_BINOCULARS,BINOCULARS,望远镜
+NAME_BOUNCE FUNGUS,BOUNCE FUNGUS,弹力菇
+NAME_TICK,TICK,蜱虫
+NAME_BUGLE,BUGLE,喇叭
+NAME_BUGLE OF FRIENDSHIP,BUGLE OF FRIENDSHIP,友谊喇叭
+NAME_SCOUTMASTER'S BUGLE,SCOUTMASTER'S BUGLE,童军领队的喇叭
+NAME_CHAIN LAUNCHER,CHAIN LAUNCHER,锁链发射器
+NAME_PITON,PITON,岩钉
+NAME_BLACK CLUSTERBERRY,BLACK CLUSTERBERRY,黑葚莓
+NAME_RED CLUSTERBERRY,RED CLUSTERBERRY,红葚莓
+NAME_YELLOW CLUSTERBERRY,YELLOW CLUSTERBERRY,黄葚莓
+NAME_GREEN CLUSTERBERRY,GREEN CLUSTERBERRY,青葚莓
+NAME_COMPASS,COMPASS,罗盘
+NAME_CURE-ALL,CURE-ALL,万灵药
+NAME_CURSED SKULL,CURSED SKULL,诅咒头骨
+NAME_EGG,EGG,煎蛋
+NAME_ENERGY DRINK,ENERGY DRINK,能量饮料
+NAME_STICK,STICK,棍子
+NAME_FIRST AID KIT,FIRST AID KIT,急救箱
+NAME_FLARE,FLARE,照明棒
+NAME_GRANOLA BAR,GRANOLA BAR,燕麦棒
+NAME_GUIDEBOOK,GUIDEBOOK,旅行指南
+NAME_TORN PAGE,TORN PAGE,撕下的书页
+NAME_SCROLL,SCROLL,卷轴
+NAME_BLOWGUN,BLOWGUN,吹箭筒
+NAME_REMEDY FUNGUS,REMEDY FUNGUS,灵药菇
+NAME_HEAT PACK,HEAT PACK,暖宝宝
+NAME_COCONUT,COCONUT,椰子
+NAME_COCONUT HALF,COCONUT HALF,半边椰子
+NAME_HONEYCOMB,HONEYCOMB,蜂巢蜜
+NAME_GREEN KINGBERRY,GREEN KINGBERRY,青荔莓
+NAME_PURPLE KINGBERRY,PURPLE KINGBERRY,紫荔莓
+NAME_YELLOW KINGBERRY,YELLOW KINGBERRY,黄荔莓
+NAME_LANTERN,LANTERN,提灯
+NAME_FAERIE LANTERN,FAERIE LANTERN,仙子提灯
+NAME_BIG LOLLIPOP,BIG LOLLIPOP,大棒棒糖
+NAME_MAGIC BEAN,MAGIC BEAN,魔豆
+NAME_MARSHMALLOW,MARSHMALLOW,棉花糖
+NAME_MEDICINAL ROOT,MEDICINAL ROOT,药用根茎
+NAME_MEGAPHONE,MEGAPHONE,扩音器
+NAME_CHUBBY SHROOM,CHUBBY SHROOM,梨鲍菇
+NAME_CLUSTER SHROOM,CLUSTER SHROOM,银针菇
+NAME_WEIRD SHROOM,WEIRD SHROOM,诡异菇
+NAME_BUGLE SHROOM,BUGLE SHROOM,喇叭菇
+NAME_BUTTON SHROOM,BUTTON SHROOM,馒头菇
+NAME_NAPBERRY,NAPBERRY,晚安莓
+NAME_BIG EGG,BIG EGG,好大蛋
+NAME_PANDORA'S LUNCHBOX,PANDORA'S LUNCHBOX,潘多拉餐盒
+NAME_PASSPORT,PASSPORT,护照
+NAME_SCORCHBERRY,SCORCHBERRY,火烧莓
+NAME_PIRATE'S COMPASS,PIRATE'S COMPASS,海盗罗盘
+NAME_PORTABLE STOVE,PORTABLE STOVE,便携火炉
+NAME_ROPE CANNON,ROPE CANNON,绳索炮
+NAME_ANTI-ROPE CANNON,ANTI-ROPE CANNON,反重绳索炮
+NAME_ROPE SPOOL,ROPE SPOOL,绳索
+NAME_SCOUT COOKIES,SCOUT COOKIES,童军饼干
+NAME_SCOUT EFFIGY,SCOUT EFFIGY,童军雕像
+NAME_SHELF FUNGUS,SHELF FUNGUS,踏板菇
+NAME_CONCH,CONCH,海螺
+NAME_SPORTS DRINK,SPORTS DRINK,运动饮料
+NAME_STONE,STONE,石头
+NAME_TRAIL MIX,TRAIL MIX,混合坚果
+NAME_WARP COMPASS,WARP COMPASS,曲迁罗盘
+NAME_ORANGE WINTERBERRY,ORANGE WINTERBERRY,橙雪莓
+NAME_YELLOW WINTERBERRY,YELLOW WINTERBERRY,黄雪莓
+EAT,eat,吃
+FEED TO #TARGETCHAR,feed to #targetchar,喂给 #targetchar
+TIE KNOT,tie knot,打结
+SPOOL,spool,卷起
+DRINK,drink,喝
+HEAL INJURIES,heal injuries,疗伤
+HEAL #TARGETCHAR,heal #targetchar,治疗 #targetchar
+LOOK,look,察看
+USE,use,使用
+PLAY,play,演奏
+SHOOT,shoot,发射
+SET,set,设置
+COMMUNE,commune,通灵
+PLANT,plant,种植
+LIGHT,light,点燃
+OPEN/CLOSE,open/close,翻开/合上
+FLIP PAGE,flip page,翻页
+INSPECT,inspect,检查
+OPEN,open,打开
+FIRE,fire,开火
+HEAT UP,heat up,加热
+HEAT UP #TARGETCHAR,heat up #targetchar,为 #targetchar 供暖
+LICK,lick,舔
+OPEN?,open?,开启？
+PLACE,place,放置
+REVIVE,revive,复活
+WARP,warp,曲迁
+USE ON #TARGETCHAR,use on #targetchar,用在 #targetchar 身上
+DROP,drop,丢下
+THROW,throw,投掷
+HOLD,hold,抓住
+LUNGE,lunge,猛扑
+SETPITON,set piton,设置岩钉
+MORALEBOOST,MORALE BOOST!!,士气高扬！！
+GIVEUP,give up,放弃
+DEAD,DEAD,你死了
+GHOSTMESSAGE,you are a ghost,你处于鬼魂状态
+RESURRECTMESSAGE,get resurrected at the statue!,到雕像处复活吧！
+SPECTATING,spectating:,观看：
+CROSSED ARMS,crossed arms,叉手手
+DANCE,dance,跳舞
+PLAY DEAD,play dead,装死
+NO-NO,no-no,不行不行
+SALUTE,salute,敬礼
+SHRUG,shrug,耸肩
+THINK,think,思考
+THUMBS UP,thumbs up,大拇哥
+WEARBACKPACK,wear backpack,背上背包
+STASHITEM,stash<br>#,存放<br>#
+TAKEITEM,take<br>#,拿取<br>#
+COOKED_COOKED,COOKED #,#烧熟了
+COOKED_WELLDONE,WELL-DONE #,#烧透了
+COOKED_BURNT,BURNT #,#烧糊了
+COOKED_INCINERATED,INCINERATED #,#烧焦了
+THEFOGRISES,THE FOG RISES...,大雾升起......
+BOARDINGPASS,BOARDING PASS,登机证
+PASSENGER,PASSENGER:,乘客：
+GATE,GATE:,登机口：
+FROM,FROM:,出发地：
+TO,TO:,目的地：
+REWARD,REWARD:,奖励：
+ANDALLOTHER,And all previous modifiers.,以及所有修正项。
+START,START,启程
+LOADING,LOADING,加载中
+PASSPORT,PASSPORT,护照
+NATIONALITY,Nationality,国籍
+NAME,Name,姓名
+PASSPORTNO,Passport no.,护照号码
+SHORE,SHORE,海岸
+TROPICS,TROPICS,雨林
+ALPINE,ALPINE,雪山
+CALDERA,CALDERA,火山
+THE KILN,THE KILN,熔炉
+PEAK,PEAK,顶峰
+DAY,Day #,第#日
+ONE,One,一
+TWO,Two,二
+THREE,Three,三
+FOUR,Four,四
+FIVE,Five,五
+SIX,Six,六
+SEVEN,Seven,七
+EIGHT,Eight,八
+NINE,Nine,九
+TEN,Ten,十
+YOUPEAKED,YOU PEAKED,登顶成功
+LEFTTODIE,<size=125%>YOUR FRIENDS<br>LEFT YOU TO DIE,<size=125%>朋友们</size><br>将你留下来等死
+BODYNEVERFOUND,YOUR BODY WAS<br><size=125%>NEVER FOUND,<size=125%>再未有人</size><br>见过你的身影
+SCOUTINGREPORT,SCOUTING REPORT,童军汇报
+TIME,TIME,用时
+TIMELINE,TIMELINE,纪时表
+NEWBADGES,NEW BADGES,新奖章
+NEXT,NEXT,继续
+NEWHAT,NEW HAT!,新的帽子！
+NEWLOOK,NEW LOOK!,新的表情！
+NEWFIT,NEW FIT!,新的衣服！
+UNLOCKED,# UNLOCKED,# 已解锁
+ASCENTSUNLOCKED,ASCENTS UNLOCKED,天阶模式已解锁
+ASCENTSUNLOCKEDTEXT,Ready for a greater challenge? Ascents add modifiers that make summiting the PEAK more difficult.<br><br>Set your Ascent Level at the Airport Kiosk!,准备好迎接更大的挑战了吗？天阶模式能为你前往顶峰的征途增添更多挑战。<br><br>在机场终端设置想要征服的天阶等级吧！
+PROMOTEDTO,PROMOTED TO:,晋升至：
+NEWSASH,NEW SASH!,新的肩带！
+TENDERFOOT,TENDERFOOT,菜鸟新人
+ASCENT 1,ASCENT 1,天阶 1
+ASCENT 2,ASCENT 2,天阶 2
+ASCENT 3,ASCENT 3,天阶 3
+ASCENT 4,ASCENT 4,天阶 4
+ASCENT 5,ASCENT 5,天阶 5
+ASCENT 6,ASCENT 6,天阶 6
+ASCENT 7,ASCENT 7,天阶 7
+ASCENT 8,ASCENT 8,天阶 8
+SCOUT,SCOUT,童子军
+TADPOLE SCOUT,TADPOLE SCOUT,蝌蚪童军
+RABBIT SCOUT,RABBIT SCOUT,狡兔童军
+RACCOON SCOUT,RACCOON SCOUT,浣熊童军
+MULE SCOUT,MULE SCOUT,马骡童军
+KANGAROO SCOUT,KANGAROO SCOUT,袋鼠童军
+OWL SCOUT,OWL SCOUT,鸮鹰童军
+WOLF SCOUT,WOLF SCOUT,野狼童军
+GOAT SCOUT,GOAT SCOUT,山羊童军
+DESC_TENDERFOOT,CLIMBING TAKES LESS STAMINA. HUNGER GROWS MORE SLOWLY. NO TIME LIMIT.,攀爬消耗体力较少；饥饿速度较慢；无时间限制。
+DESC_PEAK,THE ISLAND'S DEFAULT DIFFICULTY.,岛屿的默认难度。
+DESC_ASCENT 1,FALL DAMAGE IS GREATER.,掉落伤害增加。
+DESC_ASCENT 2,HUNGER GROWS FASTER.,饥饿速度加快。
+DESC_ASCENT 3,ITEMS HAVE INCREASED WEIGHT.,道具重量增加。
+DESC_ASCENT 4,THERE ARE NO FLARES ATOP THE PEAK.,顶峰没有照明棒。
+DESC_ASCENT 5,THE NIGHT IS COLD.,夜晚寒冷。
+DESC_ASCENT 6,CLIMBING TAKES ADDITIONAL STAMINA.,攀爬消耗额外体力。
+DESC_ASCENT 7,START CURSED. GAIN EXTRA CURSE WITH EACH REVIVAL.,初始陷入诅咒状态。每次复活都将获得更多诅咒。
+DESC_ASCENT 8,YOU MUST FREE THE SCOUTMASTER'S SOUL TO WIN.,必须解放童军领队的灵魂才可获得胜利。
+YOURSELF,YOURSELF,你自己
+WAITINGFORALL,waiting for all players...,等待所有玩家......
+BOARDFLIGHT,board flight,登机
+GATEKIOSK,GATE KIOSK,登机终端
+INVITEKIOSK,INVITE KIOSK,邀请终端
+INVITEFRIENDS_LOWER,invite friends,邀请好友
+SOMEONESBACKPACK,#'S BACKPACK,# 的背包
+TICK,TICK,蜱虫
+TICKINTERACT,remove tick,移除蜱虫
+CAMPFIRE,CAMPFIRE,营火
+COOK,cook,烹饪
+CANTLIGHT,can't light campfire with friends missing!,朋友不在时无法点燃营火！
+CARRY,carry #,扛起 #
+PITONPROMPT,PITON,岩钉
+GRAB,grab,抓住
+PICKUP,pick up,捡起
+REVIVESCOUTS,revive scouts,复活童军
+TOUCH,touch,触碰
+LUGGAGE,LUGGAGE,行李箱
+BIG LUGGAGE,BIG LUGGAGE,大号行李箱
+EXPLORER'S LUGGAGE,EXPLORER'S LUGGAGE,探险家行李箱
+ANCIENT LUGGAGE,ANCIENT LUGGAGE,古老行李箱
+ANCIENT STATUE,ANCIENT STATUE,古老雕像
+CHAIN,CHAIN,锁链
+VINE,VINE,藤蔓
+ROPE,ROPE,绳索
+ANTI-ROPE,ANTI-ROPE,反重绳索
+HOWTONOTDIE,HOW TO NOT DIE,如何保命
+AGUIDEBY,A Guide by<br>Scoutmaster Myres,童军领队迈尔斯的<br>指南手册
+TITLE_PREFACE,PREFACE,前言
+BODY_PREFACE,"<br>Ahh....................................................................................................................................................................... nature.<br><br>	What greater ecstacy in this life than crunching down on a succulent granola bar while the wind blows across your scalp atop one of this world's many miraculous mountaintops?<br><br>	But of course, nature is not just some fairground amusement, some attraction we might enjoy leisurely from behind glass! Indeed, nature is as dangerous as it is beautiful. And the view is much better from 10,000 feet up than 6 feet under! (Dead)<br><br>	In my 40 years as a Scoutmaster, I've accumulated a variety of rules for surviving dangerous wilderness situations that should help you out in the unlikely event one of your scout outings goes horribly wrong. But of course, all of these rules pale in comparison to the guiding rule of all scoutdom...",<br>啊..............................................................................................................................................................................大自然啊。<br><br>	世间瑰丽，哪有什么风景比得上那些清风拂顶的奇绝山巅？人生在世，哪有什么逍遥比得过那刻登顶高峰的饷宴快活？<br><br>	当然，俗话说金鳞绝非池中物，大自然也绝非什么搁着屏幕就能赏玩的游乐消遣！事实上，大自然的美丽总是带着几分危险。不过，那份黄土之下的安逸（死翘翘），自然比不过万尺高天之上的壮丽景色！<br><br>	本人担任童军领队四十年之久，总结了一系列应对野外紧急状况的生存法则。倘若众位的童军探险活动出了差错，希望这些经验能给大家帮上点忙。当然，一切仍要遵循这条至高法则......
+TITLE_RULE0,NEVER ABANDON A FRIEND IN NEED!,决不放弃有难的朋友！
+RULE0SIGNATURE,-Scoutmaster Myres,——童军领队迈尔斯
+RULE,RULE,守则
+TITLE_RULE1,KEEP MOVING!,动起来！
+BODY_RULE1,"	First things first: you've gotta get to HIGH GROUND if you wanna be spotted. Nobody ever got rescued off of a mysterious island by loitering around on the beach. So find the nearest peak, and start making your way there.",首要之事：要想被找到，就往高处跑。光在神秘岛屿的海滩上胡乱闲逛可不会帮你获救。所以，找到最近的山峰，然后向那里进发吧。
+BODY_RULE1_1,"	Time is of the essence in the wilderness, so get running towards your destination!",时间是野外生存的重中之重，找准目的地就抓紧时间动起来！
+PROMPT_RULE1_1,[AIM]LOOK AROUND,[AIM] 四处察看
+PROMPT_RULE1_2,[MOVE]WALK,[MOVE] 行走
+PROMPT_RULE1_3,[SPRINT]SPRINT,[SPRINT] 冲刺
+BODY_RULE1_2,"	See a gap in the trail, or a prickly thorn? Go ahead and JUMP over it!",路上有沟拦着？道上有刺挡着？往前冲跳过去呀！
+PROMPT_RULE1_4,[JUMP]JUMP,[JUMP] 跳跃
+BODY_RULE1_3,Keep in mind that jumping while sprinting will tire you out quickly! Take a quick rest if you need to - you won't do anyone any favors by passing out on the mountain!,务必牢记冲刺跳跃是很费体力的动作！有需要就赶紧休息一下——可别真在山上昏倒坏菜了！
+TITLE_RULE2,KEEP MOVING (UP)!,（向上）动起来！
+BODY_RULE2,"	Obviously, you're not going to make it up a mountain without climbing.<br><br>	You can climb almost any surface, so long as you have the stamina!",当然，山不爬是上不去的。<br><br>	不过也请相信自己，只要有体力，什么表面统统都能爬上去！
+PROMPT_RULE2_1,HOLD[USEPRIMARY]EMPTY-HANDED: GRAB WALL,空手时按住 [USEPRIMARY]：抓住岩壁
+PROMPT_RULE2_2,[JUMP]IN AIR: GRAB WALL,在空中按 [JUMP]：抓住岩壁
+PROMPT_RULE2_3,[SPRINT]WHILE CLIMBING: LUNGE,攀爬时按 [SPRINT]：猛扑
+TITLE_RULE3,ALWAYS LEND A HAND!,时刻伸出援手！
+BODY_RULE3,"	Nothing is more important than sticking together as a team!<br><br>	When your hands are empty, reach out to a friend who's mid-climb and help them reach the next ledge safely!",离群孤雁难远行，唯有团队最要紧！<br><br>	只要手上还有空，抓紧给你攀爬中的朋友拉上一把，帮助他们安全爬到下个岩架！
+PROMPT_RULE3,[USESECONDARY] EMPTY-HANDED: HELP UP FRIEND,空手时按 [USESECONDARY]：帮助朋友
+BODY_RULE3_1,"	You can help from below, too! Crouch down and let a fellow scout stand on your head, then jump to give them a boost!",就算是在下边也能帮忙！蹲下来让一位童军伙伴站你头上，跳起来给下助力吧！
+PROMPT_RULE3_1,[CROUCH]CROUCH,[CROUCH] 蹲伏
+TITLE_RULE4,"STAY ALERT, STAY ALIVE!",保持警戒，保持小命！
+BODY_RULE4,"	An effective scout keeps an eye on their <color=#0f7f00>Stamina Bar</color> at all times. If it runs out, you'll be temporarily unable to run, jump, and most importantly, climb. <br><br>	Worst case scenario, you could fall off the mountain to your death, which is the worst thing to fall off to!",优秀的童军总会时刻留意自己的<color=#0f7f00>体力条</color>。如果体力耗尽，你将暂时无法奔跑、无法跳跃，当然还有最重要的——无法攀爬。<br><br>	最糟糕的情况，你可能会直接跌下山去摔死，迎来人生最惨的大起大落！
+TITLE_RULE5,LIFE IS PAIN!,生命在于疼痛！
+BODY_RULE5,"	As you make your way through the untamed wilderness, it's inevitable that you'll get some scratches and bumps.<br><br>	The more hurt you get, the less <color=#0f7f00>Stamina</color> you'll have to run and climb, so tend to your injuries as soon as possible with a bandage or a healing herb!",在这不羁的荒野蹒跚前行，难免会有些磕磕绊绊。<br><br>	受到的伤害越多，能留给你奔跑攀爬的<color=#0f7f00>体力</color>也就越少，因此务必保持重视，一旦有条件就要用绷带或者治疗药草尽快对伤口进行处理！
+TITLE_RULE6,STAY HUNGRY,求生若渴
+TITLE_RULE6_1,"<BR><SIZE=30>(ACTUALLY, DON'T!)",<BR><SIZE=30>（可别真渴！）</size>
+BODY_RULE6,"	Getting hurt isn't the only way for your <color=#0f7f00>Stamina</color> to go downhill fast. As you climb, you'll find yourself experiencing <color=#b58200>Hunger</color>, for which 10/10 experts recommend eating food.<br><br>	Be cautious of eating plants from the wilderness! They could poison you and really mess up your day. If you have the option, choose a packaged snack from a corporation you trust!",并不是只有受伤才会让你的<color=#0f7f00>体力</color>飞流直下。如果攀爬时，腹中的<color=#b58200>饥饿</color>之感逐渐翻涌而来，这就百分百说明你该摄取食物了！<br><br>	野外的植物吃着要小心！万一有毒就得吃不了兜着走！如果有得选，还是先吃你喜欢的那家牌子的包装零食吧！
+TITLE_RULE7,DON'T OVERPACK!,别装太多！
+BODY_RULE7,"	Putting a backpack on is a great way to carry additional items, which can make the difference between life and death!<br><br>	HOWEVER, the more <color=#61380a>Weight</color> you carry, the less stamina you'll have to climb! An experienced scout knows to pack everything they need... and nothing more!",背上背包当然是携带更多物品的绝佳选择，多一件东西就是多一分生机！<br><br>	然而，携带的<color=#61380a>重量</color>越重，能留给你攀爬的体力也会越少！有经验的童子军都知道只装必要的东西......多余的一件不留！
+BODY_RULE8,"	In a survival situation, one of the worst things that can happen is getting separated from the group. <br><br>	Maintain constant communication whenever possible, and point out your next route in advance to avoid leaving a friend behind!",在野外生存中，最糟糕的情况之一便是掉队。<br><br>	有条件时务必保持通讯畅通，提前指明你的下一步路线，别让好朋友落在后面！
+TITLE_RULE8,KEEP AN EYE OUT!,睁大眼睛！
+PROMPT_RULE8,[PING]:PING LOCATION,[PING]：标记位置
+BODY_CONCLUSION,"	Exploring the wilderness is a dangerous activity that can kill you instantly - but so is everything in this world worth doing, like falling in love.<br><br>	Never forget to be a good steward towards our beautiful world, and once again, never forget:",探索荒野是一项危险的运动，分分钟就能要了你命——不过毕竟这就是世界运转的本源逻辑所在，比如陷入爱情。<br><br>	面对我们美丽的世界，不要忘了务必满怀敬畏之心，当然，更不要忘了：
+TITLE_CONCLUSION,IN CONCLUSION,总结
+BODY_BONUSPAGE0,"Dear Diary, bad news!!!<br><br>	The ship captain made an oopsy, and we've wound up crashed on this mysterious island! Thankfully, mysterious islands are my specialty.<br><br>	With our whole troop working together, we'll reach the top of the PEAK and signal for help in no time!<br><br>	In the meantime, I'll take this opportunity to add some additional pages to my famous guidebook.<br><br>	<align=right>-Scoutmaster Myres",亲爱的日记，大事不好！！！<br><br>	船长居然真的搞砸了，咱们现在真在这座神秘的岛上搁浅了！不过谢天谢地，这种神秘岛屿刚好是我的专长所在。<br><br>	只要我们同心协力，我们一定能登上顶峰，马上就能发出求救信号！<br><br>	于此同时，我也有了机会能给这部伟大的指南手册增色几页新的篇章。<br><br>	<align=right>——童军领队迈尔斯
+BONUSRULE,BONUS RULE,增补守则
+TITLE_BONUSRULE1,SCAN YOUR SHROOMS!,好好检查蘑菇！
+BODY_BONUSRULE1,"	Mushrooms can be a valuable source of nutrition in the wilderness. But watch out!! Some of them can kill you, or even make you poop your pants.<br><br>	There's always a way to tell the poisonous ones apart, though. Here's just one example!",蘑菇可以作为重要的野外营养来源。但是一定要小心！！有些蘑菇不但能要了你命，甚至能让你拉一裤子进而社会性死亡。<br><br>	幸好，还是有些办法能把有毒的种类区分出来。来看看下面的样例吧！
+TITLE_BONUSRULE2,GATHER 'ROUND THE FIRE!,生起火来！
+BODY_BONUSRULE2,"	If you find a nice place to light a campfire, make sure to bring your friends close by first! The fire brings something even better than heat and cooked food... and that's motivation!",如果找到了绝佳的营火设置地点，一定记得把朋友们都聚拢过来！火焰能带来的不仅是温暖还有热饭......更是有那熊熊燃起的决心啊！
+TITLE_BONUSRULE3,EMBRACE THE OCCULT!,拥抱玄秘！
+BODY_BONUSRULE3,"	Wuh woh! One of our scouts stepped on a sea urchin and died!!! I was about to get really sad... but one of the other kids touched a weird statue, and brought their friend back to life!",喔呼！有位童军伙伴踩到了海胆死了！！！我正要开始伤心呢......结果另外有个小孩碰了什么奇怪的雕像，居然把那小伙伴的命捞了回来！
+BODY_BONUSRULE3_1,Seems like this island bends the rules of mortality itself... how wacky! Perhaps something else interesting might happen if we use a statue when everyone is still alive...,看来这座岛屿有着自己的一套生死法则......太哈人了！如果大家都还活着的时候就去用一下那种雕像，说不定会发生什么更有趣的事情......
+TITLE_BONUSRULE4,HUDDLE UP!,紧紧相拥！
+BODY_BONUSRULE4,"	As we approach the PEAK, the temperature has begun dropping dramatically. Seeking constant cover is a must, and getting caught out in the open when the wind is strong can be a death sentence.",当我们接近顶峰，气温也就开始急剧下降。持续暴露在这种强风之中可能会害死性命，一定要找到稳定的遮蔽处才行。
+BODY_BONUSRULE4_1,"	If all else fails, huddling with your friends to share body heat might just save you from an icy grave.",如果实在没有别的办法，和身边的朋友们相拥取暖吧，这可能是你们避开死神冰爪的最后机会。
+TITLE_BONUSRULE5,I JUST NEED A NAP...,睡一下就好......
+BODY_BONUSRULE5,"	I saw such a pretty sight... a beautiful moon-shaped fruit, surrounded by fireflies...<br><br>	I feel so relaxed now... maybe a nap wouldn't be so bad...",好漂亮的东西......居然还有月亮形状的水果，周围好多萤火虫......<br><br>	感觉好安逸哦......睡一觉应该没事吧......
+TITLE_BONUSRULE?,WHERE'D EVERYONE GO?,大家都去哪儿了？
+BODY_BONUSRULE?,"	I had such a wonderful nap, but when I woke up the rest of the troop was gone!<br><br>	I'm sure they're just around the corner. They wouldn't be so foolish as to break <color=red>Rule 0</color> just because I needed a little lie-down!",我好不容易睡个好觉，醒来一看却发现大部队竟然不见了！<br><br>	我敢肯定他们没走远呢。哪有人会因为咱浅浅躺了一会儿就破了<color=red> 0 号守则</color>呀！
+TITLE_CRAZY,RULE 0 RULE 0 RULE 0 RULE 0,0 号守则 0 号守则 0 号守则
+DONTFORGET,DON'T FORGET<br><size=150%>RULE 0!,勿忘<br><size=150%>0 号守则！</size>
+NEVERABANDON,Never Abandon a Friend in Need!,决不放弃有难的朋友！
+WEMADEIT,"We made it!!<br><br>Even without our scoutmaster's help, we managed to get rescued!<br><br>SněžnýPerník managed to make it up first.<br>Zedorfska made it out without a scratch.<br>CaptainBear was injured but in great spirits.<br>Squdel & Kirpich are a little bruised. Good thing they had each other!<br>Ronokopl kept the team fed and safe.<br><br>Mr. Myres, if you're reading this... We couldn't find you!! I'm sorry!",我们成功了！<br><br>即便没有领队的帮助，我们竟然还是获救了！<br><br>施涅佩克首先抵达。泽多茨卡则是毫发无损。<br>大熊队长受了点伤不过精神不错。<br>斯库德和吉尔皮有点浮肿，好在他们能相互支持！<br>是罗诺普一直在为大家保障食物和安全。<br><br><br>迈尔斯老师，如果您能看到这条的话……我们实在找不到你！！抱歉了！
+GENERAL,GENERAL,通用
+GRAPHICS,GRAPHICS,图像
+AUDIO,AUDIO,音频
+FIELD OF VIEW,FIELD OF VIEW,视野
+MOUSE SENSITIVITY,MOUSE SENSITIVITY,鼠标灵敏度
+CONTROLLER SENSITIVITY,CONTROLLER SENSITIVITY,控制器灵敏度
+INVERT X,INVERT X,X 轴反转
+INVERT Y,INVERT Y,Y 轴反转
+ON,ON,开
+OFF,OFF,关
+WINDOW MODE,WINDOW MODE,窗口模式
+WINDOWED,WINDOWED,窗口化
+FULLSCREEN,FULLSCREEN,全屏
+WINDOWED FULLSCREEN,WINDOWED FULLSCREEN,窗口化全屏
+RESOLUTION,RESOLUTION,分辨率
+MAX FRAMERATE,MAX FRAMERATE,最大帧率
+VSYNC,VSYNC,垂直同步
+NONE,NONE,无
+ENABLED,ENABLED,启用
+RENDER SCALE,RENDER SCALE,渲染比例
+SHADOW DISTANCE,SHADOW DISTANCE,阴影距离
+WORLD QUALITY,WORLD QUALITY,世界质量
+AMBIENT OCCLUSION,AMBIENT OCCLUSION,环境光遮蔽
+NATIVE,NATIVE,原生分辨率
+LOW,LOW,低
+MEDIUM,MEDIUM,中
+HIGH,HIGH,高
+MICROPHONE,MICROPHONE,麦克风
+MICROPHONE MODE,MICROPHONE MODE,麦克风模式
+MASTER VOLUME,MASTER VOLUME,主音量
+SFX VOLUME,SFX VOLUME,特效音量
+MUSIC VOLUME,MUSIC VOLUME,音乐音量
+VOICES VOLUME,VOICES VOLUME,语音音量
+VOICE ACTIVATION,VOICE ACTIVATION,语音激活
+PUSH TO TALK,PUSH TO TALK,按住说话
+CONNECTING,CONNECTING...,连接中......
+AUTHENTICATING,AUTHENTICATING...,验证中......
+FAILEDTOCONNECT,Failed to connect to Photon Network,未能连接至 Photon 网络
+TRYCONNECTAGAIN,Try to connect again or play in offline mode?,尝试重连或以离线模式游玩？
+LANGUAGE,LANGUAGE,语言
+CONTROLLER ICONS,CONTROLLER ICONS,手柄图标
+LOBBY MODE,LOBBY MODE,大厅可见度
+INVITE ONLY,INVITE ONLY,仅限邀请
+FRIENDS,OPEN TO FRIENDS,仅限好友
+NAME_FRISBEE,FLYING DISC,飞盘
+NAME_PARASOL,PARASOL,太阳伞
+AUTO,AUTO,自动
+MODAL_MISMATCH_TITLE,GAME VERSION MISMATCH,游戏版本不匹配
+MODAL_MISMATCH_BODY,Host has different game version: [#] while you have [&].,主机的游戏版本为：[#]，你的版本是 [&]。
+MODAL_CANTFINDLOBBY_TITLE,FAILED TO FIND LOBBY,无法找到房间
+MODAL_CANTFINDLOBBY_BODY,This invite might be out of date.,该邀请已过期。
+MODAL_FAILEDTOFETCH_BODY,Failed to fetch lobby data.,无法获得房间信息。
+MODAL_CANTJOINLOBBY_TITLE,FAILED TO JOIN LOBBY,无法加入房间
+MODAL_CANTCREATELOBBY_TITLE,FAILED TO CREATE LOBBY,无法创建房间
+MODAL_INVALIDLOBBY_BODY,Steam lobby doesn't seem valid.,Steam 房间不可用。
+MODAL_OUTOFDATE_TITLE,VERSION OUT OF DATE,版本过时
+MODAL_OUTOFDATE_BODY,"Close the game, and update the game on steam...",请关闭游戏并通过 Steam 更新版本...
+MODAL_FAILEDPHOTON_TITLE,FAILED TO FIND PHOTON ROOM,无法找到 Photon 房间
+MODAL_DISCONNECTEDPHOTON_TITLE,DISCONNECTED FROM PHOTON,与 Photon 断开连接
+MODAL_DISCONNECTEDPHOTON_BODY,"You disconnected from Photon, reason: #",你与 Photon 断开了连接，原因：#
+TRYAGAIN,TRY AGAIN,重试
+NAME_RED PRICKLEBERRY,RED PRICKLEBERRY,红刺莓
+NAME_GOLD PRICKLEBERRY,GOLD PRICKLEBERRY,金刺莓
+NAME_SUNSCREEN,SUNSCREEN,防晒喷雾
+NAME_ALOE VERA,ALOE VERA,芦荟
+NAME_CACTUS,CACTUS,仙人球
+NAME_BALLOON,BALLOON,气球
+JOINEDTHEEXPEDITION,# joined the expedition.,# 加入了探险。
+LEFTTHEEXPEDITION,# left the expedition.,# 离开了探险。
+NAME_SCOUT CANNON,SCOUT CANNON,童子军大炮
+SCOUTCANNONFUSE,FUSE,引线
+CHANGE ANGLE,adjust angle,调整角度
+PRESSANYBUTTON,PRESS ANY BUTTON TO CONTINUE,按任意键继续
+REDUCE CAMERA BOBBING,REDUCE CAMERA BOBBING,减少摄像头抖动
+EXTINGUISH,extinguish,熄灭
+ZOOM,zoom,放大
+ONLYATMAINMENU,This setting can only be adjusted on the main menu.,该设置只能在主菜单更改。
+CLIMBING EXTRA FIELD OF VIEW,CLIMBING EXTRA FIELD OF VIEW,攀爬视野提升
+PUSH TO MUTE,PUSH TO MUTE,按住静音
+MESA,MESA,方山
+FLAME,FLAME,火焰
+SPRAY,spray,喷
+NAME_TORCH,TORCH,火炬
+TOMB,TOMB,古墓
+NAME_BALLOON BUNCH,BALLOON BUNCH,一束气球
+NAME_ANCIENT IDOL,ANCIENT IDOL,古老玩偶
+NAME_THORN,THORN,尖刺
+NAME_NOMAD,NOMAD BADGE,游牧民奖章
+DESC_NOMAD,Climb past the MESA.,爬过方山。
+NAME_ULTIMATE,ULTIMATE BADGE,极限奖章
+DESC_ULTIMATE,Catch a Flying Disc from 100m away.,从 100 米外接住飞盘。
+NAME_COOL CUCUMBER,COOL CUCUMBER BADGE,透心凉奖章
+DESC_COOL CUCUMBER,Climb past the MESA without ever having more than 10% Heat.,在全程热量未超过 10% 的情况下爬过方山。
+NAME_NEEDLEPOINT,NEEDLEPOINT BADGE,刺绣奖章
+DESC_NEEDLEPOINT,Have a lot of cactuses stuck to you.,身上扎满仙人掌刺。
+NAME_AERONAUTICS,AERONAUTICS BADGE,航天奖章
+DESC_AERONAUTICS,Achieve flight.,一飞冲天。
+NAME_24 KARAT,24 KARAT BADGE,24K 奖章
+DESC_24 KARAT,Offer The Kiln a worthy sacrifice.,为熔炉献上丰厚的祭品。
+NAME_RESOURCEFULNESS,RESOURCEFULNESS BADGE,丰饶奖章
+DESC_RESOURCEFULNESS,Give in to your hunger.,放纵地大吃大喝。
+NAME_DAREDEVIL,DAREDEVIL BADGE,特技奖章
+DESC_DAREDEVIL,Shoot across the MESA canyon in a Scout Cannon.,进入童军大炮并将自己射过方山。
+NAME_MEGAENTOMOLOGY,MEGAENTOMOLOGY BADGE,巨虫学奖章
+DESC_MEGAENTOMOLOGY,Survive an Antlion attack.,在蚁狮的袭击下成功求生。
+NAME_ASTRONOMY,ASTRONOMY BADGE,天文学奖章
+DESC_ASTRONOMY,Look a little too closely at the blazing sun.,稍微靠近些观察炽热的太阳。
+NAME_DYNAMITE,DYNAMITE,炸药
+PICKAXE,PICKAXE,鹤嘴锄
+ACCESSIBILITY,ACCESSIBILITY,辅助功能
+THELAVARISES,THE LAVA RISES...,岩浆奔涌……
+NAME_SCORPION,SCORPION,蝎子
+ENABLECANNIBALISM,ENABLE CANNIBALISM,允许吃人
+REMOVE,remove,移除
+NAME_BIRD,BIRD,“鸟”
+BUGPHOBIAMODE,BUG PHOBIA MODE,恐虫模式
+NAME_STRANGE GEM,STRANGE GEM,奇怪水晶
+ENABLETHELOOKER,ENABLE <i>THE LOOKER</i>,开启<i>探头小鬼</i>
+PHOTOSENSITIVEMODE,PHOTOSENSITIVE MODE,光敏模式
+COLORBLINDNESSMODE,COLOR BLINDNESS MODE,色盲模式
+NAME_RED SHROOMBERRY,RED SHROOMBERRY,红菇莓
+NAME_YELLOW SHROOMBERRY,YELLOW SHROOMBERRY,黄菇莓
+NAME_GREEN SHROOMBERRY,GREEN SHROOMBERRY,绿菇莓
+NAME_BLUE SHROOMBERRY,BLUE SHROOMBERRY,蓝菇莓
+NAME_FORTIFIED MILK,FORTIFIED MILK,奶白金
+NAME_HOT DOG,HOT DOG,热狗肠
+NAME_CHECKPOINT FLAG,CHECKPOINT FLAG,检查点旗标
+ROOTS,ROOTS,森蕈
+TEXTURE QUALITY,TEXTURE QUALITY,纹理质量
+RESET,Reset,重置
+REBIND,REBIND,重绑
+MOVE FORWARD,MOVE FORWARD,向前移动
+MOVE BACKWARD,MOVE BACKWARD,向后移动
+MOVE LEFT,MOVE LEFT,向左移动
+MOVE RIGHT,MOVE RIGHT,向右移动
+INVENTORY SLOT,ITEM SLOT,物品栏位
+BACKPACK SLOT,BACKPACK SLOT,背包栏位
+SCROLL,SCROLL,滚动
+SCROLL FORWARD,SCROLL FORWARD,前滚
+SCROLL BACKWARD,SCROLL BACKWARD,后滚
+SWAPITEMLEFT,SWAP ITEM LEFT,向左切换物品
+SWAPITEMRIGHT,SWAP ITEM RIGHT,向右切换物品
+SWAPITEMDOWN,STASH ITEM,存放物品
+RESTOREDEFAULTS,RESTORE DEFAULTS,恢复默认
+CLIMBUSE,CLIMB / USE ITEM,攀爬/使用物品
+HELPINGHANDUSE,HELPING HAND / ALT USE ITEM,伸出援手/施用物品
+REBINDCONTROLS,REBIND CONTROLS,键位设置
+INPUTICONS,INPUT ICONS,键位图示
+KBM,KEYBOARD & MOUSE,键盘与鼠标
+STYLE1,GAMEPAD STYLE 1,手柄式样 1
+STYLE2,GAMEPAD STYLE 2,手柄式样 2
+GAMEPAD,GAMEPAD,手柄
+CANCEL,CANCEL,取消
+ASK,ask,询问
+NAME_ROOK,ROOK,战车
+NAME_BISHOP,BISHOP,主教
+NAME_KNIGHT,KNIGHT,骑士
+NAME_KING,KING,国王
+NAME_QUEEN,QUEEN,皇后
+NAME_PAWN,PAWN,兵卒
+NAME_BASKETBALL,BASKETBALL,篮球
+PROMPT_REBIND,PRESS AN INPUT TO ASSIGN TO<br><size=125%><color=#DDBE55>@</color></size>,请按下想要分配给 <br><size=125%><color=#DDBE55>@</color></size> 的键位
+NAME_BUNDLED UP,BUNDLED UP BADGE,包裹严实奖章
+DESC_BUNDLED UP,Climb past the ALPINE without ever having more than 20% Cold.,在全程寒冷值未超过 20% 的情况下爬过雪山。
+BB_YES,yes!,对！
+BB_YEAH,y...yeah...,嗯…好…
+BB_IGUESSSO,i guess so...,我想也是…
+BB_SURE,s...sure,可…可以
+BB_IFYOUWANNA,if you wanna...,如果你想…
+BB_OKAY,okay...,好…
+BB_IFISAYYES,"if i say yes, will you take me with you?",我要是说行，你会带我一起吗？
+BB_DEFINITELY,"y-yeah,  definitely!",嗯好，当然咯！
+BB_FINE,i think it's fine...,我想这样就好…
+BB_PLEASEDONT,p...please don't...,求…求你不要…
+BB_NAH,nah...,不行…
+BB_INTENSENO,NO!!!!!!,不要！！！
+BB_DONTDOIT,don't do it...,别这么干…
+BB_BADIDEA,i think that's a bad idea...,我觉得那样不行…
+BB_NO,no.,不要。
+BB_NUHUH,n-nuh uh...,唉，唉不行…
+BB_DEFINITELYNOT,d-definitely not...,绝，绝对不行…
+BB_NONONO,no no no no no,不行不行不行
+BB_IMNOTSURE,i'm... not sure...,我也…不太确定…
+BB_IDUNNO,i dunno,不知道
+BB_NOTCOMFORTABLE,i'm not comfortable answering that...,不是很想回答…
+BB_UH,uh...uhhhhh...,唔…唔呃呃呃…
+BB_IMBINGBONG,i'm bing bong,我是宾邦
+BB_IMISSMYWIFE,i miss my wife,我好想念老婆
+BB_MAYBE,maaaaaaaaybe,大大大大概吧
+BB_ASKYOURFRIENDS,you should ask your friends for help!,你应该找朋友帮忙去！
+PHOTOBOOTH,PHOTOBOOTH,自拍亭
+START2,start,开拍
+JUMPTOCLIMB,JUMP TO GRAB WALL,跳跃可抓住岩壁
+NAME_CLOUD FUNGUS,CLOUD FUNGUS,云雾菇
+NAME_RESCUE CLAW,RESCUE CLAW,救援抓钩
+NAME_PURPLE SHROOMBERRY,PURPLE SHROOMBERRY,紫菇莓
+GEM_ACTIVATED,Gem Activated,宝石，启动！
+GEM_DEACTIVATED,Gem Deactivated,宝石，关闭！
+NAME_THEBOOKOFBONES,THE BOOK OF BONES,骸骨之书
+READ,READ,读
+STRUGGLE,struggle,挣扎
+BACKFLIP,backflip,后空翻
+CINEMA,cinema,这才叫电影
+CRASHOUT,crashout,无能狂怒
+DANCE2,shimmy,西迷舞
+DEFEAT,it's so over,完犊子了
+FLEX,flex,秀肌肉
+PUNCHFIST,bully,咋滴不服
+WAVE,wave,看这边
+NAME_FORESTRY,FORESTRY BADGE,林业学奖章
+DESC_FORESTRY,Climb past the ROOTS.,爬过森蕈。
+NAME_TREAD LIGHTLY,TREAD LIGHTLY BADGE,凌菇微步奖章
+DESC_TREAD LIGHTLY,Climb past the ROOTS without ever having more than 25% spores.,在全程孢子值未超过 25% 的情况下爬过森蕈。
+NAME_WEB SECURITY,WEB SECURITY BADGE,网安奖章
+DESC_WEB SECURITY,Escape a spider's web and survive.,从蛛网里逃脱并幸存下来。
+NAME_UNDEAD ENCOUNTER,UNDEAD ENCOUNTER BADGE,不死族接触奖章
+DESC_UNDEAD ENCOUNTER,Cure yourself from a zombie bite.,给自己治愈一次丧尸咬伤。
+NAME_ADVANCED MYCOLOGY,ADVANCED MYCOLOGY BADGE,高等真菌学奖章
+DESC_ADVANCED MYCOLOGY,Try all 5 types of Shroomberry in a single expedition.,单次探险吃到全部 5 种菇莓。
+NAME_DISASTER RESPONSE,DISASTER RESPONSE BADGE,灾难响应奖章
+DESC_DISASTER RESPONSE,Pull an unconscious friend 30m with the Rescue Claw.,使用救援抓钩将一位昏迷朋友拖行 30 米。
+NAME_CALCIUM INTAKE,CALCIUM INTAKE BADGE,补钙奖章
+DESC_CALCIUM INTAKE,Block 100 total damage with the Fortified Milk.,使用奶白金抵抗总计 100 点伤害。
+NAME_COMPETITIVE EATING,COMPETITIVE EATING BADGE,大胃王奖章
+DESC_COMPETITIVE EATING,Eat 3 Hot Dogs in 5 seconds or less.,5 秒内吃掉 3 根热狗肠。
+NAME_APPLIED ESOTERICA,APPLIED ESOTERICA BADGE,玄学致用奖章
+DESC_APPLIED ESOTERICA,Resurrect a friend using unholy means.,通过非正经手段复活一位朋友。
+NAME_MYCOACROBATICS,MYCOACROBATICS BADGE,真菌杂技奖章
+DESC_MYCOACROBATICS,Bounce up 40m off a mushroom.,从一个蘑菇上弹起 40 米高。
+NAME_CRYPTOGASTRONOMY,CRYPTOGASTRONOMY BADGE,秘传料理奖章
+DESC_CRYPTOGASTRONOMY,Cook and eat a Mandrake.,烹饪并吃掉一棵曼德拉草。
+NAME_SKELETON,SKELETON,骷髅
+NAME_SKELETON_PLAYER,#'S SKELETON,#骷髅
+REVIVE_BOOKOFBONES,REVIVE?,复活？
+NAME_MANDRAKE,MANDRAKE,曼德拉草
+NAME_SNOWPILE,SNOW PILE,雪堆
+NAME_SNOWBALL,SNOWBALL,雪球
+MODAL_KICK_PROMPT,Do you want to kick # from the expedition?,要将 # 踢出冒险吗？
+MODAL_KICKED_TITLE,YOU WERE KICKED,你被踢了
+MODAL_KICKED_BODY,The Troop Leader has kicked you from the expedition.,小队队长把你踢出了冒险。
+LEAVE_GAME_CONFIRM,Leave the expedition?,要离开冒险吗？
+HOSTCHANGED,# is now the Troop Leader.,#现已成为队长。
+YOUARETROOPLEADER,You are the Troop Leader.,你已成为队长。
+JELLYFISH,JELLYFISH,水母
+URCHINS,URCHINS,海胆
+SPOREBOMBS,SPORE BOMBS,孢子炸弹
+BEES,BEES,蜜蜂
+RAIN,RAIN,雨
+ZOMBIES,ZOMBIES,丧尸
+BEETLES,BEETLES,独角仙
+SPIDERS,SPIDERS,蜘蛛
+SPORECLOUDS,SPORE CLOUDS,孢子云
+WIND,WIND,风
+BLIZZARD,BLIZZARDS,暴雪
+GEYSERS,GEYSERS,间歇泉
+FLASHPLANT,FLASH BULBS,闪光苞
+TORNADOES,TORNADOES,龙卷风
+ANTLIONS,ANTLIONS,蚁狮
+CACTUSTHORNS,CACTUS THORNS,仙人掌刺
+TUMBLEWEEDS,TUMBLEWEEDS,风滚草
+BLAZINGSUN,BLAZING SUN,阳光灼伤
+SCOUTMASTER,THE SCOUTMASTER,童军领队
+HUNGERRATE,HUNGER RATE,饥饿速度
+FALLDAMAGE,FALL DAMAGE,掉落伤害
+ETCDAMAGE,OTHER DAMAGE,其他伤害
+COLDNIGHT,COLD AT NIGHT,夜晚低温
+ITEMWEIGHT,ITEM WEIGHT,物品重量
+FLARESATPEAK,FLARES AT PEAK,顶峰照明棒
+CLIMBINGSTAMINAUSAGE,CLIMBING STAMINA USAGE,攀爬消耗体力
+CUSTOM,CUSTOM RUN,自定义冒险
+DESC_CUSTOM,Customize your PEAK experience.,定制专属于你的 PEAK 体验！
+CUSTOMOPTIONS,CUSTOM OPTIONS,自定义项
+NORMAL,NORMAL,普通
+HAZARDS,HAZARDS,障碍灾害
+GAMEPLAY,GAMEPLAY,游戏参数
+SPAWNPOOL,SPAWN POOL,生成库
+EXPEDITION,EXPEDITION,探险
+EXPEDITIONTYPE,EXPEDITION TYPE,探险类型
+EXPEDITIONTYPECLASSIC,CLASSIC,经典
+MINIRUN,MINI RUN,速通局
+MINIRUNBIOME,MINI RUN BIOME,速通局地形
+BIOME1,BIOME 1,地形 1
+BIOME2,BIOME 2,地形 2
+BIOME3,BIOME 3,地形 3
+BIOME4,BIOME 4,地形 4
+TOOLTIP_NORMAL,Climb all the way to the PEAK.,爬完全场直至顶峰吧。
+TOOLTIP_MINIRUN,Climb a single biome to win.,爬完一个地形即可胜利。
+BADGESDISABLED,Progress towards earning Badges is disabled in Custom Expeditions.,自定探险模式无法累计奖章进度。
+YOUWIN,YOU WIN,你赢了
+ZOMBIEPHOBIAMODE,ZOMBIE PHOBIA MODE,恐僵模式
+CONTINUERUN,CONTINUE RUN,继续冒险
+STAMINAUSAGE,STAMINA USAGE,体力使用
+SAVE_DESTROY_ON_JOIN,Joining this game will delete your current autosave.<br>Are you sure?,加入此游戏将会删除您当前的自动存档。<br>确定要继续吗？
+SAVE_DESTROY_ON_HOST,Hosting a new game will delete your current autosave.<br>Are you sure?,开启新游戏将会删除您当前的自动存档。<br>确定要继续吗？
+GRAPPLEMODE,GRAPPLE MODE,抓钩模式
+SPEEDYMODE,SPEEDY MODE,疾速模式
+KICKMODE,KICK MODE,踢踹模式
+STUPIDSTUFF,STUPID STUFF,蠢蠢的东西
+LEAVE_GAME_CONFIRM_QUICKSAVE,Leave the expedition?<br><br>You can continue from the last campfire.,确定要离开冒险吗？<br><br>可以从上次经过的营火处继续。
+TOOLTIP_GRAPPLE,Start with an infinite-use Rescue Claw...but you suck at climbing.,初始配备一件无限使用的救援抓钩……代价是损失了攀爬的能力。
+TOOLTIP_SPEEDY,Everything moves twice as fast!,所有东西全部变为两倍快！
+TOOLTIP_KICK,Replaces your helping hand with a kick.,将伸出援手替换为踢踹动作。
+FOG,THE FOG RISES,寒雾升起
+LAVA,THE LAVA RISES,岩浆涨涌
+SCORPIONS,SCORPIONS,蝎子
+NAME_FANNYPACK,FANNY PACK,滑稽背包
+WEAR,wear<br>#,背上<br>#
+SOMEONESPACK,#'s @,#的@
+NAME_JETPACK,JETPACK,喷气背包
+NAME_ROCKETPACK,ROCKETPACK,火箭背包
+CONVERTITEM,convert<br>#<br>to fuel,将<br>#<br>转化成燃料
+BELLTOWER,BELLTOWER,钟塔
+NAME_ARROW,ARROW,箭矢
+NAME_RITUALDAGGER,RITUAL DAGGER,仪式匕首
+ACTION_SACRIFICE,SACRIFICE #targetchar,献祭 #targetchar
+NAME_FROG,FROG,青蛙
+NAME_CANDLESTICK,CANDLESTICK,烛台
+NAME_WARP FUNGUS,WARP FUNGUS,曲迁菇
+NAME_GLIDER,GLIDER,滑翔伞
+NAME_AUTOPARACHUTE,AUTO-PARACHUTE,自动降落伞
+NAME_SMALL EGG,SMALL EGG,小小蛋
+GLOOM,GLOOM,雾沼
+THE CITADEL,THE CITADEL,城塞
+NAME_AMULET_CLONE,SCOUT'S GENEROSITY,童军的盛情
+NAME_AMULET_INFINITESTAM,SCOUT'S AMBITION,童军的野心
+NAME_AMULET_DOUBLEJUMP,SCOUT'S INITIATIVE,童军的进取
+NAME_AMULET_HEALING,SCOUT’S TENACITY,童军的毅力
+NAME_SCOUTSTATUE,STONE SCOUT,石头童军
+ACTION_INSERTBADGE,bestow,嵌入
+NAME_SCOUTSHONOR,SCOUT’S HONOR,童军的荣耀
+CLOWN LUGGAGE,CLOWN LUGGAGE,小丑行李箱
+NAME_EARLYWORM,THE EARLY WORM,早起虫儿
+ACTION_RING,RING,敲响
+NAME_RULE ZERO,RULE ZERO BADGE,零号守则奖章
+DESC_RULE ZERO,Free the Scoutmaster's soul.,解放童军领队的灵魂。
+NAME_WELL RESTED,WELL RESTED BADGE,神清气爽奖章
+DESC_WELL RESTED,Consume The Early Worm.,吃掉早起的虫儿。
+NAME_WANDERER,WANDERER BADGE,漫游者奖章
+DESC_WANDERER,Climb past the GLOOM.,爬过雾沼。
+NAME_LAST RESORT,LAST RESORT BADGE,末路手段奖章
+DESC_LAST RESORT,Heal over 75% damage at once by using the Ritual Dagger.,使用仪式匕首一次性治疗超过 75% 伤害。
+NAME_BELLRINGER,BELLRINGER BADGE,敲钟人奖章
+DESC_BELLRINGER,Ring 5 Belltowers in the GLOOM in a single expedition.,单次雾沼探险敲响 5 座钟塔。
+NAME_ARCHERY,ARCHERY BADGE,射艺高超奖章
+DESC_ARCHERY,Remove 10 arrows from yourself in a single expedition.,单次冒险从身上移除 10 根箭矢。
+NAME_MEDIEVAL HISTORY,MEDIEVAL HISTORY BADGE,考古中世纪奖章
+DESC_MEDIEVAL HISTORY,Climb past THE CITADEL without being hit by any traps.,爬过城塞且未受到任何陷阱伤害。
+NAME_JESTER,JESTER BADGE,弄臣奖章
+DESC_JESTER,Open 2 Clown Luggage in a single expedition.,单次探险开启 2 件小丑行李箱。
+NAME_EXORCIST,EXORCIST BADGE,驱魔人奖章
+DESC_EXORCIST,Burn up the Big Ghost in the GLOOM.,在雾沼烧掉大幽灵。
+NAME_HANG GLIDING,HANG GLIDING BADGE,御风翱翔奖章
+DESC_HANG GLIDING,Fly 100m with the Glider without touching the ground.,使用滑翔伞不接触地面飞行 100 米。
+THEGLOOMRISES,THE GLOOM RISES...,倦霾升起……
+NAME_FROGLEGS,FROG LEGS,田鸡腿
+HAZARD_SLEEPYGLOOM,SLEEPY GLOOM,困倦雾霾
+HAZARD_FROGTONGUES,FROG TONGUES,蛙舌头
+HAZARD_RAVENS,TRICKY RAVENS,窃语鸦
+HAZARD_BIGGHOST,BIG GHOST,大幽灵
+HAZARD_FLYTRAPS,FLYTRAPS,捕蝇草
+HAZARD_ARROWTRAPS,ARROW TRAPS,箭矢陷阱
+HAZARD_ETCTRAPS,ETC TRAPS,各种陷阱
+HAZARD_PETRIFYINGSTONES,PETRIFYING STONES,石化岩
+HAZARD_TRAPCHEST,LUGGAGE TRAPS,行李箱陷阱
+JOINGAMESESSION,JOIN GAME SESSION,加入游戏会话
+SPECIFYROOMCODE,SPECIFY A ROOM CODE,指定房间码
+INVALIDROOMCODE,Invalid Room Code.,房间码无效。
+SHORTROOMCODE,The code is too short.,此代码过短。
+ENTERROOMCODE,ENTER ROOM CODE,输入房间码
+JOINGAME,JOIN GAME,加入游戏
+JOIN,JOIN,加入
+LOBBYFAILEDTOJOIN,FAILED TO JOIN ROOM,加入房间失败
+LOBBYFULL,Lobby is currently full.,大厅当前已满。
+LOBBYERRORUNKNOWN,Unknown error occurred.,发生未知错误。
+LOBBYDOESNOTEXIST,Lobby does not exist.,大厅不存在。
+HIDEROOMCODE,HIDE ROOM CODE,隐藏房间码
+BLOCKLIST,BLOCKLIST,屏蔽列表
+BLOCKEDPLAYERS,BLOCKED PLAYERS,已屏蔽玩家
+NOBLOCKEDPLAYERS,You have not blocked any players yet...,您尚未屏蔽任何玩家……
+PLATFORMBLOCKLIST,PLATFORM BLOCKLIST,平台屏蔽列表
+INFO,INFO,信息
+SELECTACTION,SELECT ACTION,选择操作
+ACTIONS,ACTIONS,操作
+BLOCK,BLOCK,屏蔽
+UNBLOCK,UNBLOCK,解除屏蔽
+BLOCKCONFIRM,Do you want to block #?,确定要屏蔽 # 吗？
+UNBLOCKCONFIRM,Do you want to unblock #?,确定要解除对 # 的屏蔽吗？
+REPORT,REPORT,举报
+REPORTPLAYER,Report Player,举报玩家
+REPORTPLAYERNAME,Report #?,举报 #？
+REPORTCONFIRM,Are you sure?,你确定吗？
+REPORTFORMINVALID,INVALID REPORT FORM,举报格式无效
+REPORTINVALID,Your report is insufficient. Please add more info.,您的举报材料不够充分。请补充更多信息。
+HATESPEECH,Hate Speech,仇恨言论
+VERBALABUSE,Verbal Abuse,语言暴力
+THREATS,Threats,威胁
+SCAMMING,Scamming,诈骗
+GRIEFING,Griefing,故意捣乱
+CHEATING,Cheating,作弊
+OFFENSIVENAME,Offensive Name,恶意名称
+LEAVINGAFK,Leaving / AFK,离线/挂机
+SEND,SEND,发送
+MUTE,MUTE,禁言
+UNMUTE,UNMUTE,解除禁言
+YES,YES,是
+CROSSPLAY,CROSSPLAY,跨平台游玩
+CANTCROSSPLAY,Can't play with players from other platforms.,无法和其他平台的玩家游玩。
+CROSSPLAYKICK,Kicking players...,踢出玩家……
+CROSSPLAYLEAVE,Leaving the game...,离开游戏……
+COPYCODE,COPY CODE,复制房间码
+GLOOM_OPTION,THE GLOOM RISES,倦霾升起
+TITLE_BONUSRULE6,BEAT THE HEAT!,战胜酷暑！
+BODY_BONUSRULE6,"At first, I was excited to get my tan on in this desert...but it's way too hot to be out in the sun for long! I started getting burned almost instantly!!!",一开始我还挺来劲的，想着终于能在这片沙漠里晒出一身古铜靓肤了……结果没想到这里竟然那么热，根本没法在太阳底下待久！随便一晒就给我烧伤了！！！
+BODY_BONUSRULE6_1,"      Better stay in the shade, or wait to move until nightfall...but finding an umbrella or something would be even better.",最好还是待在阴凉地方，或者等到天黑再行动？不过要是能找到一把遮阳伞之类的东西那就更好了。
+TITLE_BONUSRULE7,HOLD YOUR BREATH...,屏住呼吸……
+BODY_BONUSRULE7,This may be the freakiest place we've found so far... just breathing around here makes my lungs itchy.,这里恐怕是我们目前发现过最诡异的地方了……光是在这里呼吸就让我肺管子痒得难受。
+BODY_BONUSRULE7_1,"      The mushrooms seem to subtly move on their own. Something tells me if anyone succumbs to their spores, it might be a fate worse than death...",这些蘑菇好像会自己悄悄蠕动。总觉得要是有人吸入了它们的孢子，搞不好会落得个比死还可怕的下场……
+TITLE_BONUSRULE8,POISON IS BAD!,当心毒素！
+BODY_BONUSRULE8,"      In this jungle, everything seems to be out to get us! Just touching some of these plants causes painful, itchy sores.",这片丛林里的东西，似乎全都想置我们于死地！只要碰到某些植物，身上就会长出又痛又痒的毒疮。
+BODY_BONUSRULE8_1,"      But don't worry! If you don't have an antidote on hand, certain herbs growing on the mountain can help you deal with poison, too!",不过别担心！如果手头没有解毒剂，山上长的某些草药同样能帮你搞定毒素！
+TITLE_BONUSRULE9,OUT OF THE FRYING PAN...,步步烧心……
+BODY_BONUSRULE9,"      This is getting ridiculous! A single misstep, and I'll be a crispy scoutmaster! Did the rest of the troop really make it through this?",太离谱了！只要走错一步，我堂堂童军领队就得烧成酥脆童子鸡了！其他队员到底是怎么穿过这鬼地方的？
+BODY_BONUSRULE9_1,"      On the bright side, I might not even need a campfire to make a home-cooked meal here...",不过换个角度想想，在这里做顿家常饭，说不定连营火都省了……
+TITLE_BONUSRULE10,KEEP YOUR HEAD UP!,保持清醒！
+BODY_BONUSRULE10,"      Something about this special fog is making me sleepy... I've gotta remember to get some fresh air, or it could be lights out!",这奇怪的雾气熏得我昏昏欲睡……我可得记着时不时透透气才行，不然只怕是要一觉不起了！
+BODY_BONUSRULE10_1,It looks like these towers have magical flame in them that burns the fog away. If only I could take some of it with me...,看来这些塔楼里的魔法火焰能驱散浓雾。要是能带上一点随身用就好了……
+AREA_VOID,NADIR,天底
+THEGHOSTSRISE,THE LOST SOULS ARE RISING...,失落的众魂正在苏醒……
+ACTION_ENTER,ENTER,进入
+NAME_PEAKPORTAL,GATE,大门
+NAME_VOIDLAUNCHER,ANTI-ZOOKA,反重炮
+CONTROLLER SENSITIVITY_PS5,CONTROLLER SENSITIVITY,控制器灵敏度
+SCOUTMASTER_RANK,SCOUTMASTER,童军领队
+CONDORS,CONDORS,秃鹫
+SOULLINKMODE,SOUL LINK MODE,灵魂共连模式
+TOOLTIP_SOULLINK,Any damage received is split among all scouts.,受到的所有伤害在童子军全员之间进行分摊。
+ACTIVATE,activate,激活
+ADDFUEL_NOITEM,add fuel<br>(need item),添加燃料<br>（需要物品）
+ACTIVATEONPLAYER,activate on #targetchar,为#targetchar激活
+NAME_SCOUTMASTERSOUL,SCOUTMASTER'S SOUL,童军领队的灵魂
+ROOMCODE,ROOM CODE,房间码
+THEGLOOMRISES2,THE GLOOM RISES,倦霾升起
+MODDEDGAME,MODDED GAME,
+MODWARNING,"Warning! You are joining a modded game. If you are not using the same mods as the host, your experience might become unstable.",
+USINGMODS,"Warning! You are using mods which can impact the game experience heavily. If other players don't have the same set of mods, the game might become unstable.",
+ROOMCODEHIDDEN,ROOM CODE HIDDEN,

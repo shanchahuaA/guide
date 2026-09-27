@@ -910,6 +910,98 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         ("实际 success=" + (Get-Field $askBadKey.Json 'success'))
 }
 
+# ── 第 4 组（续）：练习抽题与判题（契约 §7.3）────────────────────────────────
+#
+# ⚠️ 这一段**不真调 DeepSeek**：练习题库是懒生成的（首次要某级题时才生成），
+# 本段先用 redis-cli 往**当前等级对应的题库 key** 里塞一份已知题库，再走 next / answer。
+# 这样既不需要真 Key，也能把"next 不吐答案"与"连对 10 题升级"两条 AC 钉死。
+# 塞不进去（Redis / redis-cli 不可达）就跳过并记 INFO，不误报。
+#
+# ⚠️ 题库 JSON 用 ASCII 题干（不含中文），值从 stdin（-x）送进去 —— 避开 PS 5.1
+# 传"含双引号的原生参数"时的转义地狱，也避开中文按 ANSI 编码的坑。
+Section '4d. 练习抽题与判题'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过练习断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    # 已知题库：30 题，第 i 题的正确项是 i % 4 —— 判题规则固定，脚本据此答对。
+    # 题库 key 按**当前等级**取，不写死 0：脚本可重复跑，用户已经升过级也不会错位。
+    $quizHeader = @{ token = $loginToken }
+    $quizProfile = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
+    $startLevel = [int](Get-Field $quizProfile 'level')
+    $QUIZ_BANK_KEY = 'guide:quiz:bank:' + $startLevel
+    $progressKey = 'guide:quiz:progress:' + $loginOpenid
+
+    $quizItems = @()
+    for ($i = 0; $i -lt 30; $i++) {
+        $quizItems += ('{"id":' + $i + ',"stem":"Q' + $i + '","options":["A","B","C","D"],"answerIndex":' + ($i % 4) + ',"explanation":"E' + $i + '"}')
+    }
+    $quizBankJson = '[' + ($quizItems -join ',') + ']'
+    $quizSet = $quizBankJson | & $script:RedisCli -x SET $QUIZ_BANK_KEY 2>&1
+    $quizRedisOk = ($LASTEXITCODE -eq 0) -and (("$quizSet").Trim() -eq 'OK')
+
+    if (-not $quizRedisOk) {
+        Add-Note ('Redis 不可达或 redis-cli 不可用，跳过练习断言（redis-cli 返回：' + "$quizSet" + '）')
+    } else {
+        # 先清掉这个用户的连对进度，保证从"连对 0、无排除集"开始，脚本可重复跑
+        $null = & $script:RedisCli DEL $progressKey 2>&1
+
+        # 抽题：响应只有题号 / 题干 / 选项，**没有答案**（票面 AC）
+        $quizNext = Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader
+        Assert-True ((Get-Field $quizNext.Json 'code') -eq 200) 'quiz/next code=200' `
+            ("实际 code=" + (Get-Field $quizNext.Json 'code') + " message=" + (Get-Field $quizNext.Json 'message'))
+        $quizNextData = Get-Data $quizNext
+        Assert-True ($null -ne (Get-Field $quizNextData 'id')) 'quiz/next 带题号 id' '响应里没有 id'
+        Assert-True ($null -ne (Get-Field $quizNextData 'stem') -and (Get-Field $quizNextData 'stem') -ne '') 'quiz/next 带题干 stem' '响应里没有 stem'
+        $quizOptions = As-Array (Get-Field $quizNextData 'options')
+        Assert-Equal $quizOptions.Count 4 'quiz/next 带四个选项'
+
+        # 响应里**绝不能**有答案字段：抓包就能看到它，下发答案等于把连对白送
+        $quizLeaked = @()
+        foreach ($f in @('answerIndex', 'explanation', 'correct', 'answer')) {
+            if ($null -ne (Get-Field $quizNextData $f)) { $quizLeaked += $f }
+        }
+        Assert-True ($quizLeaked.Count -eq 0) 'quiz/next 响应不含任何答案字段（answerIndex / explanation / correct）' `
+            ('多带了：' + ($quizLeaked -join ', '))
+        $quizKeys = @($quizNextData.PSObject.Properties | ForEach-Object { $_.Name })
+        Assert-Equal $quizKeys.Count 3 'quiz/next 只有题号 / 题干 / 选项三个键' ('实际键：' + ($quizKeys -join ', '))
+
+        # 连答 10 题正确（题 i 的正确项是 i % 4）
+        $quizFailed = $false
+        $lastAnswer = $null
+        for ($n = 1; $n -le 10; $n++) {
+            $q = Get-Data (Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader)
+            $qId = Get-Field $q 'id'
+            $correctIndex = ([int]$qId) % 4
+            $ans = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $qId; optionIndex = $correctIndex })
+            if ((Get-Field $ans 'correct') -ne $true) {
+                $quizFailed = $true
+                Add-Fail ('第 ' + $n + ' 题按已知答案作答却判错') ('id=' + $qId + ' 正确项=' + $correctIndex + ' 实际 correct=' + (Format-Actual (Get-Field $ans 'correct')))
+                break
+            }
+            $lastAnswer = $ans
+        }
+        if (-not $quizFailed) {
+            # 题型 AC：等级涨 1、连对归零。判题响应里不带这两样，看身份条（profile 是唯一权威）
+            $expectedLevel = [Math]::Min($startLevel + 1, 2)
+            $profileAfterQuiz = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
+            Assert-Equal (Get-Field $profileAfterQuiz 'level') $expectedLevel ('连对满 10 后 level = ' + $expectedLevel)
+            Assert-Equal (Get-Field $profileAfterQuiz 'streak') 0 '连对满 10 后 streak 归零'
+        }
+
+        # Redis：题库 key 在；连对 key 在且 TTL ≤ 2 小时（票面 AC）
+        $bankExists = & $script:RedisCli EXISTS $QUIZ_BANK_KEY 2>&1
+        Assert-Equal (("$bankExists").Trim()) '1' ('Redis 里有题库 key（' + $QUIZ_BANK_KEY + '）')
+        $progressTtl = & $script:RedisCli TTL $progressKey 2>&1
+        $ttlOk = $false
+        try { $ttlOk = (([int]$progressTtl) -gt 0) -and (([int]$progressTtl) -le 7200) } catch { $ttlOk = $false }
+        Assert-True $ttlOk '连对 key 存在且 TTL ≤ 2 小时' ('实际 TTL=' + $progressTtl)
+
+        # 收尾：清掉脚本自己塞的题库与连对 key（真实缓存由采集失效）
+        $null = & $script:RedisCli DEL $QUIZ_BANK_KEY $progressKey 2>&1
+    }
+}
+
 # ── Redis 缓存：读到的到底是缓存、还是每次都回源 ─────────────────────────────
 #
 # ⚠️ 这一段**不要求 Redis 一定在跑**：契约 §8.3 明写"Redis 连不上时接口照常返（回源 MySQL）"，

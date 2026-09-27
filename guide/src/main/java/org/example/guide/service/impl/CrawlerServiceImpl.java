@@ -2,6 +2,7 @@ package org.example.guide.service.impl;
 
 import org.example.guide.cache.AnswerCache;
 import org.example.guide.cache.ItemCache;
+import org.example.guide.cache.QuizBankCache;
 import org.example.guide.crawler.CargoItemRow;
 import org.example.guide.crawler.ConvertedItem;
 import org.example.guide.crawler.ItemConverter;
@@ -35,6 +36,7 @@ public class CrawlerServiceImpl implements ICrawlerService {
     private final ItemIconDownloader iconDownloader;
     private final ItemCache itemCache;
     private final AnswerCache answerCache;
+    private final QuizBankCache quizBankCache;
 
     public CrawlerServiceImpl(WikiApiClient wikiApiClient,
                               ItemPageParser itemPageParser,
@@ -42,7 +44,8 @@ public class CrawlerServiceImpl implements ICrawlerService {
                               IItemService itemService,
                               ItemIconDownloader iconDownloader,
                               ItemCache itemCache,
-                              AnswerCache answerCache) {
+                              AnswerCache answerCache,
+                              QuizBankCache quizBankCache) {
         this.wikiApiClient = wikiApiClient;
         this.itemPageParser = itemPageParser;
         this.itemConverter = itemConverter;
@@ -50,6 +53,7 @@ public class CrawlerServiceImpl implements ICrawlerService {
         this.iconDownloader = iconDownloader;
         this.itemCache = itemCache;
         this.answerCache = answerCache;
+        this.quizBankCache = quizBankCache;
     }
 
     /**
@@ -191,7 +195,8 @@ public class CrawlerServiceImpl implements ICrawlerService {
     }
 
     /**
-     * 缓存失效：采集跑完删掉图鉴的全量缓存与全部问答缓存（契约 §8.3、CONTEXT.md 缓存节）。
+     * 缓存失效：采集跑完删掉图鉴的全量缓存、全部问答缓存与题库缓存
+     * （契约 §8.3、CONTEXT.md 缓存节）。
      *
      * <p>放在最后一步、且**只有这一步**：采集过程中途失效会让读请求回源到"半新半旧"的库，
      * 跑完再删则下一次请求一次到位地看到采集后的新数据，不用重启应用。
@@ -199,6 +204,9 @@ public class CrawlerServiceImpl implements ICrawlerService {
      * <p>问答缓存一并删是因为它的**依据**就是图鉴数据（契约 §7.4 的上下文来自图鉴）：
      * 图鉴换了，旧回答里那些数值就成了错的。它不需要单独判断"这次采集有没有改到问答涉及的条目"——
      * 演示环境里回答只有几十条，一并删掉重生成比做精细失效便宜。
+     *
+     * <p>题库同理（#42）：题面依据的是图鉴数据，图鉴换了旧题库就可能问到一个已经改过的数值。
+     * 与图鉴 key 一起删，下一次抽题自然重新生成。
      *
      * <p>失败不上抛 —— 采集本体已经成功，缓存删不掉只是"新数据要等下一次失效才生效"；
      * 把它冒出去会让一份完整的 {@link CrawlReport} 变成一个 500。
@@ -213,6 +221,11 @@ public class CrawlerServiceImpl implements ICrawlerService {
             answerCache.evictAll();
         } catch (Exception e) {
             log.warn("采集完成但问答缓存失效失败，AI 可能仍按旧图鉴数据回答", e);
+        }
+        try {
+            quizBankCache.evictAll();
+        } catch (Exception e) {
+            log.warn("采集完成但题库缓存失效失败，练习题可能仍按旧图鉴数据", e);
         }
     }
 

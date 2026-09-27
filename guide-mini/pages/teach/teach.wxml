@@ -10,7 +10,7 @@
   <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
 </view>
 
-<!-- 「问答」分段（契约 §7.4）。本单只做图鉴内问题；「练习」与「路线」是后面两条切片 -->
+<!-- 「问答」分段（契约 §7.4）。本单只做图鉴内问题；「路线」是后面一条切片 -->
 <view class="section">
   <view class="section-title">问答</view>
 
@@ -29,5 +29,34 @@
     <view class="answer" wx:if="{{answer}}">
       <text class="answer-text">{{answer}}</text>
     </view>
+  </block>
+</view>
+
+<!-- 「练习」分段（契约 §7.3）：四选一，后端判题，答完展开解析。连对 10 题升一级 -->
+<view class="section">
+  <view class="section-title">练习</view>
+
+  <!-- 出题要用用户自己的 Key，没填先引导 -->
+  <block wx:if="{{profile && !profile.hasApiKey}}">
+    <view class="hint">出题也要用你自己的 DeepSeek API Key，先在上面填好再回来练。</view>
+  </block>
+
+  <block wx:elif="{{quiz}}">
+    <view class="quiz-stem">{{quiz.stem}}</view>
+
+    <view class="quiz-option {{quizResult ? (index === quizResult.answerIndex ? 'is-correct' : (index === selectedIndex ? 'is-wrong' : '')) : ''}}"
+          wx:for="{{quiz.options}}" wx:key="index"
+          data-index="{{index}}" bindtap="onChooseOption">{{item}}</view>
+
+    <view class="quiz-result" wx:if="{{quizResult}}">
+      <text class="quiz-verdict {{quizResult.correct ? 'is-right' : 'is-wrong'}}">{{quizResult.correct ? '答对了' : '答错了'}}</text>
+      <text class="quiz-explanation">正确答案：{{quiz.options[quizResult.answerIndex]}}</text>
+      <text class="quiz-explanation">{{quizResult.explanation}}</text>
+      <button class="btn" bindtap="onNextQuestion">下一题</button>
+    </view>
+  </block>
+
+  <block wx:elif="{{profile}}">
+    <button class="btn" bindtap="loadQuiz" disabled="{{quizLoading}}">{{quizLoading ? '出题中…' : '开始练习'}}</button>
   </block>
 </view>
