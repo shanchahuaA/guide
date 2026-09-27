@@ -15,8 +15,8 @@ import java.io.IOException;
  * 前端已登录则直接放行；没带 token 或查不到人，回 HTTP 401 + 响应壳（code=401），
  * 前端据此清登录态并重新静默登录。
  *
- * <p>仅挂在 Shiro 过滤链上，不注册为独立 Servlet Filter（见 ShiroConfig 里配套的
- * {@code FilterRegistrationBean#setEnabled(false)}，那是用来挡 Spring Boot 自动注册的）。
+ * <p>只挂在 Shiro 过滤链上，不注册为独立 Servlet Filter（在 ShiroConfig 的工厂方法里
+ * new 出来塞进 filters 表），否则 Spring Boot 会把它自动注册到 {@code /*}，连登录接口一起拦。
  */
 public class TokenAuthFilter extends AuthenticationFilter {
 
