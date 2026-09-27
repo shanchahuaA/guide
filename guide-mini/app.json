@@ -4,7 +4,7 @@
     "pages/main/main",
     "pages/archive/archive",
     "pages/detail/detail",
-    "pages/location/location",
+    "pages/profile/profile",
     "pages/teach/teach",
 
 
@@ -26,8 +26,8 @@
         "selectedIconPath":"images/item.png"
       },
       {
-        "pagePath": "pages/location/location",
-        "text": "地图",
+        "pagePath": "pages/profile/profile",
+        "text": "个人",
         "iconPath":"images/map.png",
         "selectedIconPath":"images/map.png"
       },

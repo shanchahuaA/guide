@@ -960,6 +960,32 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         '菜鸟调 expert/speedrun 时'
 }
 
+# ── 第 4 组（续）：个人页昵称（契约 §7.1）────────────────────────────────────
+#
+# ⚠️ 昵称里塞的是 ASCII（PS 5.1 中文解码坑），所以可以直接精确比对。
+# ⚠️ 头像上传（§7.8）不在这里验：PS 5.1 造 multipart 得手拼 body，不划算 ——
+#    "缺 file 回 -200 不是 500"由单测 TeachControllerTest 钉住。
+Section '4c-3. 个人资料（昵称）'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过个人资料断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $profileHeader = @{ token = $loginToken }
+    $smokeNick = 'smoke-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+
+    $saveProfile = Invoke-Json 'POST' '/api/teach/profile' 60 $profileHeader @{ nickname = $smokeNick }
+    Assert-True ((Get-Field $saveProfile.Json 'code') -eq 200) 'POST /api/teach/profile 存昵称回 200' `
+        ("实际 code=" + (Get-Field $saveProfile.Json 'code') + " message=" + (Get-Field $saveProfile.Json 'message'))
+
+    $profileAfter = Invoke-Json 'GET' '/api/teach/profile' 60 $profileHeader
+    Assert-Equal (Get-Field (Get-Data $profileAfter) 'nickname') $smokeNick 'GET profile 回读到刚存的昵称'
+
+    # 昵称头像都空 → 参数错误，不是 500
+    $emptyProfile = Invoke-Json 'POST' '/api/teach/profile' 60 $profileHeader @{ nickname = ''; avatar = '' }
+    Assert-True ((Get-Field $emptyProfile.Json 'code') -eq -200) '昵称头像都空时 code=-200（不是 500）' `
+        ("实际 code=" + (Get-Field $emptyProfile.Json 'code'))
+}
+
 # ── 第 4 组（续）：越级门禁（契约 §7.0 / #43）────────────────────────────────
 #
 # ⚠️ 只断言 ASCII 字段（code / success，以及 message 非空），**不比对中文文案** ——

@@ -18,4 +18,10 @@ public interface IUserService  extends IService<User> {
 
     /** 用户提交/更新自己的 AI key */
     boolean updateApiKey(String openid, String apiKey);
+
+    /**
+     * 保存用户的微信昵称 / 头像（个人页）。**只写非空的那个** —— 传 null 或空白的那列保持原值，
+     * 这样"只改昵称"或"只换头像"都不会把另一列清掉。
+     */
+    boolean updateProfile(String openid, String nickname, String avatar);
 }

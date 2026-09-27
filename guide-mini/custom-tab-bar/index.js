@@ -1,7 +1,8 @@
 const TABS = [
   { pagePath: '/pages/main/main', text: '主页', icon: '/images/main.png' },
   { pagePath: '/pages/archive/archive', text: '图鉴', icon: '/images/item.png' },
-  { pagePath: '/pages/location/location', text: '地图', icon: '/images/map.png' },
+  // 图标先复用 map.png —— images/ 里还没有人物图标，等有新的再换
+  { pagePath: '/pages/profile/profile', text: '个人', icon: '/images/map.png' },
   { pagePath: '/pages/teach/teach', text: '快速上手', icon: '/images/guidebook.png' }
 ]
 

@@ -22,6 +22,9 @@ public class ProfileDto {
     private Integer streak;
     private Integer streakTarget;
     private Boolean hasApiKey;
+    /** 微信昵称 / 头像。都没设过时是 null —— 个人页据此显示"去设置" */
+    private String nickname;
+    private String avatar;
 
     /** 与 {@link ItemDetailDto#toMap()} 同一个理由：主源码路径上只有 Jackson 3，手工装配这一层 */
     public Map<String, Object> toMap() {
@@ -31,6 +34,8 @@ public class ProfileDto {
         map.put("streak", streak);
         map.put("streakTarget", streakTarget);
         map.put("hasApiKey", hasApiKey);
+        map.put("nickname", nickname);
+        map.put("avatar", avatar);
         return map;
     }
 }

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -117,6 +118,46 @@ class TeachControllerTest {
         controller.speedrun(TOKEN, body("怎么速通"));
 
         verify(teachService).ask(eq(TOKEN), eq("怎么速通"), eq(UserLevels.EXPERT));
+    }
+
+    // ── 个人页：昵称 / 头像（§7.1 / §7.8）──────────────────────────────────
+
+    @Test
+    void profile把昵称与头像一并带出() {
+        User user = new User();
+        user.setOpenid(TOKEN);
+        user.setLevel(UserLevels.NOVICE);
+        user.setNickname("小明");
+        user.setAvatar("/avatars/oTest.png");
+        when(userService.findByOpenid(TOKEN)).thenReturn(user);
+
+        BaseResult result = controller.profile(TOKEN);
+
+        assertThat(result.getData().get("nickname")).isEqualTo("小明");
+        assertThat(result.getData().get("avatar")).isEqualTo("/avatars/oTest.png");
+    }
+
+    @Test
+    void 保存昵称时头像那列不被清掉() {
+        controller.updateProfile(TOKEN, Map.of("nickname", "小明"));
+
+        // 只传昵称 → 头像传 null，服务层会跳过它（只写非空的那列）
+        verify(userService).updateProfile(TOKEN, "小明", null);
+    }
+
+    @Test
+    void 昵称与头像都空回参数错误且不写库() {
+        BaseResult result = controller.updateProfile(TOKEN, Map.of("nickname", "  ", "avatar", ""));
+
+        assertThat(result.getCode()).isEqualTo(-200);
+        verify(userService, never()).updateProfile(anyString(), any(), any());
+    }
+
+    @Test
+    void 头像上传缺文件回参数错误不是500() {
+        BaseResult result = controller.uploadAvatar(TOKEN, null);
+
+        assertThat(result.getCode()).isEqualTo(-200);
     }
 
     private void givenUser(int level) {

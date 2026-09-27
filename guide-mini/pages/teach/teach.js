@@ -11,11 +11,14 @@ Page({
 
   data: {
     profile: null,      // /api/teach/profile 的 data，null = 还没拿到（未登录 / 后端没起）
+    loginError: null,   // 未登录时展示的原因（来自 app.js 记下的登录失败信息）
     isExpert: false,    // profile 的 level >= 2。路线分段靠它决定放行还是置灰
     taps: 0,            // 跳级按钮已点击数，显示成"跳级 x/3"
-    // 「问答」分段。apiKey 是输入到一半的草稿，answer 是上一条答案
+    tab: 'ask',         // 分段导航：ask / quiz / route
+    // 「问答」分段。questions/answers 走聊天气泡流，messages 是 [{role, text, pending}]
     question: '',
-    answer: '',
+    messages: [],
+    scrollInto: '',
     asking: false,
     keyDraft: '',
     // 「路线」分段。routeAnswer 是引导语，routeLinks 是后端构造的 B站 链接，askingRoute 防重复
@@ -35,23 +38,47 @@ Page({
     this.loadProfile()
   },
 
-  // 身份条的数据源。没登录时后端返 code=401，api.request 走 reject 分支，
-  // 这里把 profile 归 null —— 页面退化成"未登录"，不弹窗
+  // 身份条的数据源。没登录时后端返 401，api.request 走 reject 分支 —— 把 profile 归 null，
+  // 并带上"为什么没登录"的原因（来自 app.js），页面据此显示明确提示而不是空白
   loadProfile() {
     const token = wx.getStorageSync('token')
     if (!token) {
-      this.setData({ profile: null, isExpert: false, quiz: null, quizResult: null })
+      this.setData({ profile: null, isExpert: false, quiz: null, quizResult: null, loginError: this.loginErrorText() })
       return
     }
     api.request('/api/teach/profile', { header: { token } })
       .then(profile => {
-        this.setData({ profile, isExpert: profile.level >= EXPERT_LEVEL })
+        this.setData({ profile, isExpert: profile.level >= EXPERT_LEVEL, loginError: null })
         // 填过 Key 且还没出过题，进页面就把练习的第一题拉出来
         if (profile.hasApiKey && !this.data.quiz && !this.data.quizResult) {
           this.loadQuiz()
         }
       })
-      .catch(() => this.setData({ profile: null, isExpert: false, quiz: null, quizResult: null }))
+      .catch(err => this.setData({
+        profile: null, isExpert: false, quiz: null, quizResult: null,
+        loginError: err.message || this.loginErrorText()
+      }))
+  },
+
+  loginErrorText() {
+    const app = getApp()
+    const fromApp = app && app.globalData && app.globalData.loginError
+    return fromApp || wx.getStorageSync('loginError') || '未登录：后端没起，或 guide.wechat.appid / secret 没配'
+  },
+
+  onRetryLogin() {
+    const app = getApp()
+    if (app && app.retryLogin) {
+      app.retryLogin()
+    }
+    wx.showToast({ title: '正在重试登录', icon: 'none' })
+    setTimeout(() => this.loadProfile(), 1500)
+  },
+
+  // ── 分段导航 ──────────────────────────────────────────────────────────
+
+  onSwitchTab(e) {
+    this.setData({ tab: e.currentTarget.dataset.tab })
   },
 
   // ── 问答分段（契约 §7.4）──────────────────────────────────────────────
@@ -84,24 +111,49 @@ Page({
     })
   },
 
-  // 提问。失败时后端已经给了一句中文 message（如「API Key 无效」），直接弹出来 ——
-  // 统一请求封装的 reject 分支带的就是它，前端不再自己翻译错误码
+  // 提问。先把用户那句和一条「思考中…」气泡推进列表，结果回来再把气泡替换掉。
+  // 失败时后端已经给了一句中文 message（如「API Key 无效」），直接把它当回答气泡展示
   onAsk() {
     const question = this.data.question.trim()
     if (!question || this.data.asking) {
       return
     }
-    this.setData({ asking: true })
+    const messages = this.data.messages.concat([
+      { role: 'user', text: question },
+      { role: 'ai', text: '思考中…', pending: true }
+    ])
+    this.setData({ asking: true, question: '', messages }, () => this.scrollToLatest())
+
     api.request('/api/teach/ask', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') },
       data: { question }
     }).then(res => {
-      this.setData({ answer: res.answer || '', asking: false })
-    }).catch(err => {
+      this.replaceLatest(res.answer || '（空回答）')
       this.setData({ asking: false })
-      wx.showToast({ title: err.message || '提问失败', icon: 'none' })
+    }).catch(err => {
+      this.replaceLatest(err.message || '提问失败')
+      this.setData({ asking: false })
     })
+  },
+
+  // 把最后一条 ai 气泡的占位文本换成真结果
+  replaceLatest(text) {
+    const messages = this.data.messages.slice()
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'ai') {
+      return
+    }
+    messages[messages.length - 1] = { role: 'ai', text }
+    this.setData({ messages }, () => this.scrollToLatest())
+  },
+
+  // scroll-view 的 scroll-into-view 需要一个 id，气泡的 id 就是 "m<下标>"
+  scrollToLatest() {
+    const index = this.data.messages.length - 1
+    if (index >= 0) {
+      this.setData({ scrollInto: 'm' + index })
+    }
   },
 
   // ── 路线分段（契约 §7.4，仅高手）──────────────────────────────────────
@@ -127,7 +179,7 @@ Page({
     }
     this.setData({ askingRoute: true })
     // 分级入口（契约 §7.7）：等级门禁在 Shiro 的 /api/teach/beginner/** 路径规则上，
-    // 前端只负责发起，链接由后端构造。不再走 /api/teach/ask 那条自由提问
+    // 前端只负责发起，链接由后端构造。不走 /api/teach/ask 那条自由提问
     api.request('/api/teach/beginner/route', {
       method: 'POST',
       header: { token }

@@ -1,5 +1,7 @@
 package org.example.guide.controller;
 
+import lombok.extern.slf4j.Slf4j;
+import org.example.guide.config.AvatarStorage;
 import org.example.guide.pojo.User;
 import org.example.guide.pojo.dto.ProfileDto;
 import org.example.guide.service.IQuizService;
@@ -11,12 +13,18 @@ import org.example.guide.service.UserLevels;
 import org.example.guide.utils.BaseResult;
 import org.example.guide.utils.ResultCodeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -37,6 +45,7 @@ import java.util.Map;
  * </ul>
  * 两层缺一不可：路径拦不住"把越级问题塞进 {@code /ask}"，内容层又表达不了"哪条路径归哪一档"。
  */
+@Slf4j
 @RestController
 public class TeachController {
 
@@ -48,6 +57,9 @@ public class TeachController {
 
     @Autowired
     private IQuizService quizService;
+
+    @Autowired
+    private AvatarStorage avatarStorage;
 
     /** 身份条与分段门禁都靠它。streak 来自连对缓存（#42），level 来自 user 行 */
     @GetMapping("/api/teach/profile")
@@ -61,8 +73,89 @@ public class TeachController {
                 UserLevels.nameOf(user.getLevel()),
                 quizService.streakOf(user.getOpenid()),
                 QuizStreak.TARGET,
-                hasApiKey(user));
+                hasApiKey(user),
+                user.getNickname(),
+                user.getAvatar());
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, dto.toMap());
+    }
+
+    /**
+     * 保存微信昵称 / 头像（个人页）。
+     *
+     * <p>body 传 {@code {nickname, avatar}}，**只写传了的那个**（一个空白不影响另一个）。
+     * 两个都空白才回参数错误 —— 允许"只改昵称"或"只换头像"。
+     */
+    @PostMapping("/api/teach/profile")
+    public BaseResult updateProfile(@RequestHeader(value = "token", required = false) String token,
+                                    @RequestBody(required = false) Map<String, String> body) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        String nickname = body == null ? null : body.get("nickname");
+        String avatar = body == null ? null : body.get("avatar");
+        if (blank(nickname) && blank(avatar)) {
+            BaseResult bad = BaseResult.setResult(ResultCodeEnum.PARAM_ERROR, null);
+            bad.setMessage("昵称和头像不能都为空");
+            return bad;
+        }
+        userService.updateProfile(user.getOpenid(), nickname, avatar);
+        return BaseResult.setResult(ResultCodeEnum.SUCCESS, null);
+    }
+
+    /**
+     * 收下并保存头像文件（个人页）。入参是 multipart 的 {@code file}，出参 {@code {url}}。
+     *
+     * <p>为什么必须真上传：小程序 {@code chooseAvatar} 给的只是一个**临时路径**（{@code wxfile://…}），
+     * 进程一退就失效，直接把它写进库等于存了个废链接。所以先落到后端本地、再回一个稳定 URL
+     * （静态映射见 {@code config/WebMvcConfig}），个人页拿这个 URL 再调 {@link #updateProfile} 落库。
+     *
+     * <p>文件名用 openid（经 {@link AvatarStorage#safeFileName} 白名单收敛，防路径穿越），
+     * 扩展名沿用上传的（默认 png）—— 静态映射按扩展名给 Content-Type，写错后缀会让图片打不开。
+     */
+    @PostMapping(value = "/api/teach/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public BaseResult uploadAvatar(@RequestHeader(value = "token", required = false) String token,
+                                   @RequestParam(value = "file", required = false) MultipartFile file) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        if (file == null || file.isEmpty()) {
+            BaseResult bad = BaseResult.setResult(ResultCodeEnum.PARAM_ERROR, null);
+            bad.setMessage("file 不能为空");
+            return bad;
+        }
+        String fileName = AvatarStorage.safeFileName(user.getOpenid()) + imageExtension(file.getOriginalFilename());
+        try {
+            Files.createDirectories(avatarStorage.directory());
+            Path target = avatarStorage.directory().resolve(fileName);
+            file.transferTo(target);
+        } catch (IOException e) {
+            // 上传失败如实回错误壳，**不是 500**（契约 §7.5 的口径）
+            log.warn("保存头像失败：{}", e.getMessage());
+            BaseResult failed = BaseResult.setResult(ResultCodeEnum.FAILURE, null);
+            failed.setMessage("头像保存失败：" + e.getMessage());
+            return failed;
+        }
+        return BaseResult.setResult(ResultCodeEnum.SUCCESS, Map.of("url", avatarStorage.urlFor(fileName)));
+    }
+
+    /** 只认图片后缀（白名单），其余一律按 .png 存 —— 后缀决定了静态映射给的 Content-Type */
+    private static String imageExtension(String originalFilename) {
+        if (originalFilename != null) {
+            int dot = originalFilename.lastIndexOf('.');
+            if (dot >= 0) {
+                String ext = originalFilename.substring(dot + 1).toLowerCase();
+                if (ext.matches("png|jpg|jpeg|gif|webp")) {
+                    return "." + ext;
+                }
+            }
+        }
+        return ".png";
+    }
+
+    private static boolean blank(String text) {
+        return text == null || text.isBlank();
     }
 
     /**

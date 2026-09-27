@@ -4,46 +4,11 @@ page {
   background-color: #f7f4ea;
   background-image: radial-gradient(#e2dcc6 1.5rpx, transparent 1.5rpx);
   background-size: 20rpx 20rpx;
-  /* 顶部身份条 + 底部给自定义 tabBar 留高度 */
+  /* 底部给自定义 tabBar 留高度 */
   padding-bottom: 140rpx;
 }
 
-/* 身份条：常驻在页面顶部，和详情页的 section 同一套卡片语言（无阴影） */
-.identity {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 24rpx 24rpx 0;
-}
-
-.identity-text {
-  display: flex;
-  align-items: baseline;
-}
-
-.identity-level {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #2b2823;
-}
-
-.identity-streak {
-  margin-left: 16rpx;
-  font-size: 26rpx;
-  color: #9a9384;
-}
-
-/* 跳级按钮（仅演示）：一枚描边小胶囊 */
-.jump {
-  padding: 8rpx 24rpx;
-  font-size: 24rpx;
-  color: #6b6353;
-  background: #f0ebdb;
-  border: 2rpx solid #ded7c2;
-  border-radius: 28rpx;
-}
-
-/* 「问答」分段的卡片。与详情页的 section 同一套语言：米白底 + 细描边、无阴影 */
+/* 与详情页的 section 同一套卡片语言：米白底 + 细描边、无阴影 */
 .section {
   margin: 24rpx 24rpx 0;
   padding: 28rpx;
@@ -74,6 +39,7 @@ page {
   background: #f7f4ea;
   border: 2rpx solid #e6e0cc;
   border-radius: 16rpx;
+  box-sizing: border-box;
 }
 
 .btn {
@@ -107,7 +73,150 @@ page {
   white-space: pre-wrap;
 }
 
-/* ── 「路线」分段（契约 §7.4）──────────────────────────────────────────── */
+/* ── 身份条 + 能力解锁条（契约 §7.0 / §7.6）────────────────────────────── */
+
+.identity {
+  display: flex;
+  flex-direction: column;
+}
+
+.id-line {
+  display: flex;
+  align-items: center;
+}
+
+.id-level {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #2b2823;
+}
+
+.id-streak {
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  color: #9a9384;
+}
+
+/* 跳级按钮（仅演示）：一枚描边小胶囊 */
+.jump {
+  margin-left: auto;
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  color: #6b6353;
+  background: #f0ebdb;
+  border: 2rpx solid #ded7c2;
+  border-radius: 28rpx;
+}
+
+/* 三枚能力 chip：现在是解锁的那几个亮着，灰的是还没到等级 */
+.caps {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20rpx;
+}
+
+.cap {
+  margin: 0 16rpx 12rpx 0;
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  color: #b3ab99;
+  background: #f2eee1;
+  border: 2rpx solid #e6e0cc;
+  border-radius: 28rpx;
+}
+
+.cap.is-on {
+  color: #2f6b3a;
+  background: #eaf4ec;
+  border-color: #b8d8bf;
+}
+
+/* ── 分段导航：问答 / 练习 / 路线 ─────────────────────────────────────── */
+
+.seg {
+  display: flex;
+  margin: 24rpx 24rpx 0;
+  padding: 6rpx;
+  background: #efe9d6;
+  border-radius: 999rpx;
+}
+
+.seg-item {
+  flex: 1;
+  padding: 14rpx 0;
+  font-size: 27rpx;
+  text-align: center;
+  color: #7a7263;
+  border-radius: 999rpx;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.seg-item.is-on {
+  color: #2b2823;
+  font-weight: 600;
+  background: #fffdf6;
+}
+
+/* ── 聊天界面（问答）────────────────────────────────────────────────── */
+
+.chat {
+  height: 520rpx;
+  padding: 4rpx;
+  box-sizing: border-box;
+}
+
+.chat-empty {
+  margin-top: 24rpx;
+  font-size: 26rpx;
+  color: #9a9384;
+  text-align: center;
+}
+
+.msg {
+  display: flex;
+  margin-bottom: 20rpx;
+}
+
+/* 用户气泡靠右，AI 靠左 */
+.msg--user {
+  justify-content: flex-end;
+}
+
+.msg--ai {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 76%;
+  padding: 18rpx 24rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  border-radius: 20rpx;
+}
+
+.msg--user .bubble {
+  color: #2b2823;
+  background: #dfead2;
+  border: 2rpx solid #c6d9b0;
+}
+
+.msg--ai .bubble {
+  color: #3d3830;
+  background: #f7f4ea;
+  border: 2rpx solid #e6e0cc;
+}
+
+/* 「思考中…」占位：淡一点，别让它看起来像最终答案 */
+.bubble.is-pending {
+  color: #9a9384;
+}
+
+.chat-input {
+  margin-top: 20rpx;
+}
+
+/* ── 路线分段（契约 §7.4）────────────────────────────────────────────── */
 
 /* 非高手：按钮置灰但仍可点 —— 点了弹本地提示、不发请求 */
 .route-btn.is-disabled {
@@ -140,7 +249,7 @@ page {
   word-break: break-all;
 }
 
-/* ── 「练习」分段（契约 §7.3）──────────────────────────────────────────── */
+/* ── 练习分段（契约 §7.3）────────────────────────────────────────────── */
 
 .quiz-stem {
   font-size: 30rpx;
