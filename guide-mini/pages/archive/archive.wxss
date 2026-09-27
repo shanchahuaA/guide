@@ -125,3 +125,12 @@
   color: #3d3a33;
   text-align: center;
 }
+
+/* ---------- 空态：加载中 / 拉取失败 / 过滤后无结果 ---------- */
+
+.status {
+  padding: 160rpx 48rpx;
+  font-size: 28rpx;
+  color: #9a9a9a;
+  text-align: center;
+}

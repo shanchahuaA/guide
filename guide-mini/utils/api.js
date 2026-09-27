@@ -52,4 +52,18 @@ function fetchAll() {
   }))
 }
 
-module.exports = { BASE_URL, request, fetchAll }
+// 接口里的 icon 是相对路径（/icons/Hot_Dog.png），那是给后端静态映射看的；
+// 小程序里 <image src> 必须带 origin，否则会被当成包内文件而加载失败。
+//
+// 逐段百分号编码是必需的，不是保险：库里有 11 个文件名带 ' 或 ()——
+// Pandora's_Lunchbox、Pirate's_Compass、Scout's_*（5 个）、Scoutmaster's_Bugle、
+// 以及 3 个 *_Shroom_(Poisonous)。原样丢给小程序，这几个 <image> 加载不出来。
+// split/join 是为了不把路径里的 / 也编成 %2F；其余文件名编码后与原串一致。
+function assetUrl(path) {
+  if (!path) return ''
+  // encodeURIComponent 不转义 ' ( ) ! *，得自己补上 —— 库里那 11 个文件名正好用到了 ' 和 ()
+  const strict = s => encodeURIComponent(s).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase())
+  return BASE_URL + path.split('/').map(strict).join('/')
+}
+
+module.exports = { BASE_URL, request, fetchAll, assetUrl }

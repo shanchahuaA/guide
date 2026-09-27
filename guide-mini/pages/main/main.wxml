@@ -30,6 +30,24 @@
       <view class="intro-item">按主类型、标签、生态筛选，想找什么点一下就出来</view>
     </view>
 
+    <!-- 官方链接：三块图标直接贴在布上，不套卡片底。
+         两列排布 —— 前两个各占一半铺满第一行，第三个只剩一个、被 justify-content 居中 -->
+    <view class="links">
+      <view
+        class="link"
+        wx:for="{{links}}"
+        wx:key="url"
+        data-url="{{item.url}}"
+        bindtap="onTapLink"
+      >
+        <image class="link-icon" src="{{item.icon}}" mode="aspectFit" />
+        <view class="link-text">
+          <text>{{item.text}}</text>
+          <text class="link-arrow"></text>
+        </view>
+      </view>
+    </view>
+
     <!-- 占位：把布撑出可滑动的长度，等有真实模块后删掉 -->
     <view class="filler"></view>
   </view>
