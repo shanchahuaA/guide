@@ -68,7 +68,7 @@ class QuizStreakTest {
 
     @Test
     void 没有进度时从第一题开始() {
-        QuizStreak.Outcome outcome = QuizStreak.advance(true, UserLevels.NOVICE, 0, null);
+        QuizStreak.Outcome outcome = QuizStreak.advance(true, UserLevels.NOVICE, 0, QuizProgress.empty());
 
         assertThat(outcome.streak()).isEqualTo(1);
         assertThat(outcome.answeredIds()).containsExactly(0);

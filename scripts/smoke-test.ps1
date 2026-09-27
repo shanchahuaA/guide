@@ -913,7 +913,7 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
 # ── 第 4 组（续）：练习抽题与判题（契约 §7.3）────────────────────────────────
 #
 # ⚠️ 这一段**不真调 DeepSeek**：练习题库是懒生成的（首次要某级题时才生成），
-# 本段先用 redis-cli 往 guide:quiz:bank:0 里塞一份已知题库，再走 next / answer。
+# 本段先用 redis-cli 往**当前等级对应的题库 key** 里塞一份已知题库，再走 next / answer。
 # 这样既不需要真 Key，也能把"next 不吐答案"与"连对 10 题升级"两条 AC 钉死。
 # 塞不进去（Redis / redis-cli 不可达）就跳过并记 INFO，不误报。
 #
@@ -924,8 +924,14 @@ Section '4d. 练习抽题与判题'
 if ($null -eq $loginToken -or $loginToken -eq '') {
     Write-Host '  登录没拿到 token，跳过练习断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
 } else {
-    # 已知题库：30 题，第 i 题的正确项是 i % 4 —— 判题规则固定，脚本据此答对
-    $QUIZ_BANK_KEY = 'guide:quiz:bank:0'
+    # 已知题库：30 题，第 i 题的正确项是 i % 4 —— 判题规则固定，脚本据此答对。
+    # 题库 key 按**当前等级**取，不写死 0：脚本可重复跑，用户已经升过级也不会错位。
+    $quizHeader = @{ token = $loginToken }
+    $quizProfile = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
+    $startLevel = [int](Get-Field $quizProfile 'level')
+    $QUIZ_BANK_KEY = 'guide:quiz:bank:' + $startLevel
+    $progressKey = 'guide:quiz:progress:' + $loginOpenid
+
     $quizItems = @()
     for ($i = 0; $i -lt 30; $i++) {
         $quizItems += ('{"id":' + $i + ',"stem":"Q' + $i + '","options":["A","B","C","D"],"answerIndex":' + ($i % 4) + ',"explanation":"E' + $i + '"}')
@@ -937,7 +943,8 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     if (-not $quizRedisOk) {
         Add-Note ('Redis 不可达或 redis-cli 不可用，跳过练习断言（redis-cli 返回：' + "$quizSet" + '）')
     } else {
-        $quizHeader = @{ token = $loginToken }
+        # 先清掉这个用户的连对进度，保证从"连对 0、无排除集"开始，脚本可重复跑
+        $null = & $script:RedisCli DEL $progressKey 2>&1
 
         # 抽题：响应只有题号 / 题干 / 选项，**没有答案**（票面 AC）
         $quizNext = Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader
@@ -959,7 +966,7 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $quizKeys = @($quizNextData.PSObject.Properties | ForEach-Object { $_.Name })
         Assert-Equal $quizKeys.Count 3 'quiz/next 只有题号 / 题干 / 选项三个键' ('实际键：' + ($quizKeys -join ', '))
 
-        # 连答 10 题正确（题 i 的正确项是 i % 4）→ 等级涨 1 且连对归零
+        # 连答 10 题正确（题 i 的正确项是 i % 4）
         $quizFailed = $false
         $lastAnswer = $null
         for ($n = 1; $n -le 10; $n++) {
@@ -975,19 +982,16 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
             $lastAnswer = $ans
         }
         if (-not $quizFailed) {
-            Assert-True ((Get-Field $lastAnswer 'streak') -eq 0) '连对满 10 后 streak 归零' ('实际 ' + (Format-Actual (Get-Field $lastAnswer 'streak')))
-            Assert-True ((Get-Field $lastAnswer 'level') -eq 1) '连对满 10 后等级涨到 1' ('实际 ' + (Format-Actual (Get-Field $lastAnswer 'level')))
+            # 题型 AC：等级涨 1、连对归零。判题响应里不带这两样，看身份条（profile 是唯一权威）
+            $expectedLevel = [Math]::Min($startLevel + 1, 2)
+            $profileAfterQuiz = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
+            Assert-Equal (Get-Field $profileAfterQuiz 'level') $expectedLevel ('连对满 10 后 level = ' + $expectedLevel)
+            Assert-Equal (Get-Field $profileAfterQuiz 'streak') 0 '连对满 10 后 streak 归零'
         }
-
-        # 身份条同步（等级条读的就是 profile）
-        $profileAfterQuiz = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
-        Assert-Equal (Get-Field $profileAfterQuiz 'level') 1 'profile 的 level 也涨到 1'
-        Assert-Equal (Get-Field $profileAfterQuiz 'streak') 0 'profile 的 streak 归零'
 
         # Redis：题库 key 在；连对 key 在且 TTL ≤ 2 小时（票面 AC）
         $bankExists = & $script:RedisCli EXISTS $QUIZ_BANK_KEY 2>&1
-        Assert-Equal (("$bankExists").Trim()) '1' 'Redis 里有题库 key（guide:quiz:bank:0）'
-        $progressKey = 'guide:quiz:progress:' + $loginOpenid
+        Assert-Equal (("$bankExists").Trim()) '1' ('Redis 里有题库 key（' + $QUIZ_BANK_KEY + '）')
         $progressTtl = & $script:RedisCli TTL $progressKey 2>&1
         $ttlOk = $false
         try { $ttlOk = (([int]$progressTtl) -gt 0) -and (([int]$progressTtl) -le 7200) } catch { $ttlOk = $false }

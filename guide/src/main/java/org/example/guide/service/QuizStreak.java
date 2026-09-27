@@ -44,23 +44,22 @@ public final class QuizStreak {
      * @param correct    这一题是否答对
      * @param level      作答前的等级
      * @param answeredId 这一题的题号（答对时进排除集）
-     * @param current    作答前的进度，可空（当空进度处理）
+     * @param current    作答前的进度。调用方拿的是 {@code QuizProgressCache.get} 的结果，**必定非空**
+     *                   （没有缓存时它返回 {@link QuizProgress#empty()}），所以这里不判 null
      */
     public static Outcome advance(boolean correct, int level, int answeredId, QuizProgress current) {
-        int streak = current == null ? 0 : current.getStreak();
-
         if (!correct) {
             return new Outcome(false, false, level, 0, Set.of());
         }
 
-        Set<Integer> answered = new HashSet<>(current == null ? Set.of() : current.answeredIdsOrEmpty());
-        answered.add(answeredId);
-        streak += 1;
-
+        int streak = current.getStreak() + 1;
         if (streak >= TARGET) {
             int nextLevel = UserLevels.nextLevel(level);
             return new Outcome(true, nextLevel > level, nextLevel, 0, Set.of());
         }
+
+        Set<Integer> answered = new HashSet<>(current.answeredIdsOrEmpty());
+        answered.add(answeredId);
         return new Outcome(true, false, level, streak, answered);
     }
 }

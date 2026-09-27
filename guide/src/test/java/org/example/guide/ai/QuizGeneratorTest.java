@@ -103,11 +103,25 @@ class QuizGeneratorTest {
     void 第一次解析失败会重试并返回第二次的结果() {
         when(deepSeekClient.chatJson(anyString(), anyString(), anyString()))
                 .thenReturn("不是 JSON")
-                .thenReturn("{\"questions\":[{\"stem\":\"Q\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"answerIndex\":0,\"explanation\":\"E\"}]}");
+                .thenReturn(bankJson(QuizGenerator.MIN_QUESTIONS));
 
         List<QuizQuestion> questions = generator.generate("sk-good", List.of(item()), 0);
 
-        assertThat(questions).hasSize(1);
+        assertThat(questions).hasSize(QuizGenerator.MIN_QUESTIONS);
+        verify(deepSeekClient, times(2)).chatJson(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void 题数不够也算失败并重试() {
+        // 短于 MIN_QUESTIONS 的题库会让"本周期内已答对的题不再出"在周期走完前无题可出，
+        // 所以题数不够与解析失败同待遇：重试，绝不写进缓存
+        when(deepSeekClient.chatJson(anyString(), anyString(), anyString()))
+                .thenReturn(bankJson(QuizGenerator.MIN_QUESTIONS - 1))
+                .thenReturn(bankJson(QuizGenerator.MIN_QUESTIONS));
+
+        List<QuizQuestion> questions = generator.generate("sk-good", List.of(item()), 0);
+
+        assertThat(questions).hasSize(QuizGenerator.MIN_QUESTIONS);
         verify(deepSeekClient, times(2)).chatJson(anyString(), anyString(), anyString());
     }
 
@@ -124,7 +138,7 @@ class QuizGeneratorTest {
     @Test
     void 出题走的是JSON模式不是普通对话() {
         when(deepSeekClient.chatJson(anyString(), anyString(), anyString()))
-                .thenReturn("{\"questions\":[{\"stem\":\"Q\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"answerIndex\":0,\"explanation\":\"E\"}]}");
+                .thenReturn(bankJson(QuizGenerator.MIN_QUESTIONS));
 
         generator.generate("sk-good", List.of(item()), 0);
 
@@ -139,5 +153,19 @@ class QuizGeneratorTest {
         item.setNameEn("Hot Dog");
         item.setNameZh("热狗肠");
         return item;
+    }
+
+    /** n 道合法题目的响应串，题 i 的正确项是 i % 4 —— 出题路径的测试夹具 */
+    private static String bankJson(int n) {
+        StringBuilder sb = new StringBuilder("{\"questions\":[");
+        for (int i = 0; i < n; i++) {
+            if (i > 0) {
+                sb.append(',');
+            }
+            sb.append("{\"stem\":\"Q").append(i)
+              .append("\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"answerIndex\":").append(i % 4)
+              .append(",\"explanation\":\"E").append(i).append("\"}");
+        }
+        return sb.append("]}").toString();
     }
 }

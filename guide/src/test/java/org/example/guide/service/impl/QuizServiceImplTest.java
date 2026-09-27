@@ -12,6 +12,7 @@ import org.example.guide.service.IUserService;
 import org.example.guide.utils.BaseResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,6 +38,9 @@ import static org.mockito.Mockito.when;
  *
  * <p>状态机本身的四条路径在 {@code QuizStreakTest} 里，题库解析与重试在 {@code QuizGeneratorTest} 里；
  * 这里只钉"编排有没有接上"。
+ *
+ * <p>判题结果的连对/排除集不在响应里（响应只有正确项与解析），所以断言改成**抓写进缓存的那个
+ * {@link QuizProgress}** —— 那才是状态真正落地的地方，比断言响应字段更贴事实。
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -116,23 +120,27 @@ class QuizServiceImplTest {
     // ── 判题 ────────────────────────────────────────────────────────────────
 
     @Test
-    void 答对时连对加一且写回缓存不升级() {
+    void 答对时回正确项与解析且连对加一不升级() {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
         when(quizProgressCache.get(OPENID)).thenReturn(QuizProgress.empty());
 
         BaseResult result = service().answer(OPENID, 3, 1);
 
+        // 响应只有正确项与解析（契约 §7.3）—— 连对/等级由 profile 下发
+        assertThat(result.getData()).containsOnlyKeys("correct", "answerIndex", "explanation");
         assertThat(result.getData().get("correct")).isEqualTo(true);
         assertThat(result.getData().get("answerIndex")).isEqualTo(1);
         assertThat(result.getData().get("explanation")).isEqualTo("解析");
-        assertThat(result.getData().get("streak")).isEqualTo(1);
-        verify(quizProgressCache).put(eq(OPENID), any(QuizProgress.class));
-        verify(userService, never()).updateLevel(anyString(), org.mockito.ArgumentMatchers.anyInt());
+
+        QuizProgress written = capturedProgress();
+        assertThat(written.getStreak()).isEqualTo(1);
+        assertThat(written.answeredIdsOrEmpty()).containsExactly(3);
+        verify(userService, never()).updateLevel(anyString(), anyInt());
     }
 
     @Test
-    void 答错时连对归零() {
+    void 答错时连对归零且排除集清空() {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
         when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(5, new HashSet<>(Set.of(1, 2))));
@@ -140,21 +148,24 @@ class QuizServiceImplTest {
         BaseResult result = service().answer(OPENID, 3, 0);
 
         assertThat(result.getData().get("correct")).isEqualTo(false);
-        assertThat(result.getData().get("streak")).isEqualTo(0);
+        QuizProgress written = capturedProgress();
+        assertThat(written.getStreak()).isZero();
+        // 之前答对的题要重新出现 —— 排除集一并清空
+        assertThat(written.answeredIdsOrEmpty()).isEmpty();
     }
 
     @Test
-    void 连对满十升级并落库() {
+    void 连对满十升级并落库且连对归零() {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
         when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(9, new HashSet<>()));
 
-        BaseResult result = service().answer(OPENID, 3, 1);
+        service().answer(OPENID, 3, 1);
 
-        assertThat(result.getData().get("level")).isEqualTo(1);
-        assertThat(result.getData().get("streak")).isEqualTo(0);
-        assertThat(result.getData().get("levelName")).isEqualTo("入门");
         verify(userService).updateLevel(OPENID, 1);
+        QuizProgress written = capturedProgress();
+        assertThat(written.getStreak()).isZero();
+        assertThat(written.answeredIdsOrEmpty()).isEmpty();
     }
 
     @Test
@@ -176,6 +187,13 @@ class QuizServiceImplTest {
         user.setLevel(level);
         user.setApiKey(apiKey);
         when(userService.findByOpenid(OPENID)).thenReturn(user);
+    }
+
+    /** 抓一次写到连对缓存里的进度 —— 状态落地的真正位置 */
+    private QuizProgress capturedProgress() {
+        ArgumentCaptor<QuizProgress> captor = ArgumentCaptor.forClass(QuizProgress.class);
+        verify(quizProgressCache).put(eq(OPENID), captor.capture());
+        return captor.getValue();
     }
 
     private static QuizQuestion question(int id, int answerIndex) {

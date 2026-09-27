@@ -82,20 +82,15 @@ public class QuizServiceImpl implements IQuizService {
             } catch (AiException e) {
                 return fail(e.getMessage());
             }
-            if (bank == null || bank.isEmpty()) {
-                return fail("题库生成失败，请重试");
-            }
             quizBankCache.put(level, bank);
         }
 
+        // 题库不少于 QuizGenerator.MIN_QUESTIONS（10）道，而一个周期的排除集最多 9 个
+        // （满 10 就清零/升级），所以这里必定还挑得出一道没答对的题 —— 不需要"排空就回退全量"的兜底
         Set<Integer> answered = quizProgressCache.get(openid).answeredIdsOrEmpty();
         List<QuizQuestion> candidates = bank.stream()
                 .filter(question -> question.getId() != null && !answered.contains(question.getId()))
                 .toList();
-        if (candidates.isEmpty()) {
-            // 排除集攒满一整库（只有封顶高手连续全对才会走到）时回退成全量，避免"无题可出"
-            candidates = bank;
-        }
 
         QuizQuestion question = candidates.get(random.nextInt(candidates.size()));
         QuizNextDto dto = new QuizNextDto(question.getId(), question.getStem(), question.getOptions());
@@ -129,11 +124,7 @@ public class QuizServiceImpl implements IQuizService {
         QuizAnswerDto dto = new QuizAnswerDto(
                 outcome.correct(),
                 question.getAnswerIndex(),
-                question.getExplanation(),
-                outcome.streak(),
-                QuizStreak.TARGET,
-                outcome.level(),
-                UserLevels.nameOf(outcome.level()));
+                question.getExplanation());
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, dto.toMap());
     }
 
