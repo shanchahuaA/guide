@@ -2,8 +2,10 @@ package org.example.guide.controller;
 
 import org.example.guide.pojo.User;
 import org.example.guide.pojo.dto.ProfileDto;
+import org.example.guide.service.IQuizService;
 import org.example.guide.service.ITeachService;
 import org.example.guide.service.IUserService;
+import org.example.guide.service.QuizStreak;
 import org.example.guide.service.UserLevels;
 import org.example.guide.utils.BaseResult;
 import org.example.guide.utils.ResultCodeEnum;
@@ -17,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * AI 教学的身份与问答（契约 §7.0 / §7.1 / §7.2 / §7.4 / §7.6）。
+ * AI 教学的身份、问答与练习（契约 §7.0 / §7.1 / §7.2 / §7.3 / §7.4 / §7.6）。
  *
  * <p><b>鉴权是手工的</b>：Shiro 过滤链仍是 {@code /** = anon}（收口归 #5），
  * 这里直接校验请求头 {@code token}（占位串，值即 openid）。缺 token 返
@@ -26,16 +28,16 @@ import java.util.Map;
 @RestController
 public class TeachController {
 
-    /** 连对 10 题升级（CONTEXT.md「用户等级」） */
-    private static final int STREAK_TARGET = 10;
-
     @Autowired
     private IUserService userService;
 
     @Autowired
     private ITeachService teachService;
 
-    /** 身份条与分段门禁都靠它。本单里 streak 恒 0（连对计数归 #42） */
+    @Autowired
+    private IQuizService quizService;
+
+    /** 身份条与分段门禁都靠它。streak 来自连对缓存（#42），level 来自 user 行 */
     @GetMapping("/api/teach/profile")
     public BaseResult profile(@RequestHeader(value = "token", required = false) String token) {
         User user = userByToken(token);
@@ -45,8 +47,8 @@ public class TeachController {
         ProfileDto dto = new ProfileDto(
                 user.getLevel(),
                 UserLevels.nameOf(user.getLevel()),
-                0,
-                STREAK_TARGET,
+                quizService.streakOf(user.getOpenid()),
+                QuizStreak.TARGET,
                 hasApiKey(user));
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, dto.toMap());
     }
@@ -91,6 +93,53 @@ public class TeachController {
         }
         String question = body == null ? null : body.get("question");
         return teachService.ask(user.getOpenid(), question);
+    }
+
+    /**
+     * 抽一道题（契约 §7.3）。响应**只有题号 / 题干 / 选项**，答案只在
+     * {@link #quizAnswer} 的响应里出现 —— 抓包也不该能推出正确项。
+     *
+     * <p>题库懒生成在 {@code IQuizService.next} 里：该级题库不在缓存时才调大模型。
+     */
+    @GetMapping("/api/teach/quiz/next")
+    public BaseResult quizNext(@RequestHeader(value = "token", required = false) String token) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        return quizService.next(user.getOpenid());
+    }
+
+    /**
+     * 作答（契约 §7.3）。body 传 {@code {questionId, optionIndex}}，对错由后端比对下标。
+     *
+     * <p>返回里带正确项与解析，同时带作答后的 {@code streak / level / levelName} ——
+     * 前端据此就地把身份条刷新，不必再打一次 profile。
+     */
+    @PostMapping("/api/teach/quiz/answer")
+    public BaseResult quizAnswer(@RequestHeader(value = "token", required = false) String token,
+                                 @RequestBody(required = false) Map<String, Object> body) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        return quizService.answer(user.getOpenid(), asInt(body, "questionId"), asInt(body, "optionIndex"));
+    }
+
+    /** JSON 体里的数字可能是 Integer / Double / String（前端序列化不定），统一收敛成 Integer */
+    private static Integer asInt(Map<String, Object> body, String key) {
+        Object value = body == null ? null : body.get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String text && !text.isBlank()) {
+            try {
+                return Integer.valueOf(text.trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     /**

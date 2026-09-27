@@ -13,7 +13,13 @@ Page({
     question: '',
     answer: '',
     asking: false,
-    keyDraft: ''
+    keyDraft: '',
+    // 「练习」分段。quiz 是当前题目（**不含答案**），quizResult 是判题结果，
+    // selectedIndex 是用户选的那一项，quizLoading 防重复出题
+    quiz: null,
+    quizResult: null,
+    selectedIndex: null,
+    quizLoading: false
   },
 
   onShow() {
@@ -26,12 +32,18 @@ Page({
   loadProfile() {
     const token = wx.getStorageSync('token')
     if (!token) {
-      this.setData({ profile: null })
+      this.setData({ profile: null, quiz: null, quizResult: null })
       return
     }
     api.request('/api/teach/profile', { header: { token } })
-      .then(profile => this.setData({ profile }))
-      .catch(() => this.setData({ profile: null }))
+      .then(profile => {
+        this.setData({ profile })
+        // 填过 Key 且还没出过题，进页面就把练习的第一题拉出来
+        if (profile.hasApiKey && !this.data.quiz && !this.data.quizResult) {
+          this.loadQuiz()
+        }
+      })
+      .catch(() => this.setData({ profile: null, quiz: null, quizResult: null }))
   },
 
   // ── 问答分段（契约 §7.4）──────────────────────────────────────────────
@@ -82,6 +94,48 @@ Page({
       this.setData({ asking: false })
       wx.showToast({ title: err.message || '提问失败', icon: 'none' })
     })
+  },
+
+  // ── 练习分段（契约 §7.3）──────────────────────────────────────────────
+
+  // 抽一题。响应只有题号 / 题干 / 选项，答案要答完才由后端下发
+  loadQuiz() {
+    const token = wx.getStorageSync('token')
+    if (!token || this.data.quizLoading) {
+      return
+    }
+    this.setData({ quizLoading: true, quizResult: null, selectedIndex: null })
+    api.request('/api/teach/quiz/next', { header: { token } })
+      .then(quiz => this.setData({ quiz: quiz || null, quizLoading: false }))
+      .catch(err => {
+        this.setData({ quizLoading: false })
+        wx.showToast({ title: err.message || '出题失败', icon: 'none' })
+      })
+  },
+
+  // 选一个选项作答。对错在后端比对下标，这里只把结果展开
+  onChooseOption(e) {
+    const quiz = this.data.quiz
+    if (!quiz || this.data.quizResult) {
+      return
+    }
+    const optionIndex = e.currentTarget.dataset.index
+    api.request('/api/teach/quiz/answer', {
+      method: 'POST',
+      header: { token: wx.getStorageSync('token') },
+      data: { questionId: quiz.id, optionIndex }
+    }).then(result => {
+      this.setData({ quizResult: result, selectedIndex: optionIndex })
+      // 连对与等级都可能变，就地把身份条刷新（loadProfile 里 quizResult 已在，不会重抽题）
+      this.loadProfile()
+    }).catch(err => {
+      wx.showToast({ title: err.message || '判题失败', icon: 'none' })
+    })
+  },
+
+  // 下一题：清掉上一题的判题结果再抽一道
+  onNextQuestion() {
+    this.loadQuiz()
   },
 
   // 演示后门：连点三次升一级。第三次才打后端，成功后计数归零并提示
