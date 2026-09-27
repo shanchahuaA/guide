@@ -134,6 +134,13 @@ public class TeachServiceImpl implements ITeachService {
         return success(answer);
     }
 
+    @Override
+    public BaseResult route() {
+        // 分级入口 /api/teach/beginner/route 专用。等级门禁在路由层的 Shiro 路径规则上
+        // （beginner/** 要 beginner），这里只负责把链接装进响应；不调大模型、不进缓存。
+        return routeAnswer();
+    }
+
     /** 路线类问题的回答：引导语 + 后端构造的 B站 链接（契约 §7.4，{@code links} 非空） */
     private BaseResult routeAnswer() {
         return BaseResult.setResult(ResultCodeEnum.SUCCESS,

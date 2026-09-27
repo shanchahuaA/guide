@@ -27,6 +27,15 @@ import java.util.Map;
  * {@code code = 401}，请求根本到不了这里。控制器里保留的手工校验（{@code userByToken} /
  * {@code unauthorized}）只是兜底：过滤链被绕过、或单测直调控制器方法时才会用到；
  * 它同时负责取出 User 行（等级、Key），所以不能整个删掉。
+ *
+ * <p><b>越级门禁分两层</b>（契约 §7.0）：
+ * <ul>
+ *   <li><b>路径层</b>在 Shiro 过滤链上 —— {@code /api/teach/beginner/**} 要 beginner（≥入门，
+ *       如「今日路线」）、{@code /api/teach/expert/**} 要 expert（仅高手，如速通），拦下的回 HTTP 403；</li>
+ *   <li><b>内容层</b>是 {@link TeachGate} —— 同一个 {@code /api/teach/ask} 里按问题分类拦越级
+ *       （自由文本的兜底），拦下的回 {@code code = 403} + 按等级分支的中文文案。</li>
+ * </ul>
+ * 两层缺一不可：路径拦不住"把越级问题塞进 {@code /ask}"，内容层又表达不了"哪条路径归哪一档"。
  */
 @RestController
 public class TeachController {
@@ -106,9 +115,41 @@ public class TeachController {
         return teachService.ask(user.getOpenid(), question, user.getLevel());
     }
 
-    /** 门禁拦下：统一响应包的失败分支（code = -100）+ 按等级分支的文案，前端 reject 分支直接弹它 */
+    /**
+     * 「今日路线」的分级入口（契约 §7.4 / §7.7）。
+     *
+     * <p>等级门禁在 **Shiro 路径层**：{@code /api/teach/beginner/**} 要 beginner（≥入门），
+     * 菜鸟在过滤链上就被 HTTP 403 拦下、到不了这里。链接由后端构造、不调大模型。
+     */
+    @PostMapping("/api/teach/beginner/route")
+    public BaseResult route(@RequestHeader(value = "token", required = false) String token) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        return teachService.route();
+    }
+
+    /**
+     * 速通类的分级入口（契约 §7.0 / §7.7）。
+     *
+     * <p>等级门禁在 **Shiro 路径层**：{@code /api/teach/expert/**} 要 expert（仅高手）。
+     * 路径已保证等级够，所以不再走 {@link #ask} 的内容门禁，直接按问答那条链答。
+     */
+    @PostMapping("/api/teach/expert/speedrun")
+    public BaseResult speedrun(@RequestHeader(value = "token", required = false) String token,
+                               @RequestBody(required = false) Map<String, String> body) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        String question = body == null ? null : body.get("question");
+        return teachService.ask(user.getOpenid(), question, user.getLevel());
+    }
+
+    /** 内容门禁拦下：{@code code = 403} + 按等级分支的文案，前端 reject 分支直接弹它 */
     private static BaseResult blocked(String message) {
-        BaseResult result = BaseResult.setResult(ResultCodeEnum.FAILURE, null);
+        BaseResult result = BaseResult.setResult(ResultCodeEnum.FORBIDDEN, null);
         result.setMessage(message);
         return result;
     }

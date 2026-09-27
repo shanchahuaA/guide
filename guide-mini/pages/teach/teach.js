@@ -4,8 +4,6 @@ const api = require('../../utils/api')
 // 跳级后门：连点三次算升一级（契约 §7.6），计数到 3 才发请求
 const TAPS_PER_LEVEL = 3
 
-// 「路线」分段的入口问题。路线类问题由后端识别（TeachGate），前端只负责发起（契约 §7.4）
-const ROUTE_QUESTION = '今日最佳路线'
 // 高手才配问路线（契约 §7.0 的等级矩阵）
 const EXPERT_LEVEL = 2
 
@@ -128,10 +126,11 @@ Page({
       return
     }
     this.setData({ askingRoute: true })
-    api.request('/api/teach/ask', {
+    // 分级入口（契约 §7.7）：等级门禁在 Shiro 的 /api/teach/beginner/** 路径规则上，
+    // 前端只负责发起，链接由后端构造。不再走 /api/teach/ask 那条自由提问
+    api.request('/api/teach/beginner/route', {
       method: 'POST',
-      header: { token },
-      data: { question: ROUTE_QUESTION }
+      header: { token }
     }).then(res => {
       this.setData({ routeAnswer: res.answer || '', routeLinks: res.links || [], askingRoute: false })
     }).catch(err => {

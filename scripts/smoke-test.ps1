@@ -836,6 +836,19 @@ function Assert-Unauthorized($resp, [string] $name) {
     }
 }
 
+# 路径门禁拦下：Shiro 的 roleAuthc 回 **HTTP 403** + 响应壳 code=403（与 401 同形，也是真 HTTP 状态）。
+# 与 Assert-Unauthorized 同一套路：HTTP 状态硬断言，响应壳取到才加验，取不到记 INFO。
+function Assert-Forbidden($resp, [string] $name) {
+    Assert-True ($resp.Status -eq 403) ($name + ' HTTP 403（Shiro 路径门禁拦下）') `
+        ("实际 status=" + $resp.Status + " error=" + $resp['Error'])
+    $code = Get-Field $resp.Json 'code'
+    if ($null -ne $code) {
+        Assert-Equal $code 403 ($name + ' 响应壳里 code=403')
+    } else {
+        Add-Note ($name + ' 的 403 响应体在 PS 5.1 里取不到，只验了 HTTP 状态')
+    }
+}
+
 Section '4b. 登录与教学身份'
 
 $loginCode = 'smoke-test-' + [guid]::NewGuid().ToString('N')
@@ -927,6 +940,26 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         ("实际 success=" + (Get-Field $askBadKey.Json 'success'))
 }
 
+# ── 第 4 组（续）：分级入口的路径门禁（契约 §7.0 / §7.7）──────────────────────
+#
+# ⚠️ 必须在**登录取到的这个新用户还是菜鸟（level 0）时**验：login 用的是每次新生成的
+# js_code，findOrCreateByOpenid 建出来的就是 level 0。§4e 连对升级、§4f 顶到高手之后
+# 就再也造不出"菜鸟调高级入口"这个场景了（dev/level 只能升不能降）。
+#
+# 落在 Shiro 过滤链上的 roleAuthc 拦下时回**真 HTTP 403**（不是响应包 code），所以断言看 Status。
+Section '4c-2. 分级入口的路径门禁'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过路径门禁断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $tierHeader = @{ token = $loginToken }
+    # 菜鸟 → beginner/route（要 ≥入门）→ 403
+    Assert-Forbidden (Invoke-Json 'POST' '/api/teach/beginner/route' 60 $tierHeader) '菜鸟调 beginner/route 时'
+    # 菜鸟 → expert/speedrun（要高手）→ 403
+    Assert-Forbidden (Invoke-Json 'POST' '/api/teach/expert/speedrun' 60 $tierHeader @{ question = '怎么速通' }) `
+        '菜鸟调 expert/speedrun 时'
+}
+
 # ── 第 4 组（续）：越级门禁（契约 §7.0 / #43）────────────────────────────────
 #
 # ⚠️ 只断言 ASCII 字段（code / success，以及 message 非空），**不比对中文文案** ——
@@ -950,9 +983,10 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     if ($null -eq $gateQuestion) {
         Add-Note ('当前等级 ' + $gateLevel + ' 是高手，越级门禁无从触发（把 user.level 置 0 可重验）')
     } else {
-        # 越级：拦在路由层，不查回答缓存、不调大模型（票面 AC）
+        # 越级：内容门禁拦在服务之前，不查回答缓存、不调大模型（票面 AC）。
+        # 响应码自门禁整合起是 403（取 Shiro 那套语义），HTTP 仍 200（统一响应包惯例）。
         $blockedAsk = Invoke-Json 'POST' '/api/teach/ask' 60 $gateHeader @{ question = $gateQuestion }
-        Assert-True ((Get-Field $blockedAsk.Json 'code') -eq -100) ('越级问题被拦时 code=-100（等级 ' + $gateLevel + '）') `
+        Assert-True ((Get-Field $blockedAsk.Json 'code') -eq 403) ('越级问题被拦时 code=403（等级 ' + $gateLevel + '）') `
             ("实际 code=" + (Get-Field $blockedAsk.Json 'code') + " message=" + (Get-Field $blockedAsk.Json 'message'))
         Assert-True ((Get-Field $blockedAsk.Json 'success') -eq $false) '越级问题 success=false' `
             ("实际 success=" + (Get-Field $blockedAsk.Json 'success'))
@@ -1059,8 +1093,8 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
 
 # ── 第 4 组（续）：每日路线（契约 §7.4 / #44）────────────────────────────────
 #
-# ⚠️ 路线只有高手能问：先用 dev/level 把等级顶到 2。它只能升不能降、封顶也是 2，
-# 所以连叫两次一定到 2（无论当前是 0 还是 1）。dev/level 与 testInsertUser 同类，是演示后门。
+# ⚠️ 前端把「今日路线」只开给高手，所以这里先 dev/level 顶到 2；端点本身要 ≥入门（§7.0）。
+# dev/level 只能升不能降、封顶 2，叫两次一定到 2（无论当前是 0 还是 1）。它与 testInsertUser 同类，是演示后门。
 #
 # ⚠️ 这一条**不依赖大模型、也不依赖用户的 Key** —— 链接由后端构造
 # （模型不能联网，CONTEXT.md「每日路线」）。第一级真会去打 api.bilibili.com；即便被风控挡下，
@@ -1078,8 +1112,9 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     $routeLevel = [int](Get-Field (Get-Data (Invoke-Json 'POST' '/api/teach/dev/level' 60 $routeHeader)) 'level')
     Assert-Equal $routeLevel 2 'dev/level 把等级顶到高手（路线断言的前提）'
 
-    $route = Invoke-Json 'POST' '/api/teach/ask' 90 $routeHeader @{ question = '今日最佳路线' }
-    Assert-True ((Get-Field $route.Json 'code') -eq 200) '高手问路线类 code=200（不被门禁拦）' `
+    # 高手走分级入口（§7.7）：Shiro 的 beginner/** 规则放行，后端构造链接、不调大模型
+    $route = Invoke-Json 'POST' '/api/teach/beginner/route' 90 $routeHeader
+    Assert-True ((Get-Field $route.Json 'code') -eq 200) '高手走 beginner/route 拿路线 code=200' `
         ("实际 code=" + (Get-Field $route.Json 'code') + " message=" + (Get-Field $route.Json 'message'))
 
     $routeData = Get-Data $route

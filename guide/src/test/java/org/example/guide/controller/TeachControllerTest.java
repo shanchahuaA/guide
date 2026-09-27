@@ -56,10 +56,11 @@ class TeachControllerTest {
     }
 
     @Test
-    void 菜鸟问路线类被路由层拦下且不调服务() {
+    void 菜鸟问路线类被内容门禁拦下且不调服务() {
         BaseResult result = controller.ask(TOKEN, body("今日最佳路线"));
 
-        assertThat(result.getCode()).isEqualTo(-100);
+        // 内容门禁的响应码从 -100 改成 403（取 Shiro 那套语义），文案仍是按等级分支的那句
+        assertThat(result.getCode()).isEqualTo(403);
         assertThat(result.getMessage()).isEqualTo(TeachGate.message(UserLevels.NOVICE));
         // 票面 AC：越级时不调大模型 —— 服务那一层压根没被碰过
         verifyNoInteractions(teachService);
@@ -90,8 +91,32 @@ class TeachControllerTest {
     void 请求体里的等级参数不影响门禁判定() {
         BaseResult result = controller.ask(TOKEN, Map.of("question", "今日最佳路线", "level", "2"));
 
-        assertThat(result.getCode()).isEqualTo(-100);
+        assertThat(result.getCode()).isEqualTo(403);
         verifyNoInteractions(teachService);
+    }
+
+    // ── 分级入口的委派（§7.7）────────────────────────────────────────────────
+    //
+    // ⚠️ 等级门禁在 **Shiro 路径层**，不在控制器里 —— 所以这里只验"委派对不对"；
+    // "菜鸟调 beginner/route 被 403"那半条归过滤器，冒烟脚本覆盖。
+
+    @Test
+    void 分级入口route把请求交给服务() {
+        when(teachService.route()).thenReturn(ok());
+
+        controller.route(TOKEN);
+
+        verify(teachService).route();
+    }
+
+    @Test
+    void 分级入口speedrun把问题带身份等级交给服务() {
+        givenUser(UserLevels.EXPERT);
+        when(teachService.ask(anyString(), anyString(), any())).thenReturn(ok());
+
+        controller.speedrun(TOKEN, body("怎么速通"));
+
+        verify(teachService).ask(eq(TOKEN), eq("怎么速通"), eq(UserLevels.EXPERT));
     }
 
     private void givenUser(int level) {

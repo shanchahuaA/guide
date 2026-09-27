@@ -19,4 +19,15 @@ public interface ITeachService {
      *         失败时是 {@code -100} + 中文提示，**不是 500**（契约 §7.5）
      */
     BaseResult ask(String openid, String question, Integer level);
+
+    /**
+     * 「今日路线」的分级入口（契约 §7.4 / §7.7）：只回引导语 + 后端构造的 B站 链接。
+     *
+     * <p>**不调大模型、不进回答缓存**（链接里带当天日期，缓存到明天就是过期链接）——
+     * 与 {@link #ask} 的路线分支同一份产出，只是入口不同。
+     *
+     * <p>**等级门禁不在这里** —— 它在路由层的 Shiro 路径规则上：
+     * {@code /api/teach/beginner/**} 要 beginner（≥入门），见 {@code config/ShiroConfig}。
+     */
+    BaseResult route();
 }

@@ -7,6 +7,7 @@ public enum ResultCodeEnum {
 
     SUCCESS(true,200,"操作成功"),
     UNAUTHORIZED(false,401,"未登录"),
+    FORBIDDEN(false,403,"当前等级不足"),
     FAILURE(false,-100,"操作失败"),
     SYSTEM_ERROR(false,500,"系统错误"),
     PARAM_ERROR(false,-200,"参数错误");

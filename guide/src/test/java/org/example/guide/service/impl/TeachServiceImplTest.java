@@ -155,6 +155,34 @@ class TeachServiceImplTest {
         verify(answerCache, never()).put(anyString(), anyString());
     }
 
+    // ── 分级入口 route()（§7.7）─────────────────────────────────────────────
+
+    @Test
+    void route入口回后端构造的链接且不调大模型() {
+        when(routeService.links()).thenReturn(List.of(
+                Map.of("title", "攻略", "url", "https://www.bilibili.com/video/BV1xx")));
+
+        BaseResult result = service(true).route();
+
+        assertThat(result.getCode()).isEqualTo(200);
+        assertThat(result.getData().get("answer")).isEqualTo(TeachServiceImpl.ROUTE_ANSWER);
+        assertThat((List<?>) result.getData().get("links")).hasSize(1);
+        // 与 /ask 的路线分支同一份产出：不走大模型、不看图鉴、不落缓存
+        verifyNoInteractions(deepSeekClient);
+        verifyNoInteractions(itemCache);
+        verify(answerCache, never()).put(anyString(), anyString());
+    }
+
+    @Test
+    void route入口不受ai开关影响() {
+        when(routeService.links()).thenReturn(List.of(
+                Map.of("title", "攻略", "url", "https://www.bilibili.com/video/BV1xx")));
+
+        // 链接由后端构造、不走大模型，所以 guide.ai.enabled=false 也照常给
+        assertThat(service(false).route().getCode()).isEqualTo(200);
+        verifyNoInteractions(deepSeekClient);
+    }
+
     // ── 降级 ────────────────────────────────────────────────────────────────
 
     @Test
