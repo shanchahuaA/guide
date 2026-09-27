@@ -1,28 +1,31 @@
-"""图鉴采集：拉取 + 落库闭环（票 #22）。
+"""图鉴采集：拉取 + 页面源文 + 落库闭环（票 #22 / #23）。
 
-窄而完整的第一刀：从数据源 Cargo 表拉全量**结构化**字段，转成图鉴条目的
-标签 / 状态效果 / 重量，按 nameEn upsert 进 `item` 表，写完应用侧立刻能读到。
+从数据源 Cargo 表拉全量**结构化**字段，再从页面源文取**只有散文里才有**的那半边，
+转成图鉴条目按 nameEn upsert 进 `item` 表，写完应用侧立刻能读到。
 
-本票**不碰**页面源文与图标：
-  * 熟食覆写值与可烹饪判据来自页面源文 —— #23；
-  * 描述 / 成就来自页面源文 —— #23；
-  * 图标本地化 —— #24。
-所以 description / description_zh / achievement / icon 四列**一律不写**，库里原值保留。
+- **结构化半边**（#22）：标签、生食状态效果、重量；
+- **页面源文半边**（#23，见 `page_source.py`）：熟食覆写值 / 可烹饪判据、描述、成就。
+  数值解析不出来时该条进失败明细，不静默退回公式；描述取不到时该条照常入库。
+
+本票仍**不碰图标**（#24）：icon 列原值保留。description_zh / name_zh 是「对照表回填」的地盘，
+一个字都不动 —— 这既是"已有中文名保留"的实现，也是"不碰中文名"的落实。
 
 落库后删掉采集影响的三个缓存 key（图鉴全量 / 问答 / 题库）——「应用可见」的最后一环。
 与 Java 采集的 `CrawlerServiceImpl.evictItemCache()` 同一口径；用户连对进度（`quiz:progress`）
 是用户状态、不是缓存，不删。
 
-已知后果（见 #22 的「与金标准比对」）：4 条食物的熟食值与金标准不同，全部是
-「依赖页面源文」的那几条，理由见 `--check` 的报告。
-
 用法::
 
-    # 真跑一次全量采集并落库
+    # 真跑一次全量采集并落库（结构化 + 页面源文，需要联网）
     python guide/tools/crawl_items.py
 
     # 只拉取 + 转换，与金标准比对，不写库（差异会被逐条列出，有差异时退出码非 0）
     python guide/tools/crawl_items.py --check
+
+    # 离线复跑：Cargo 与页面源文都从本地读（#21 冻结的语料目录）
+    python guide/tools/crawl_items.py --check \
+        --items-file ../_baseline-corpus/cargo.json \
+        --wikitext-dir ../_baseline-corpus
 
 外部连接走环境变量（与 freeze_baseline.py 同一约定）：
 
@@ -41,6 +44,8 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+import page_source
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN = REPO_ROOT / "guide" / "src" / "test" / "resources" / "crawler" / "golden-items.json"
 
@@ -51,6 +56,13 @@ USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot
 # 与 crawler/WikiApiClient 一致：全量 134 行一次拉完，不分页
 LIMIT = 500
 TABLES = "Items"
+
+# 与 WikiApiClient.WIKITEXT_TITLES_PER_REQUEST 一致（MediaWiki 对普通用户的上限）
+WIKITEXT_TITLES_PER_REQUEST = 50
+
+# Windows 文件名建不出来的字符（`?` 是实测会遇到的那个：数据源上有 File:Bugle?.png）。
+# 与 freeze_baseline.py 的 UNSAFE_FILE_CHARS 同一口径：离线语料按同样的名字落盘。
+UNSAFE_FILE_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 # 与 crawler/WikiApiClient.FIELDS 一致。加字段要同时改 CargoRow.from_map
 FIELDS = ",".join([
@@ -114,6 +126,58 @@ def _unwrap_row(row: dict) -> dict:
     if isinstance(title, dict):
         return {str(k): v for k, v in title.items()}
     return row
+
+
+def read_items_file(path: Path) -> list["CargoRow"]:
+    """从本地 cargo 快照读行（离线复跑用；快照就是 cargoquery 的原始响应）。"""
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    rows = payload.get("cargoquery")
+    if rows is None:
+        raise RuntimeError("本地快照里没有 cargoquery 字段:" + str(path))
+    return [CargoRow.from_map(_unwrap_row(row)) for row in rows]
+
+
+def fetch_wikitext(page_names: list[str]) -> dict[str, str]:
+    """批量拉页面源文；每包最多 50 个标题。
+
+    熟食覆写值、描述、成就都不在 Cargo 表里，只在页面源文里，所以采集必须再走这一趟。
+    响应里的标题是数据源规范化之后的写法，按 normalized 对照还原成**请求时**的页面名。
+    """
+    result: dict[str, str] = {}
+    for start in range(0, len(page_names), WIKITEXT_TITLES_PER_REQUEST):
+        batch = page_names[start:start + WIKITEXT_TITLES_PER_REQUEST]
+        query = ("action=query&format=json&formatversion=2&prop=revisions"
+                 "&rvprop=content&rvslots=main&titles="
+                 + urllib.parse.quote("|".join(batch), safe=""))
+        response = http_json(query)
+        error = response.get("error")
+        if error:
+            raise RuntimeError("数据源返回错误:" + json.dumps(error, ensure_ascii=False))
+        query_obj = response.get("query") or {}
+        normalized = {entry["from"]: entry["to"] for entry in query_obj.get("normalized") or []}
+        by_title: dict[str, str] = {}
+        for page in query_obj.get("pages") or []:
+            revisions = page.get("revisions") or []
+            if not (revisions and page.get("title")):
+                continue
+            main = (revisions[0].get("slots") or {}).get("main") or {}
+            if "content" in main:
+                by_title[page["title"]] = main["content"]
+        for name in batch:
+            content = by_title.get(normalized.get(name, name)) or by_title.get(name)
+            if content is not None:
+                result[name] = content
+    return result
+
+
+def read_wikitext_dir(directory: Path, page_names: list[str]) -> dict[str, str]:
+    """从离线语料目录读页面源文（与 freeze_baseline.py 的落盘命名同一口径）。"""
+    result: dict[str, str] = {}
+    for name in page_names:
+        path = Path(directory) / (UNSAFE_FILE_CHARS.sub("_", name) + ".wikitext")
+        if path.exists():
+            result[name] = path.read_text(encoding="utf-8")
+    return result
 
 
 # --------------------------------------------------------------------------------------
@@ -305,8 +369,8 @@ def split_multi_value(raw: str | None) -> list[str]:
     return [piece.strip() for piece in raw.split(",") if piece.strip()]
 
 
-def convert(row: CargoRow) -> tuple[dict, list[str]]:
-    """一行 → 图鉴条目字段 + 这条里出现的字典未知取值。
+def convert(row: CargoRow, params: page_source.CookParams) -> tuple[dict, list[str]]:
+    """一行 + 页面源文参数 → 图鉴条目字段 + 这条里出现的字典未知取值。
 
     @throws ValueError 该行连英文名都没有时抛出，由上层记进失败明细
     """
@@ -320,7 +384,7 @@ def convert(row: CargoRow) -> tuple[dict, list[str]]:
     unknown: list[str] = []
     type_values = split_multi_value(row.type)
 
-    cooked = build_cooked_effects(row, type_values)
+    cooked = build_cooked_effects(row, type_values, params)
     item = {
         "nameEn": name_en,
         "weight": row.weight,
@@ -381,16 +445,19 @@ def build_raw_effects(row: CargoRow) -> list[dict]:
     return effects
 
 
-def build_cooked_effects(row: CargoRow, type_values: list[str]) -> list[dict]:
-    """熟食值按模板公式算（本票不读页面源文，覆写值与 HasCookingBonus 开关见 #23）。"""
+def build_cooked_effects(row: CargoRow, type_values: list[str],
+                         params: page_source.CookParams) -> list[dict]:
+    """熟食值：页面源文覆写值优先，否则按模板公式算（票 #23 起读页面源文）。"""
     if not _has_type(type_values, "Food"):
         return []
 
     berry = _has_type(type_values, "Berry")
     cooked: list[dict] = []
 
-    _add_non_zero(cooked, "HUNGER_COOKED", _scaled(row.hunger, HUNGER_FACTOR))
-    _add_non_zero(cooked, "BONUS_COOKED", _cooked_bonus(row.bonus))
+    # HasCookingBonus = no/breaks 的条目（含带 Food 标签的 Fortified Milk）不生成这两个值
+    if not params.suppresses_cooking_bonus():
+        _add_derived(cooked, "HUNGER_COOKED", params.hunger_cooked, _scaled(row.hunger, HUNGER_FACTOR))
+        _add_derived(cooked, "BONUS_COOKED", params.bonus_cooked, _cooked_bonus(row.bonus))
 
     if berry:
         # 浆果煮熟毒/刺清零（只有生值存在时才写：本来就没有的东西，"煮熟后为 0"是句空话）
@@ -428,6 +495,11 @@ def _add_non_zero(effects: list[dict], code: str, value, duration=None, start_de
     _add_effect(effects, code, value, duration, start_delay)
 
 
+def _add_derived(effects: list[dict], code: str, override, derived) -> None:
+    """覆写值优先，否则用公式算出来的值；两边都没有 → 不生成。"""
+    _add_non_zero(effects, code, override if override is not None else derived)
+
+
 def _add_explicit_zero(effects: list[dict], code: str, raw_value) -> None:
     """显式写 0：生值存在时才写（没有的东西谈不上"清零"）。"""
     if raw_value is None:
@@ -457,9 +529,9 @@ def persist(items: list[dict], failures: list[dict]) -> int:
     表上没有 name_en 唯一索引（唯一真相是 pojo/Item.java，仓库里没有 DDL），
     所以照 Java 版的做法：先按 name_en 查 id，命中就更新、否则插入。
 
-    刻意只写 weight / tag / effect 三列：name_zh、description、description_zh、
-    achievement、icon 是「对照表回填」与 #23/#24 的地盘，本票一个字都不动 ——
-    这既是"已有中文名保留"的实现，也是"不碰页面源文与图标"的落实。
+    只写 weight / tag / effect / description / achievement 五列：name_zh、description_zh、
+    icon 是「对照表回填」与 #24 的地盘，一个字都不动 —— 这既是"已有中文名保留"的实现，
+    也是"不碰中文名与图标"的落实。
     """
     import pymysql
 
@@ -475,12 +547,16 @@ def persist(items: list[dict], failures: list[dict]) -> int:
                     effect_json = json.dumps(item["effect"], ensure_ascii=False)
                     if existing:
                         cur.execute(
-                            "UPDATE item SET weight = %s, tag = %s, effect = %s WHERE id = %s",
-                            (item["weight"], tag_json, effect_json, existing["id"]))
+                            "UPDATE item SET weight = %s, tag = %s, effect = %s,"
+                            " description = %s, achievement = %s WHERE id = %s",
+                            (item["weight"], tag_json, effect_json,
+                             item["description"], item["achievement"], existing["id"]))
                     else:
                         cur.execute(
-                            "INSERT INTO item (name_en, weight, tag, effect) VALUES (%s, %s, %s, %s)",
-                            (item["nameEn"], item["weight"], tag_json, effect_json))
+                            "INSERT INTO item (name_en, weight, tag, effect, description, achievement)"
+                            " VALUES (%s, %s, %s, %s, %s, %s)",
+                            (item["nameEn"], item["weight"], tag_json, effect_json,
+                             item["description"], item["achievement"]))
                 # 逐条提交：一次 rollback 只该退掉失败的那一条，而不是把先前成功的行一起退掉
                 conn.commit()
                 success += 1
@@ -589,7 +665,7 @@ def golden_count(golden_path: Path) -> int | None:
 
 
 def compare_with_golden(items: list[dict], golden_path: Path) -> dict:
-    """逐条比对 tag / effect / weight 三列；差异全部列出（含理由所需的上下文）。"""
+    """逐条比对 tag / effect / weight / description / achievement 五列；差异全部列出。"""
     golden = json.loads(golden_path.read_text(encoding="utf-8"))
     by_name = {item["nameEn"]: item for item in golden["items"]}
 
@@ -598,21 +674,23 @@ def compare_with_golden(items: list[dict], golden_path: Path) -> dict:
         name = item["nameEn"]
         expected = by_name.get(name)
         if expected is None:
-            diffs.append({"nameEn": name, "kind": "金标准里没有这条", "reason": "数据源新增条目，待重跑 --step1 更新金标准"})
+            diffs.append({"nameEn": name, "kind": "金标准里没有这条",
+                          "reason": "数据源新增条目，待重跑 --step1 更新金标准"})
             continue
-        for fieldname in ("tag", "effect", "weight"):
+        for fieldname in ("tag", "effect", "weight", "description", "achievement"):
             if not _same(item[fieldname], expected[fieldname]):
                 diffs.append({
                     "nameEn": name,
                     "kind": fieldname,
                     "actual": item[fieldname],
                     "expected": expected[fieldname],
-                    "reason": SOURCE_TEXT_REASONS.get(name, "未归类差异，需查证"),
+                    "reason": "未归类差异，需查证",
                 })
 
     missing = sorted(set(by_name) - {item["nameEn"] for item in items})
     for name in missing:
-        diffs.append({"nameEn": name, "kind": "数据源里没有这条", "reason": "条目被数据源删除，本票只 upsert 不反删"})
+        diffs.append({"nameEn": name, "kind": "数据源里没有这条",
+                      "reason": "条目被数据源删除，本票只 upsert 不反删"})
 
     return {
         "golden": str(golden_path),
@@ -621,15 +699,6 @@ def compare_with_golden(items: list[dict], golden_path: Path) -> dict:
         "diffCount": len(diffs),
         "diffs": diffs,
     }
-
-
-# 本票不读页面源文，熟食覆写值与 HasCookingBonus 开关拿不到 —— 差异仅限这几条（#23 负责补齐）
-SOURCE_TEXT_REASONS = {
-    "Cooked Bird": "页面源文里的 HungerCooked 覆写值（#23 补）；本票按公式算不出 HUNGER_COOKED",
-    "Scorpion": "页面源文里的 HungerCooked 覆写值（#23 补）；本票按公式算不出 HUNGER_COOKED",
-    "Fortified Milk": "页面源文里的 HasCookingBonus 开关抑制熟食值（#23 补）；本票按公式多算了两条",
-    "The Early Worm": "页面源文里的 HasCookingBonus 开关抑制熟食值（#23 补）；本票按公式多算了两条",
-}
 
 
 def _same(actual, expected) -> bool:
@@ -643,12 +712,11 @@ def _same(actual, expected) -> bool:
 # 入口
 # --------------------------------------------------------------------------------------
 
-def crawl() -> tuple[list[dict], list[str], list[dict]]:
-    """拉取 + 转换。
+def crawl(rows: list["CargoRow"], wikitext_by_page: dict[str, str]) -> tuple[list[dict], list[str], list[dict]]:
+    """转换：结构化行 + 页面源文 → 图鉴条目。
 
-    @return (条目列表, 警告, 单条失败明细)；拉取整体失败时抛，由调用方落进报告
+    @return (条目列表, 警告, 单条失败明细)
     """
-    rows = fetch_all_items()
     warnings: list[str] = []
     if not rows:
         warnings.append("数据源返回 0 行，请确认接口与字段清单是否仍然有效")
@@ -657,8 +725,16 @@ def crawl() -> tuple[list[dict], list[str], list[dict]]:
     failures: list[dict] = []
     unknown_counter: dict[str, int] = {}
     for row in rows:
+        # 源文没抓到、或页面上没有 Infobox 时走 EMPTY：熟食值按公式算，描述留空
+        wikitext = wikitext_by_page.get(row.page)
         try:
-            item, unknown = convert(row)
+            params = page_source.read_params(wikitext, row.display) if wikitext else page_source.EMPTY_PARAMS
+            item, unknown = convert(row, params)
+            # 描述与成就同样出自页面源文：取不到就留空，绝不因为一段散文把这条挡在库外
+            description, achievement = (
+                page_source.read_page_text(wikitext, row.display) if wikitext else (None, None))
+            item["description"] = description
+            item["achievement"] = achievement
             items.append(item)
             for value in unknown:
                 unknown_counter[value] = unknown_counter.get(value, 0) + 1
@@ -670,18 +746,43 @@ def crawl() -> tuple[list[dict], list[str], list[dict]]:
     return items, warnings, failures
 
 
+def load_wikitext(args, page_names: list[str]) -> tuple[dict[str, str], list[str]]:
+    """取页面源文：`--wikitext-dir` 走离线语料，否则联网批量拉。
+
+    整体失败只记警告、不中断采集：源文少了只会让熟食值退回公式、描述留空，
+    而结构化那半边是独立的、丢不起（与 Java 版 fetchWikitext 同一取舍）。
+    """
+    if args.wikitext_dir:
+        return read_wikitext_dir(args.wikitext_dir, page_names), []
+    try:
+        wikitext_by_page = fetch_wikitext(page_names)
+    except Exception as exc:
+        return {}, [f"页面源文没取到（{_failure_reason(exc)}），"
+                    f"本次采集的熟食覆写值与描述全部按缺省处理"]
+    if len(wikitext_by_page) < len(page_names):
+        return wikitext_by_page, [
+            f"有 {len(page_names) - len(wikitext_by_page)} 个页面没取到源文，"
+            f"这些条目的熟食值按公式算、描述留空"]
+    return wikitext_by_page, []
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    parser = argparse.ArgumentParser(description="图鉴采集：拉取 + 落库闭环（#22）")
-    parser.add_argument("--check", action="store_true", help="只拉取 + 转换并与金标准比对，不写库")
+    parser = argparse.ArgumentParser(description="图鉴采集：拉取 + 页面源文 + 落库闭环（#22/#23）")
+    parser.add_argument("--check", action="store_true", help="只转换并与金标准比对，不写库")
     parser.add_argument("--golden", type=Path, default=DEFAULT_GOLDEN, help="金标准快照路径")
+    parser.add_argument("--items-file", type=Path, help="从本地 cargo 快照读结构化行（离线复跑）")
+    parser.add_argument("--wikitext-dir", type=Path, help="从本地语料目录读页面源文（离线复跑）")
     parser.add_argument("--report", type=Path, help="把报告写到这个 JSON 文件")
     args = parser.parse_args()
 
     try:
-        items, warnings, failures = crawl()
+        rows = read_items_file(args.items_file) if args.items_file else fetch_all_items()
+        page_names = list(dict.fromkeys(row.page for row in rows if row.page and row.page.strip()))
+        wikitext_by_page, wikitext_warnings = load_wikitext(args, page_names)
+        items, warnings, failures = crawl(rows, wikitext_by_page)
     except Exception as exc:
         report = {"fetchError": _failure_reason(exc), "fetchedRows": 0, "warnings": [],
                   "failures": [], "successCount": 0}
@@ -689,6 +790,8 @@ def main() -> int:
         if args.report:
             _write(args.report, report)
         return 1
+
+    warnings = wikitext_warnings + warnings
 
     print(f"拉到 {len(items) + len(failures)} 行，转换成功 {len(items)} 条，失败 {len(failures)} 条")
     for warning in warnings:
@@ -719,8 +822,8 @@ def main() -> int:
     warnings.extend(evict_warnings)
     report = {"fetchedRows": len(items) + len(failures), "fetchError": None,
               "successCount": success, "failures": failures, "warnings": warnings}
-    print(f"\n落库成功 {success} 条（只写 weight / tag / effect 三列，"
-          f"中文名、描述、图标原值保留）")
+    print(f"\n落库成功 {success} 条（写 weight / tag / effect / description / achievement 五列，"
+          f"中文名、中文描述、图标原值保留）")
     for warning in evict_warnings:
         print("警告：" + warning)
     if args.report:

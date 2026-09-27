@@ -113,7 +113,9 @@ python guide/tools/freeze_baseline.py --step3 --corpus <语料目录> --report <
    **今天不成立**：134 页里多 Infobox 页面为 0，且那 3 个毒蘑菇页**连 `{{Infobox item}}` 都没有** —— 它们是仅有的 3 个无 Infobox 页面，走的应该是另一条取值路径。
 
 2. **`WikitextParams` 注释**称「`HungerCooked` 只有 4 个页面用、`BonusCooked` 只有 15 个」「62 个页面用了 `HasCookingBonus` 开关」。
-   **尚未核对**：本次只数了「非数字」的情况（0 次），**数值型覆写值各有多少页面用，没数**。#23（页面源文管道）开工前需要补这一项。
+   **#23 已核对（2026-09-27）**：按采集真正看到的页面（`row.page` 去重，131 页）逐页解析，
+   `HungerCooked` **4 页**、`BonusCooked` **15 页**、`HasCookingBonus` **62 页**（取值全是 `no`/`breaks`，
+   即抑制熟食值）—— **与注释一致**，注释不必改。非数字覆写值仍为 0 次。
 
 ---
 
