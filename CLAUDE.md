@@ -40,15 +40,15 @@ Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 - **登录与鉴权** —— `ShiroConfig` 的过滤链是 `/** = anon`（全放行），`AdminRealm` 是
   "任意账号都能登录"的占位实现。`weixin-java-miniapp` 与 `jjwt` 都还没用上。
 - **AI 助手** —— 没有 `/api/ai/chat`。
-- **图鉴接口** —— 契约里的 7 个接口一个都没有：`/api/items`、`/api/items/{slug}`、
-  `/api/items/search`、`/api/tags`、`/api/biomes`、`/api/auth/login`、`/api/ai/chat`。
-  现在只有两个早期自测端点：`ItemController` 的 `/testItemList`、`UserController` 的 `/testInsertUser`。
-  `pojo/dto/ItemDto` 还是旧的 `tag`/`effect` 结构，没有契约要的
-  `slug`/`primaryType`/`rarity`/`isCookable`/`tags`。
+- **图鉴接口** —— 本轮落地 4 个：`/api/items`、`/api/items/{slug}`、`/api/tags`、`/api/biomes`。
+  `/api/items/search` 保留但不使用；登录（`/api/auth/login`）与 AI（`/api/ai/chat`）不在本轮。
+  **字段级口径已收口**，见 `docs/接口契约.md`（附录 A 是 Q1–Q24 的逐条答复）。
+  现在只有两个早期自测端点：`ItemController` 的 `/testItemList`、`UserController` 的 `/testInsertUser` —— **都留着不删**。
+  `pojo/dto/ItemDto` 还是旧的 `tag`/`effect` 直传结构，要拆成列表 DTO / 详情 DTO 两个类。
   **`slug` 与 `primaryType` 是计算值**，表里没有这两列；`isCookable` 不用算，
   直接取 `flag=cookable` 标签。
-  接口的**字段级口径**（slug 命名规则、响应字段名）要先向项目所有者确认 ——
-  原契约文档 `docs/分工与目标清单.md` 已标记为 **agent 不读**。
+  **筛选与搜索在小程序本地做**：`/api/items` 不接受筛选参数、一次返全量 134 条、不分页；
+  一级导航（8 个主类型格）与关键词搜索都在客户端，详情页跳转靠列表里的 `slug`。
 
 两条事实：
 
@@ -105,20 +105,21 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 
 ## 数据模型（改 `Item` 前必读）
 
-**表结构已定稿**（表名 `item`，9 列，与 `pojo/Item.java` 一一对应）。
-**仓库里没有建表 SQL** —— 换机器重灌数据要照这张表手写 DDL。
+**表结构已定稿**（表名 `item`，10 列）。**仓库里没有建表 SQL** —— 换机器重灌数据要照这张表手写 DDL。
+`pojo/Item.java` 目前**缺 `descriptionZh` 一个字段**（列在库里已存在且已回填），本轮补上。
 
 | 字段 (`Item.java`) | 类型 | 形态 |
 |---|---|---|
 | `id` | `Long` | 自增主键 |
-| `nameEn` | `String` | 采集按它 upsert，去重口径 |
+| `nameEn` | `String` | 采集按它 upsert，去重口径；`slug` 也由它派生 |
 | `nameZh` | `String` | 中文名，可由名称对照表回填 |
 | `weight` | `Float` | 含负数与一位小数（见下） |
 | `icon` | `String` | 相对路径，如 `/icons/Hot_Dog.png` |
-| `description` | `String` | 长文本，最长 1000+ 字 |
-| `achievement` | `String` | 可空 |
-| `tag` | `List<ItemTag>` | JSON 列，`[{code, value, nameZh}]`，五维 |
-| `effect` | `List<Effect>` | JSON 列，`[{code, value, duration, startDelay}]` |
+| `description` | `String` | **英文**长文本，最长 1262 字，不下发给小程序 |
+| `descriptionZh` | `String` | **中文**长文本，最长 391 字，134/134 已回填；**它是唯一下发给小程序的那份** |
+| `achievement` | `String` | 可空，库里 28 条有 |
+| `tag` | `List<ItemTag>` | JSON 列，`[{code, value, nameZh}]`，六维：`type`/`biome`/`rarity`/`source`/`location`/`flag` |
+| `effect` | `List<Effect>` | JSON 列，`[{code, value, duration, startDelay}]`；**生熟混在一个数组里**，熟值靠 `_COOKED` 后缀区分且存的是**总量** |
 
 已知的**数据事实**（来自对数据源的分析，是事实不是设计决定）：
 

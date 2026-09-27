@@ -1,0 +1,200 @@
+﻿# 工作文件，不提交（见 .gitignore）。本文件是 name_zh 翻译填充的校对底稿，不是仓库文档。
+# 生成日期：2026-09-26　来源：Cargo Items 全量快照 134 行 + TagDictionary.java 六张字典（离线生成，未发网络请求）
+# 用法：校对/修改 name_zh 列（条目行已由 gen_peaks_terms.py 按 PEAK 官方译名填好）；改完告诉 agent 按本表填充 item.name_zh。
+# 表头五列：kind, dim, en, name_zh, note —— en 列不要动（它是对回数据源 / 字典的键）。
+# name_zh 由 gen_peaks_terms.py 从 PEAK 游戏本体官方简体译名回填（游戏版本 2.4.c cd63edc4c，官方词条命中 124 条，人工判定 10 条，待判定 0 条）
+kind,dim,en,name_zh,note
+item,item,Airline Food,飞机餐,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Aloe Vera,芦荟,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Ancient Idol,古老玩偶,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Anti-Rope Cannon,反重绳索炮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Anti-Rope Spool,反重绳索,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Anti-Zooka,反重炮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Antidote,解毒剂,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Backpack,背包,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Balloon,气球,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Balloon Bunch,一束气球,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bandages,绷带,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Basketball,篮球,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Beehive,蜂巢,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Big Egg,好大蛋,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Big Lollipop,大棒棒糖,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bing Bong,宾邦,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Binoculars,望远镜,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bishop,主教,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Black Clusterberry,黑葚莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Blowgun,吹箭筒,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Blue Berrynana,蓝莓蕉,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Blue Berrynana Peel,蓝莓蕉皮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Blue Shroomberry,蓝菇莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bounce Fungus,弹力菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Brown Berrynana,棕莓蕉,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Brown Berrynana Peel,棕莓蕉皮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bugle,喇叭,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bugle of Friendship,友谊喇叭,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bugle Shroom,喇叭菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bugle Shroom (Poisonous),喇叭菇（有毒）,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Bugle?,号角,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Button Shroom,馒头菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Button Shroom (Poisonous),馒头菇（有毒）,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cactus,仙人球,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Candlestick,烛台,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Chain Launcher,锁链发射器,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Checkpoint Flag,检查点旗标,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Chubby Shroom,梨鲍菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cloud Fungus,云雾菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cluster Shroom,银针菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cluster Shroom (Poisonous),银针菇（有毒）,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Coconut,椰子,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Compass,罗盘,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Conch,海螺,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cooked Bird,“鸟”烧熟了,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cure-All,万灵药,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Cursed Skull,诅咒头骨,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Dynamite,炸药,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Egg,煎蛋,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Energy Drink,能量饮料,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Faerie Lantern,仙子提灯,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Fanny Pack,滑稽背包,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,First Aid Kit,急救箱,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Flare,照明棒,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Flying Disc,飞盘,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Fortified Milk,奶白金,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Frog,青蛙,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Frog Legs,田鸡腿,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Glider,滑翔伞,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Gold Prickleberry,金刺莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Granola Bar,燕麦棒,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Green Crispberry,绿脆莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Green Kingberry,青荔莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Green Shroomberry,绿菇莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Guidebook,旅行指南,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Half-Coconut,半边椰子,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Heat Pack,暖宝宝,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Honeycomb,蜂巢蜜,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Hot Dog,热狗肠,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Jetpack,喷气背包,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,King,国王,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Knight,骑士,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Lantern,提灯,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Magic Bean,魔豆,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Mandrake,曼德拉草,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Marshmallow,棉花糖,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Medicinal Root,药用根茎,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Napberry,晚安莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Orange Winterberry,橙雪莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Pandora's Lunchbox,潘多拉餐盒,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Parasol,太阳伞,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Passport,护照,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Pawn,兵卒,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Pink Berrynana,粉莓蕉,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Pink Berrynana Peel,粉莓蕉皮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Pirate's Compass,海盗罗盘,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Piton,岩钉,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Portable Stove,便携火炉,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Purple Kingberry,紫荔莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Purple Shroomberry,紫菇莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Queen,皇后,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Red Clusterberry,红葚莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Red Crispberry,红脆莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Red Prickleberry,红刺莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Red Shroomberry,红菇莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Remedy Fungus,灵药菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Rescue Claw,救援抓钩,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Ritual Dagger,仪式匕首,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Rocketpack,火箭背包,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Rook,战车,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Rope Cannon,绳索炮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Rope Spool,绳索,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scorchberry,火烧莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scorpion,蝎子,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout Cannon,童子军大炮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout Cookies,童军饼干,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout Effigy,童军雕像,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout's Ambition,童军的野心,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout's Generosity,童军的盛情,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout's Honor,童军的荣耀,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout's Initiative,童军的进取,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scout's Tenacity,童军的毅力,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scoutmaster's Bugle,童军领队的喇叭,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Scroll,卷轴,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Shelf Fungus,踏板菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Small Egg,小小蛋,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Snowball,雪球,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Sports Drink,运动饮料,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Strange Gem,奇怪水晶,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Sunscreen,防晒喷雾,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,The Book of Bones,骸骨之书,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,The Early Worm,早起虫儿,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Tick,蜱虫,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Torch,火炬,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Trail Mix,混合坚果,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Warp Compass,曲迁罗盘,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Warp Fungus,曲迁菇,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Berrynana,黄莓蕉,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Berrynana Peel,黄莓蕉皮,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Clusterberry,黄葚莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Crispberry,黄脆莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Kingberry,黄荔莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Shroomberry,黄菇莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+item,item,Yellow Winterberry,黄雪莓,图鉴条目英文名（数据源 display）；中文名由 gen_peaks_terms.py 按官方译名回填，可直接改
+dict,type,Food,食物,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Natural food,天然食物,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Packaged food,包装食品,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Berry,浆果,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Mushroom,蘑菇,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Consumable,消耗品,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Equipment,装备,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Deployable,可放置物,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Mystical item,神秘物品,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Amulet,护身符,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Misc,杂物,标签字典（TagDictionary.TYPE_ZH）
+dict,type,Enemy,敌人,标签字典（TagDictionary.TYPE_ZH）
+dict,biome,Tropics,雨林,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Roots,森蕈,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Mesa,方山,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Shore,海岸,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Gloom,雾沼,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Alpine,雪山,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Airport,机场,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Peak,顶峰,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,Caldera,火山,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,The Citadel,城塞,标签字典（TagDictionary.BIOME_ZH）
+dict,biome,The Kiln,熔炉,标签字典（TagDictionary.BIOME_ZH）
+dict,rarity,Common,普通,标签字典（TagDictionary.RARITY_ZH）
+dict,rarity,Uncommon,优秀,标签字典（TagDictionary.RARITY_ZH）
+dict,rarity,Rare,稀有,标签字典（TagDictionary.RARITY_ZH）
+dict,rarity,Epic,史诗,标签字典（TagDictionary.RARITY_ZH）
+dict,rarity,Mythic,神话,标签字典（TagDictionary.RARITY_ZH）
+dict,rarity,Legendary,传说,标签字典（TagDictionary.RARITY_ZH）
+dict,rarity,Ridiculously Rare,极其罕见,标签字典（TagDictionary.RARITY_ZH）
+dict,source,Regular Luggage,普通行李,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Big Luggage,大型行李,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Ancient Luggage,古代行李,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Explorer's Luggage,探险家行李,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Ancient Statue,古代雕像,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Ancient Statues,古代雕像,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Clown Luggage,小丑行李,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Scout Statue,童军雕像,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Stone Scout,石头童军,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Crash Site,坠机点,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Campfires,篝火,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Airport,机场,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Luggage,行李,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Big Egg,大蛋,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Small Egg,小蛋,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Blue Berrynana,蓝莓蕉,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Brown Berrynana,棕莓蕉,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Pink Berrynana,粉莓蕉,标签字典（TagDictionary.SOURCE_ZH）
+dict,source,Yellow Berrynana,黄莓蕉,标签字典（TagDictionary.SOURCE_ZH）
+dict,location,Crash Site,坠机点,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,Tomb,墓穴,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,Photobooth,照相亭,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,Scout Statue,童军雕像,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,Campfires,篝火,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,On ground,地面,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,In Luggage,行李中,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,Peak,顶峰,标签字典（TagDictionary.LOCATION_ZH）
+dict,location,Stone Scout,石头童军,标签字典（TagDictionary.LOCATION_ZH）
+dict,flag,cookable,可烹饪,标签字典（TagDictionary.FLAG_ZH）
+dict,flag,removed,已移除,标签字典（TagDictionary.FLAG_ZH）

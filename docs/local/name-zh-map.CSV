@@ -1,0 +1,139 @@
+﻿# 工作文件，不提交（见 .gitignore）。en → 中文 的扁平对照表，供采集侧回填 item.name_zh。
+# 来源：docs/local/name-translation.CSV 的 name_zh 列。
+# 由 gen_peaks_terms.py 生成，重跑会覆盖；改译名请改对照表，不要改本文件。
+# 表头两列：en（数据源 display，对回 item.name_en）, zh（要写入 item.name_zh）。
+en,zh
+Airline Food,飞机餐
+Aloe Vera,芦荟
+Ancient Idol,古老玩偶
+Anti-Rope Cannon,反重绳索炮
+Anti-Rope Spool,反重绳索
+Anti-Zooka,反重炮
+Antidote,解毒剂
+Backpack,背包
+Balloon,气球
+Balloon Bunch,一束气球
+Bandages,绷带
+Basketball,篮球
+Beehive,蜂巢
+Big Egg,好大蛋
+Big Lollipop,大棒棒糖
+Bing Bong,宾邦
+Binoculars,望远镜
+Bishop,主教
+Black Clusterberry,黑葚莓
+Blowgun,吹箭筒
+Blue Berrynana,蓝莓蕉
+Blue Berrynana Peel,蓝莓蕉皮
+Blue Shroomberry,蓝菇莓
+Bounce Fungus,弹力菇
+Brown Berrynana,棕莓蕉
+Brown Berrynana Peel,棕莓蕉皮
+Bugle,喇叭
+Bugle of Friendship,友谊喇叭
+Bugle Shroom,喇叭菇
+Bugle Shroom (Poisonous),喇叭菇（有毒）
+Bugle?,号角
+Button Shroom,馒头菇
+Button Shroom (Poisonous),馒头菇（有毒）
+Cactus,仙人球
+Candlestick,烛台
+Chain Launcher,锁链发射器
+Checkpoint Flag,检查点旗标
+Chubby Shroom,梨鲍菇
+Cloud Fungus,云雾菇
+Cluster Shroom,银针菇
+Cluster Shroom (Poisonous),银针菇（有毒）
+Coconut,椰子
+Compass,罗盘
+Conch,海螺
+Cooked Bird,“鸟”烧熟了
+Cure-All,万灵药
+Cursed Skull,诅咒头骨
+Dynamite,炸药
+Egg,煎蛋
+Energy Drink,能量饮料
+Faerie Lantern,仙子提灯
+Fanny Pack,滑稽背包
+First Aid Kit,急救箱
+Flare,照明棒
+Flying Disc,飞盘
+Fortified Milk,奶白金
+Frog,青蛙
+Frog Legs,田鸡腿
+Glider,滑翔伞
+Gold Prickleberry,金刺莓
+Granola Bar,燕麦棒
+Green Crispberry,绿脆莓
+Green Kingberry,青荔莓
+Green Shroomberry,绿菇莓
+Guidebook,旅行指南
+Half-Coconut,半边椰子
+Heat Pack,暖宝宝
+Honeycomb,蜂巢蜜
+Hot Dog,热狗肠
+Jetpack,喷气背包
+King,国王
+Knight,骑士
+Lantern,提灯
+Magic Bean,魔豆
+Mandrake,曼德拉草
+Marshmallow,棉花糖
+Medicinal Root,药用根茎
+Napberry,晚安莓
+Orange Winterberry,橙雪莓
+Pandora's Lunchbox,潘多拉餐盒
+Parasol,太阳伞
+Passport,护照
+Pawn,兵卒
+Pink Berrynana,粉莓蕉
+Pink Berrynana Peel,粉莓蕉皮
+Pirate's Compass,海盗罗盘
+Piton,岩钉
+Portable Stove,便携火炉
+Purple Kingberry,紫荔莓
+Purple Shroomberry,紫菇莓
+Queen,皇后
+Red Clusterberry,红葚莓
+Red Crispberry,红脆莓
+Red Prickleberry,红刺莓
+Red Shroomberry,红菇莓
+Remedy Fungus,灵药菇
+Rescue Claw,救援抓钩
+Ritual Dagger,仪式匕首
+Rocketpack,火箭背包
+Rook,战车
+Rope Cannon,绳索炮
+Rope Spool,绳索
+Scorchberry,火烧莓
+Scorpion,蝎子
+Scout Cannon,童子军大炮
+Scout Cookies,童军饼干
+Scout Effigy,童军雕像
+Scout's Ambition,童军的野心
+Scout's Generosity,童军的盛情
+Scout's Honor,童军的荣耀
+Scout's Initiative,童军的进取
+Scout's Tenacity,童军的毅力
+Scoutmaster's Bugle,童军领队的喇叭
+Scroll,卷轴
+Shelf Fungus,踏板菇
+Small Egg,小小蛋
+Snowball,雪球
+Sports Drink,运动饮料
+Strange Gem,奇怪水晶
+Sunscreen,防晒喷雾
+The Book of Bones,骸骨之书
+The Early Worm,早起虫儿
+Tick,蜱虫
+Torch,火炬
+Trail Mix,混合坚果
+Warp Compass,曲迁罗盘
+Warp Fungus,曲迁菇
+Yellow Berrynana,黄莓蕉
+Yellow Berrynana Peel,黄莓蕉皮
+Yellow Clusterberry,黄葚莓
+Yellow Crispberry,黄脆莓
+Yellow Kingberry,黄荔莓
+Yellow Shroomberry,黄菇莓
+Yellow Winterberry,黄雪莓

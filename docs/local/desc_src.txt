@@ -1,0 +1,536 @@
+@@@ [1] Airline Food | 飞机餐 | achievement=NULL
+effect: HUNGER -40, BONUS +40, USES +1, HUNGER_COOKED -80, BONUS_COOKED +60
+The Airline Food is a packaged food in PEAK found in regular or large luggage.
+
+@@@ [2] Aloe Vera | 芦荟 | achievement=NULL
+effect: HEAT -50, USES +1
+The Aloe Vera is a consumable item in PEAK found growing in the Mesa. Using the Aloe Vera will remove 50.
+
+@@@ [3] Ancient Idol | 古老玩偶 | achievement=Esoterica, 24 Karat
+effect: USES +1
+The Ancient Idol is a mystical item in PEAK. It is found inside of the Mesa's Tomb after completing the challenge chamber. Although the Ancient Idol cannot be found inside Ancient Luggage or obtained from Ancient Statues, it is still considered mystical and grants theupon picking it up. Actively holding the idol grants the player Invincibility. Throwing the Ancient Idol into the lava of The Kiln or the lava cauldron in The Citadel destroys the idol and unlocks. The Ancient Idol cannot be cooked. Found exclusively inside the Tomb. Grants Invincibility from any damage or negative status effects (except knockback) while actively held. Prevents consumption ofwhile actively held. Can be thrown into the lava of The Kiln to receive. 烹饪：Cannot be cooked.
+
+@@@ [4] Anti-Rope Cannon | 反重绳索炮 | achievement=NULL
+effect: USES +1
+The Anti-Rope Cannon is a deployable mystical item in PEAK. Using an Anti-Rope Cannon attaches a 7.25 meter anti-rope (see Anti-Rope Spool) to a surface up to 48 meters away, embedding one end of it into the surface via a hook. It is the anti version of the Rope Cannon. The Anti-Rope Cannon is a mystical item and as such can only be found in Ancient Statues and inside Ancient Luggage. Cooking an Anti-Rope Cannon immediately incinerates it, making it unusable. Shoots a harpoon that will deploy a length of gravity defying anti-rope on contact with a compatible surface. A dropped anti-rope Cannon can float away! 烹饪：Immediately incinerated.
+
+@@@ [5] Anti-Rope Spool | 反重绳索 | achievement=NULL
+effect: USES +1
+The Anti-Rope Spool is a deployable mystical item in PEAK. It provides a total of 12.5 meters climbable anti-gravity rope, placeable in custom lengths measuring from 0.75m to 10m long. The rope will float upwards, allowing Scouts to access hard to reach places. Being a mystical item, the Anti-Rope Spool can only be found in Ancient Statues and inside Ancient Luggage. The Anti-Rope Spool has a negative weight and will reduce the total weight carried by the Scout (note that Ascent 3's weight modification still applies to the Anti-Rope Spool). Dropping an Anti-Rope Spool will cause it to float up and away. Cooking an Anti-Rope Spool immediately incinerates it, making it unusable (it retains its negative Weight, however). Creates lengths of climbable anti-rope (up to 10 meters) that can be attached to any climbable surface. Anti-rope will defy gravity and float upwards. Each spool contains 12.5 meters of anti-rope. A dropped spool of anti-rope will float upwards! 烹饪：Immediately incinerated.
+
+@@@ [6] Anti-Zooka | 反重炮 | achievement=Leave No Trace
+effect: USES +1
+The Anti-Zooka is a deployable mystical item in PEAK. Using an Anti-Zooka shoots an Anti-Sphere up to 40 meters away in the air or against a surface, with a size of 16 meters in diameter. Anything inside of the Anti-Sphere will experience reversed gravity. The Anti-Zooka can be used up to 3 times before becoming unusable. Anti-Spheres last one minute in the environment, but do not count as placed, meaning the Anti-Zooka can be safely used when attempting to obtain. When cooked, the Anti-Zooka explodes, creating an Anti-Sphere with an increased size of approximately 32 meters in diameter. 烹饪：Explodes, creating an Anti-Sphere with twice the regular diameter.
+
+@@@ [7] Antidote | 解毒剂 | achievement=NULL
+effect: HEAT -10, POISON -35, SPORES -35, USES +3
+The Antidote is a consumable item in PEAK. An Antidote can be used up to 3 times, removing 35, 35, 10 and poison over time effects with each use. Cooking or throwing an antidote will cause it to shatter, removing up to 20 andfrom players within 4.8 meters depending on their distance. This does not remove any existing poison over time effects that have not elapsed. Throwing an antidote directly at a player however will bonk them, causing them to enter a ragdoll state. Due tomostly occurring in the Tropics andonly appearing in the Roots, Antidotes can only spawn in luggages in these biomes. 烹饪：Explodes, removing up to 20 from all players within 4.8m.
+
+@@@ [8] Backpack | 背包 | achievement=NULL
+effect: USES +1
+The Backpack is an equipment item that expands Scouts' available item storage, offering four new item spaces, allowing players to carry a lot more items during their climb. The Backpack always occupies the fourth inventory slot, reserved for equipment that can be attached to the Scout. One backpack can be found at the Crash Site and an additional backpack can be found at each Campfire, except in The Kiln and The Citadel. Cooking a backpack does not affect its functionality but it does cook all the items inside. Found at the crash site and campfires. Can be used to carry 4 additional items.
+
+@@@ [9] Balloon | 气球 | achievement=Aeronautics
+effect: USES +1
+The Balloon is a consumable item in PEAK found in Luggage. Using it attaches a single balloon to the player. Dropping the balloon causes it to fly away. While the inventory icon appears red, the balloon model itself can appear in six colors: red, orange, yellow, green, blue, and purple. Cooking a balloon causes it to pop, destroying the item. Having 6 or more balloons attached at any moment grants the player. The Balloon Bunch is a separate item that gives the players 3 balloons that can be attached all at once or carried in a single inventory slot. Lowers gravity by 18% per Balloon for 2 minutes or when 100m has passed. Using 6 Balloons at the same time allows for limited flight. Can be stacked with itself and Balloon Bunches. Passively removes Status when held, in inventory, or in a Backpack. Dropped balloons float away! 烹饪：Pops.
+
+@@@ [10] Balloon Bunch | 一束气球 | achievement=NULL
+effect: USES +1
+The Balloon Bunch is a consumable item in PEAK found in Luggage. Using it attaches 3 Balloons to the player. Dropping the balloon bunch causes it to fly away. Cooking the Balloon Bunch causes the balloons to pop, destroying the item. Lowers gravity by 54% per Balloon Bunch for 2 minutes or when 100m has passed. Using 2 Balloon Bunches at the same time allows for limited flight. Can be stacked with itself and Balloons. Passively removes Status when held, in inventory, or in a Backpack. Dropped balloons float away! 烹饪：Pops.
+
+@@@ [11] Bandages | 绷带 | achievement=NULL
+effect: INJURY -30, USES +1
+The Bandages is a consumable item in PEAK. It can be found in luggages. Using bandages removes 30. Cooking them has no effect, even if incinerated. Use time is 4 seconds. 烹饪：No effect.
+
+@@@ [12] Basketball | 篮球 | achievement=NULL
+effect: USES +1
+The Basketball is an item in PEAK that can be found in the Airport. There are four basketballs in total to be found in the Airport, two spawning in each bin at the basketball court. Throwing a Basketball at another Scout will bonk them, causing them to enter a ragdoll state. Despite the fact that there is no way to cook in the Airport, cooking a basketball causes it to pop, destroying the item. 烹饪：Pops.
+
+@@@ [13] Beehive | 蜂巢 | achievement=NULL
+effect: USES +1
+The Beehive is an item in PEAK found on trees in the Tropics. A beehive can be broken open to receive four Honeycombs. Cooking a Beehive applies its cooking level to the contained Honeycombs.
+
+@@@ [14] Big Egg | 好大蛋 | achievement=Gourmand
+effect: USES +1
+The Big Egg is an item in PEAK found in nests on rocks in the Caldera, including those patrolled by Condors. A Big Egg can be cracked by throwing it to make an Egg or, with a 10% chance, a Cooked Bird. Cooking an Egg is required for, as the Cooked Bird will not count. Cooking a Big Egg will transfer its cooking level to the item inside (with the exception of a would-be uncooked bird).
+
+@@@ [15] Big Lollipop | 大棒棒糖 | achievement=NULL
+effect: HUNGER -5, USES +1, HUNGER_COOKED -10, BONUS_COOKED +10
+The Big Lollipop is a packaged food in PEAK found in regular, big, and explorer's luggages. A smaller unusable version can also be found inside the Airport's photobooth. Consuming a Big Lollipop grants you Infinite for 11 seconds, with the duration being shortened to 8 seconds when you climb. This means you can wait 3 seconds to begin climbing and still get the full 8 seconds of climbing with infinite stamina. After the effect ends, the player will gain 32.5 over the course of 10 seconds. Cooking a Big Lollipop removes this penalty. Grants infinite stamina temporarily. 烹饪：Removeseffect.
+
+@@@ [16] Bing Bong | 宾邦 | achievement=Bing Bong
+effect: USES +1
+Bing Bong is an item in PEAK. It is a stuffed plushie of the BingBong Airlines mascot. It can always be found at the crash site on the Shore as well as inside the Airport's photobooth. spoiler Pressing Key Left Click while holding out Bing Bong will squeeze it and play a random voice line meant to respond to a question from a player; being a positive, negative, uncertain or irrelevant response. All responses (not response types) are equally likely. Cooking Bing Bong causes his voice lines to lower in both pitch and volume each time. Cooking Bing Bong 4 times incinerates him, causing him to stop speaking. Putting away a Bing Bong that's been incinerated once and bringing him back out will cause him to start speaking again, but cooking him a 5th time will silence him permanently. Escaping the island with Bing Bong in a Scout's inventory or Backpack unlocks thefor all players in the group. If all items that can spawn in Luggage or from an Ancient Statue are removed from the spawn pool in a Custom Expedition, additional Bing Bongs will spawn in their place. Can be asked "Yes" or "No" questions. Can be used for. 烹饪：Lowers pitch and volume of voice lines.
+
+@@@ [17] Binoculars | 望远镜 | achievement=Astronomy
+effect: USES +1
+The Binoculars is an equipment item in PEAK, found at the crash site in Shore. Using the Binoculars zooms in your view, making it easier to see long distances. A version without it's zoom-in effect can also be found inside the Airport's photobooth. You can receive theby using Binoculars to look directly at the sun while in the Mesa during the day. Used to see farther. Can be used for.
+
+@@@ [18] Bishop | 主教 | achievement=NULL
+effect: USES +1
+The Bishop is an item in PEAK that can be found in the Airport. When dropped, chess pieces will automatically lock into place on the floor to avoid being accidentally displaced. There are four bishop pieces in total to be found in the Airport, with two of each color set up on the the chess board.
+
+@@@ [19] Black Clusterberry | 黑葚莓 | achievement=NULL
+effect: HUNGER -20, USES +1, HUNGER_COOKED -40, BONUS_COOKED +10
+The Black Clusterberry is a natural food in PEAK found growing on Giant Ivy in the Tropics.
+
+@@@ [20] Blowgun | 吹箭筒 | achievement=Survivalist
+effect: DROWSY +120, USES +1
+The Blowgun is a consumable item in PEAK found in regular and big luggages while playing multiplayer. It can be used to shoot a dart at another Scout to clear all statuses exceptand. The Blowgun causes the shot Scout to fall asleep due to them receiving 120. This will prevent earning, as the Scout will invariably lose consciousness. (Cooking a blowgun causes it to inflict 150 instead of 120. Additionally, the user gains 10.) This is currently bugged and gives 120 even when cooked, along with 10. Shoots a single dart with these effects on target scout: Clears all status effects except. Inflicts 120. Does not spawn in solo play. 烹饪：Replaces 120 with 150.
+
+@@@ [21] Blue Berrynana | 蓝莓蕉 | achievement=NULL
+effect: HUNGER -30, USES +1, HUNGER_COOKED -60, BONUS_COOKED +10
+The Blue Berrynana is a natural food in PEAK found growing on vines in the Tropics. Eating a Blue Berrynana will restore 30. After eating the Berrynana, the player receives a Blue Berrynana Peel. If the Blue Berrynana is fed to another, the other player will receive the peel. If the other player's inventory and hands are full, the peel will drop at their feet. Produces a Blue Berrynana Peel after eating.
+
+@@@ [22] Blue Berrynana Peel | 蓝莓蕉皮 | achievement=NULL
+effect: USES +1
+The Blue Berrynana Peel is an item in PEAK that is acquired after eating Blue Berrynanas from the Tropics. Players walking over a peel will slip and fall to the ground, losing control for a moment. Source: Acquired after eating a Blue Berrynana.
+
+@@@ [23] Blue Shroomberry | 蓝菇莓 | achievement=NULL
+effect: HUNGER -10, SPORES +5, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Blue Shroomberry is a type of Shroomberry. It produces a random bad effect when eaten. Cooking a Blue Shroomberry removes the Spore effect. Produces a bad effect when eaten. 烹饪：Removes 5 effect.
+
+@@@ [24] Bounce Fungus | 弹力菇 | achievement=Mycoacrobatics
+effect: USES +1
+The Bounce Fungus is an item in PEAK and can be found on steep surfaces in the Roots. It can be thrown or dropped to create a bouncy platform at the point of impact with terrain, an item, player, or other object with valid collision. Thrown items and falling players can also cause a Bounce Fungus to become a platform. Bouncing on a Bounce Fungus will restore a small portion of Stamina. Bouncing 40 meters off a Bounce Fungus grants the player. Creates a bouncy platform when thrown.
+
+@@@ [25] Brown Berrynana | 棕莓蕉 | achievement=NULL
+effect: HUNGER -15, BONUS +10, USES +1, HUNGER_COOKED -30, BONUS_COOKED +15
+The Brown Berrynana is a natural food in PEAK found growing on vines in the Tropics and the Gloom. Eating a Brown Berrynana will restore 15 and give 10. After eating the Berrynana, the player receives a Brown Berrynana Peel. If the Brown Berrynana is fed to another, the other player will receive the peel. If the other player's inventory and hands are full, the peel will drop at their feet. Produces a Brown Berrynana Peel after eating.
+
+@@@ [26] Brown Berrynana Peel | 棕莓蕉皮 | achievement=NULL
+effect: USES +1
+The Brown Berrynana Peel is an item in PEAK that is acquired after eating Brown Berrynanas from the Tropics or Gloom. Players walking over a peel will slip and fall to the ground, losing control for a moment. Source: Acquired after eating a Brown Berrynana.
+
+@@@ [27] Bugle | 喇叭 | achievement=Animal Serenading
+effect: USES +1
+The Bugle is an equipment item in PEAK, found at the crash site in Shore. Using the Bugle plays a loud sound that can be heard at a great distance. The farthest distance the bugle can be heard from is between 150 and 175 meters. The pitch of the sound depends on the looking direction, with the lowest pitch corresponding to looking straight down, and the highest pitch corresponding to looking straight up. An unusable version can also be found inside the Airport's photobooth. Cooking a bugle causes its pitch to wobble up and down over the course of about 3 seconds. Subsequent cooking causes the pitch to wobble farther. Using a bugle while standing next to a capybara grants the user. Plays a musical note when used. Can be used for. 烹饪：Adds a pitch modulation varying on times cooked.
+
+@@@ [28] Bugle of Friendship | 友谊喇叭 | achievement=Animal Serenading
+effect: USES +1
+The Bugle of Friendship is a mystical equipment item in PEAK that can be found while playing in multiplayer. While a Scout plays the bugle, all other players within a 56 meter radius will gain 0.5 seconds of Infinite. The bugle has a total use time of 7.5 seconds. This makes it an amazing item for helping teammates cross large vertical distances. You can receive theby using the Bugle of Friendship while standing next to a capybara, although using the regular Bugle for this is less wasteful. The badge will still be unlocked if the Bugle of Friendship is used without any use time left. Plays a musical note when used. Gives scouts in a large radius infinite Stamina while being played, up to a total of 7.5 seconds. Can be used for. Cannot spawn in solo play.
+
+@@@ [29] Bugle Shroom | 喇叭菇 | achievement=NULL
+effect: HUNGER -15, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10
+The Bugle Shroom is a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. The poisonous variety has a rougher ridged stalk and will slowly inflict 20 over 8 seconds beginning 10 seconds after eating.
+
+@@@ [30] Bugle Shroom (Poisonous) | 喇叭菇（有毒） | achievement=NULL
+effect: HUNGER -15, POISON +20, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10, POISON_COOKED +20
+The Bugle Shroom (Poisonous) is a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. The poisonous variety has a rougher ridged stalk and will slowly inflict 20 over 8 seconds beginning 10 seconds after eating.
+
+@@@ [31] Bugle? | 号角 | achievement=NULL
+effect: USES +1
+The Bugle? is an time-limited item in PEAK that was available during the PEAK x bbno$ concert event. It could be found on a statue on the Shore. Using the bugle for roughly 1 second provided a full morale boost and initiates the Bbno$ concert. After being used once, it cannot be used again. Probably for the best. The Bugle? shares its model with, and makes a similar distorted noise to the Scoutmaster's Bugle.
+
+@@@ [32] Button Shroom | 馒头菇 | achievement=NULL
+effect: HUNGER -10, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Button Shroom is a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. A poisonous variety has spots on its cap in place of the split "X" shape, and will slowly inflict 30 over 12 seconds beginning 10 seconds after eating.
+
+@@@ [33] Button Shroom (Poisonous) | 馒头菇（有毒） | achievement=NULL
+effect: HUNGER -10, POISON +30, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10, POISON_COOKED +30
+The Button Shroom (Poisonous) is a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. A poisonous variety has spots on its cap in place of the split "X" shape, and will slowly inflict 30 over 12 seconds beginning 10 seconds after eating.
+
+@@@ [34] Cactus | 仙人球 | achievement=Needlepoint
+effect: THORNS +20, USES +1
+The Cactus is an item in PEAK found in the Mesa. A Cactus will stick to the player and will apply 20 until thrown or picked off the player's body. It must be thrown (40% or higher throw power) and cannot be dropped due to its sticky attribute. Having 5 or more Cacti stuck to the player grants. Held Cacti do not count towards this total. Prickleberries do not grow on small Cacti.
+
+@@@ [35] Candlestick | 烛台 | achievement=Exorcist
+effect: USES +1
+The Candlestick is an item in PEAK. It can only be found in luggage in the Gloom or The Citadel. While lit, all players within 7 meters of the candle are immune to theinflicted by the Sleepy Gloom, and the visuals of the Gloom are dispelled within 4 meters. The Candlestick can be lit for 30 seconds before running out of usage. A Candlestick can be used to burn The Ghost, granting the player. Cooking a Candlestick has no effect.
+
+@@@ [36] Chain Launcher | 锁链发射器 | achievement=NULL
+effect: USES +1
+The Chain Launcher is a deployable item in PEAK found in Regular and Big Luggages past the Shore and Explorer's Luggages anywhere. Using the chain launcher while grounded allows the player to deploy a chain connecting their current location with a wall up to 80 meters away, consuming the chain launcher. You cannot use a chain launcher if you are looking too far up or down. Cooking a Chain Launcher immediately incinerates it, making it unusable. Creates a length of chain between two points that can be climbed on like a vine. The chain originates from the point where the user fired the launcher. The chain launcher cannot fire a chain upwards. 烹饪：Immediately incinerated.
+
+@@@ [37] Checkpoint Flag | 检查点旗标 | achievement=NULL
+effect: USES +1
+The Checkpoint Flag is a deployable item in PEAK found in Luggages. It is a placeable flag that provides a single respawn checkpoint for the player who places it. When placed, it is tinted to match the color of the scout who placed it. Checkpoint Flags can only be cooked using explosives, such as the ones created by Dynamite. Explosives advance the Checkpoint Flag's cooking stage by two (from uncooked to Well-Done to Incinerated). Creates a single-use respawn checkpoint for the Scout who placed it, saving & restoring all statuses when it was placed. 烹饪：Can only be cooked using explosives. Cooking stage increases by two when cooked.
+
+@@@ [38] Chubby Shroom | 梨鲍菇 | achievement=NULL
+effect: HUNGER -10, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Chubby Shroom is a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. There is no poisonous variety of the Chubby Shroom.
+
+@@@ [39] Cloud Fungus | 云雾菇 | achievement=NULL
+effect: USES +1
+The Cloud Fungus is an deployable item in PEAK that can be found on the sides of redwoods in the Roots. It can be used to create a walkable platform similar to the Shelf Fungus in midair. Creates a platform when it is thrown at a wall. Creates a platform at the apex of a throw mid-air.
+
+@@@ [40] Cluster Shroom | 银针菇 | achievement=NULL
+effect: HUNGER -5, USES +1, HUNGER_COOKED -10, BONUS_COOKED +10
+The Cluster Shroom a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. A poisonous variety has skirted stalks and will slowly inflict 40 over 16 seconds beginning 10 seconds after eating.
+
+@@@ [41] Cluster Shroom (Poisonous) | 银针菇（有毒） | achievement=NULL
+effect: HUNGER -5, POISON +40, USES +1, HUNGER_COOKED -10, BONUS_COOKED +10, POISON_COOKED +40
+The Cluster Shroom (Poisonous) a mushroom in PEAK that can be found growing in the Shore, Tropics, Roots, and Mesa. It can be eaten as food. A poisonous variety has skirted stalks and will slowly inflict 40 over 16 seconds beginning 10 seconds after eating.
+
+@@@ [42] Coconut | 椰子 | achievement=NULL
+effect: USES +1
+The Coconut is an item in PEAK found growing on trees in the Shore, Tropics, and in the Mesa (on the oasis trees). You can retrieve them by climbing the palm tree or by throwing another item at the coconut. A coconut can be broken to make two Half-Coconuts. When thrown at a player, a Coconut is able to bonk them, causing them to enter a ragdoll state. A cooked Coconut produces cooked Half-Coconuts.
+
+@@@ [43] Compass | 罗盘 | achievement=NULL
+effect: USES +1
+The Compass is an equipment item in PEAK. The compass will point towards the Peak (biome). Points towards the peak biome.
+
+@@@ [44] Conch | 海螺 | achievement=NULL
+effect: USES +1
+The Conch is an item in PEAK. Several conch shells can be found scattered across the beach of the Shore. Conches can be cooked for no effect aside from visual. Conches have no practical uses.
+
+@@@ [45] Cooked Bird | “鸟”烧熟了 | achievement=Resourcefulness
+effect: USES +1, HUNGER_COOKED -80, BONUS_COOKED +10
+The Cooked Bird is a natural food in PEAK that has a 10% chance to be found by cracking a Big Egg from nests in the Caldera and a 1% chance to be found by cracking a Small Egg from nests in the Gloom. It spawns pre-cooked and cooking it again will make it Well-Done. Consuming a Cooked Bird while Cannibalism is disabled will grant. Source: Has a 10% chance to spawn from a Big Egg instead of an Egg.
+
+@@@ [46] Cure-All | 万灵药 | achievement=NULL
+effect: HUNGER -20, HEAT -35, COLD -35, INJURY -35, POISON -35, SPORES -35, DROWSY -35, CURSE -5, THORNS -25, USES +3
+The Cure-All is a consumable mystical item in PEAK. It can be found in Ancient Luggage or obtained from an Ancient Statue. It has 3 uses, and when drunk, it removes a wide array of status effects from the Stamina bar. Drinking the Cure-All also removes poison over time effects from the player but it does not remove drowsy over time effects from the player. Dropping or cooking the Cure-All causes it to shatter, removing up to 10, 20, 20, 20, 20, 20, 20, and 5 from players up to4.8 meters away, depending on their distance. Dropped or cooked Cure-All does not prevent poison over time effects that have not elapsed from applying additional poison to the player. Throwing a Cure-All directly at a player however will bonk them, causing them to enter a ragdoll state. Removes 35, 35, 35, 35, 35, 35, 35, and 5. 烹饪：Explodes, removing up to 5, 10, and 20 each,,,,from all players within 4.8m.
+
+@@@ [47] Cursed Skull | 诅咒头骨 | achievement=NULL
+effect: USES +1
+The Cursed Skull is a consumable mystical item in PEAK. Unlike other mystical items, it can only spawn in Ancient Luggage and is not obtainable through Ancient Statues. When used, the player who activates the Cursed Skull will die immediately, and all other players within 1440 meters will gain 100 and be cleared of all afflictions except(and potentially Petrify). Attempting to cook a Cursed Skull immediately activates it and creates a dynamite explosion, destroying the item. If the Cursed Skull is cooked by throwing it into Lava, leaving it on heated ground or by using explosives, the Cursed Skull will activate without killing any scouts. If lava or heated ground causes the Cursed Skull in a held Backpack to be cooked, the player will not die but will takedamage and knockback from the explosion. If a player has placed a Checkpoint Flag and uses the Cursed Skull, they will gain 50 but will otherwise follow normal Checkpoint Flag respawning rules. The Cursed Skull cannot spawn when playing solo. Use instantly kills the Scout holding it and grants other players 50 and cleanses all negative status effects aside from. Can only be found in Ancient Luggage. Cannot spawn in solo play. 烹饪：Activates immediately, then explodes with a dynamite explosion.
+
+@@@ [48] Dynamite | 炸药 | achievement=NULL
+effect: INJURY 52.5, USES +1
+The Dynamite is a consumable item in PEAK found in luggage or on the ground of the Mesa, or rarely in other biomes inside Clown Luggages. If a scout is within 8 meters of the dynamite (or it is found inside a luggage) the fuse will be automatically lit, exploding after 5 seconds. The explosion can cause up to 27.5 to players within 9.6 meters, and an additional 25 if held. It is possible to pick up and throw Dynamite, should there be no safe place to retreat from it or too many clueless Scouts nearby. Attempting to cook Dynamite will cause it to immediately detonate. Dynamite explosions cook other items in close proximity, which can cause chain reactions if those items happen to be more Dynamite. The Dynamite can also be used as a fuel for Jetpacks making it useful and non-dangerous if timed right The label text "FIVE BIG BOOMS" may be a reference to this meme. 烹饪：Immediately explodes.
+
+@@@ [49] Egg | 煎蛋 | achievement=Gourmand
+effect: HUNGER -15, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10
+The Egg is a natural food in PEAK found by cracking a Big Egg from the Condor nests in the Caldera, or Small Eggs from Raven nests in the Gloom. It is one of the food items required for. Source: Made upon breaking a Big Egg. Part .
+
+@@@ [50] Energy Drink | 能量饮料 | achievement=NULL
+effect: HEAT -30, DROWSY +25, USES +1, BONUS_COOKED +10
+The Energy Drink is a packaged food in PEAK found in regular or large luggage. Drinking an Energy Drink will immediately remove 30 and 50, and the player will gain 11 seconds of both 50% bonus run speed and 150% bonus climb speed, with the maximum duration being shortened to 8 seconds after you begin climbing. While these effects are active, you cannot gain any. After the effect ends, the player immediately receives 25. Cooking an Energy Drink will cause it to explode upon consumption, causing nobut will knock-back players within 9.6 meters of the explosion, including the user. Additionally, the duration of the effect is increased to 15 seconds, shortening to 12 seconds after you begin climbing, and no additionalis gained afterwards, although previously removedis still returned. Grants a temporary speed boost.
+
+@@@ [51] Faerie Lantern | 仙子提灯 | achievement=Exorcist
+effect: HEAT -75, COLD -150, INJURY -75, POISON -75, SPORES -75, DROWSY -150, USES +1
+The Faerie Lantern is a mystical equipment item in PEAK. While lit, all players within 7.2 meters of the lantern recover 2.5, 5, 2.5, 5, and 2.5 each second, and are immune to the Fog. The Faerie Lantern can be lit for up to 30 seconds before running out of fuel. The Lantern will stay lit when dropped or when placed into a dropped backpack. It is automatically extinguished if it is put away, if the containing backpack is picked up, or if it is taken out of a containing backpack. The Faerie Lantern can be used to burn The Ghost in the Gloom, granting the player. Cooking a Faerie Lantern while it has remaining fuel causes it to explode, restoring up to 25, 25, 25, 25, 25, 25 to scouts within 4.8 meters, depending on their distance. Removes 75, 150, 75, 75, 150 and 75 over 30 seconds from nearby players. Can be extinguished to preserve the remaining fuel. Will stay lit while stowed in a dropped Backpack. 烹饪：Explodes, removing up to 25 each,,,, andfrom all players within 4.8m.
+
+@@@ [52] Fanny Pack | 滑稽背包 | achievement=NULL
+effect: USES +1
+The Fanny Pack is an equipment item in PEAK. It is equipped in the fourth equipment slot, similar to the Backpack. It allows scouts to carry two more items during their climb. The Fanny Pack cannot spawn in a solo expedition.
+
+@@@ [53] First Aid Kit | 急救箱 | achievement=NULL
+effect: INJURY -100, POISON -100, SPORES -100, USES +1
+The First Aid Kit is a consumable item in PEAK. It is found in luggage. Using the First Aid Kit removes any,(including any remaining poison over time effects), ora Scout may have. Cooking a First Aid Kit has no effect, even when incinerated. Takes 5 seconds to use. 烹饪：No effect.
+
+@@@ [54] Flare | 照明棒 | achievement=NULL
+effect: USES +1
+The Flare is a consumable item in PEAK. It can be found at the crash site, in Luggage, and in a small crate full of them at the peak biome while not doing Ascent 4+. A flare can be lit to display a tall column of colourful smoke matching the colour of the scout who uses it. Lighting a flare at the peak biome signals the rescue helicopter, completing the expedition. Once a flare is lit, it can no longer be stored in the player's inventory or in a Backpack. Cooking a flare causes it to explode, dealing up to 20 to scouts within 4.8 meters, depending on distance. Can be lit to display a tall column of colourful smoke matching the colour of the player's scout. Summons the rescue helicopter if used at the peak biome. 烹饪：Explodes, dealing up to 20 to all players within 4.8m.
+
+@@@ [55] Flying Disc | 飞盘 | achievement=Ultimate
+effect: USES +1
+The Flying Disc is an item in PEAK, found exclusively at the crash site in Shore. When thrown at a player, the flying disc is able to bonk them, causing them to enter a ragdoll state. Catching the Flying Disc when it has been thrown from over 100 meters away unlocks. Can be thrown at other scouts to bonk them. Can be used for.
+
+@@@ [56] Fortified Milk | 奶白金 | achievement=NULL
+effect: HUNGER -10, HEAT -50, USES +1
+The Fortified Milk is an item in PEAK. When consumed, it removes 50 and 10, and applies Invincibility for 15 seconds. For the duration, a scout cannot gain any additional status effects other than Weight,and, although existing status effects are not removed. A scout can still die by some methods, like being consumed by another scout. Cooking Fortified Milk increases its duration by 10 seconds the first time you cook it. Overcooking has no effect. If a skeleton consumes Fortified Milk, it additionally heals 100. 烹饪：Adds 10s to invulnerability.
+
+@@@ [57] Frog | 青蛙 | achievement=NULL
+effect: USES +1
+The Frog is a creature found in Gloom. It occasionally hops around aimlessly until a Scout gets too close to it, at which point it will grab the scout with its long tongue to pull them closer to it.
+
+@@@ [58] Frog Legs | 田鸡腿 | achievement=NULL
+effect: HUNGER -50, USES +1, HUNGER_COOKED -100, BONUS_COOKED +10
+Frog Legs are a natural food in PEAK. To obtain cooked Frog Legs, the player must pick up a Frog from the Gloom and cook it. Despite uncooked Frogs Legs appearing in the game files, there is no way to obtain them through normal game means. Cooking once doubles the removedand gains 10. Obtained by cooking a frog.
+
+@@@ [59] Glider | 滑翔伞 | achievement=Hang Gliding
+effect: USES +1
+The Glider is an item in PEAK. While held in hand, the user can glide while airborne. Gliding consumes 20 stamina per second, and when no stamina is available, the glider cannot be used. Gliding 100 meters without touching the ground grants. Cooking the Glider has no effect beyond its appearance, even when Burnt or Incinerated.
+
+@@@ [60] Gold Prickleberry | 金刺莓 | achievement=NULL
+effect: HUNGER -15, HEAT -10, INJURY -10, THORNS +10, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10, THORNS_COOKED +0
+The Gold Prickleberry is a natural food in PEAK found growing on Cacti in the Mesa. Eating it restores 15, 10, heals 10 and attaches 2 thorns to the Scout's head, inflicting 10. Because the thorns are attached to the head, you cannot remove them from yourself. Cooking a Gold Prickleberry removes theeffect, in addition to the normal effects of cooking. 烹饪：Removeseffect.
+
+@@@ [61] Granola Bar | 燕麦棒 | achievement=NULL
+effect: HUNGER -15, BONUS +20, USES +1, HUNGER_COOKED -30, BONUS_COOKED +30
+The Granola Bar is a packaged food in PEAK found in regular or large luggage.
+
+@@@ [62] Green Crispberry | 绿脆莓 | achievement=NULL
+effect: HUNGER -5, POISON +10, USES +1, HUNGER_COOKED -10, BONUS_COOKED +10, POISON_COOKED +0
+The Green Crispberry is a natural food in PEAK found growing on bushes in the Shore and Tropics. It sometimes also appears on the bushes around the Campfire at the top of the Roots and Alpine, around the Hot Spring in the Alpine and Oasis in the Mesa, and at the foot of the Peak. Eating it restores 5 and inflicts 10 over the course of 4 seconds, beginning 2 seconds after eating it. Cooking a Green Crispberry removes theeffect. 烹饪：Removeseffect.
+
+@@@ [63] Green Kingberry | 青荔莓 | achievement=NULL
+effect: HUNGER -30, POISON +5, USES +1, HUNGER_COOKED -60, BONUS_COOKED +10, POISON_COOKED +0
+The Green Kingberry is a natural food in PEAK found growing on trees in the Tropics. Eating it restores 30 and inflicts 5 immediately. Eating a raw Green Kingberry is almost always worth it despite, since theit restores is far greater than theit inflicts. Cooking a Green Kingberry removes theeffect. 烹饪：Removeseffect.
+
+@@@ [64] Green Shroomberry | 绿菇莓 | achievement=NULL
+effect: HUNGER -10, SPORES +5, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Green Shroomberry is a type of Shroomberry. It produces a random bad effect when eaten. Cooking a Green Shroomberry removes the Spore effect. Produces a bad effect when eaten. 烹饪：Removes 5 effect.
+
+@@@ [65] Guidebook | 旅行指南 | achievement=NULL
+effect: USES +1
+The Guidebook is an equipment item in PEAK. It is found exclusively at the crash site in Shore. It serves as a readable tutorial for the game, explaining various gameplay mechanics such as the Stamina bar and cooking food. It was written by Scoutmaster Myres. When cooked, the Guidebook is incinerated and can no longer be opened or closed. If the Guidebook was already open prior to cooking, the player can continue to flip through its pages. Dropping or stashing the Guidebook away will close it and prevent it from being reopened. A survival guide to teach basic gameplay. 烹饪：Immediately incinerated.
+
+@@@ [66] Half-Coconut | 半边椰子 | achievement=Gourmand
+effect: HUNGER -10, HEAT -30, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Half-Coconut is a natural food in PEAK found by a breaking whole Coconuts that grow on trees in the Shore, Tropics or on Oasis trees. Consuming it removes 10 and 30. Cooking it once doubles the removedand adds 10. It is one of the food items required for. Source: Breaking a large Coconut gives 2x Half-Coconuts. Part .
+
+@@@ [67] Heat Pack | 暖宝宝 | achievement=NULL
+effect: COLD -360, USES +1
+The Heat Pack is a consumable item in PEAK. Using a Heat Pack removes 6 per second for the next 60 seconds. Heat packs only spawn in luggages in the Alpine. Cooking a Heat Pack causes it to explode, dealing up to 20 to players within 4.8 meters, depending on their distance. 烹饪：Explodes, dealing up to 20 to all players within 4.8m.
+
+@@@ [68] Honeycomb | 蜂巢蜜 | achievement=Gourmand
+effect: HUNGER -10, BONUS +50, USES +1, HUNGER_COOKED -20, BONUS_COOKED +75
+The Honeycomb is a natural food in PEAK, it has a chance to be found in Roots inside Redwood Stumps or in Tropics by breaking a Beehive (yields four honeycombs). Eating it restores 10 and grants 50. Honeycomb is one of the food items required for. Source: Breaking a Beehive gives 4x Honeycombs. Part .
+
+@@@ [69] Hot Dog | 热狗肠 | achievement=Competitive Eating
+effect: HUNGER -30, BONUS +20, USES +1, HUNGER_COOKED -60, BONUS_COOKED +30
+The Hot Dog is a natural food in PEAK found near the campfires. At each campfire, either a Marshmallow (62.5% chance) or a Hot Dog (37.5% chance) spawns for each player in the expedition. The Hot Dog can also be found in the Gloom hiding as a cattail. Eating (or being fed) 3 Hot Dogs within 5 seconds grants the player. Source: Campfires, amongst cattails in the Gloom. 37.5% chance to appear instead of a Marshmallow.
+
+@@@ [70] Jetpack | 喷气背包 | achievement=NULL
+effect: USES +1
+The Jetpack is an wearable Equipment item in PEAK. It takes the fourth equipment slot similar to the Backpack, and you cannot wear both at the same time. Each Jetpack starts fully fueled. While in mid-air, pressing or holding Key Space will activate the Jetpack and slowly ascend the Scout into the air, consuming 20% of the fuel every second. Cooking the Jetpack has no effect.
+
+@@@ [71] King | 国王 | achievement=NULL
+effect: USES +1
+The King is an item in PEAK that can be found in the Airport. When dropped, chess pieces will automatically lock into place on the floor to avoid being accidentally displaced. There are two king pieces in total to be found in the Airport, with one of each color set up on the the chess board.
+
+@@@ [72] Knight | 骑士 | achievement=NULL
+effect: USES +1
+The Knight is an item in PEAK that can be found in the Airport. When dropped, chess pieces will automatically lock into place on the floor to avoid being accidentally displaced. There are four knight pieces in total to be found in the Airport, with two of each color set up on the the chess board.
+
+@@@ [73] Lantern | 提灯 | achievement=NULL
+effect: COLD -150, USES +1
+The Lantern is an equipment item in PEAK. One lantern can be found in the Crash Site, with more lanterns potentially being found in luggages in the Tropics and Alpine. While lit, all scouts within 7.2 meters of the lantern recover 2.5 each second. The Lantern can be lit for up to 60 seconds before running out of fuel. A Lantern will stay lit when dropped or when placed into a dropped backpack. It is automatically extinguished if it is put away, if the containing backpack is picked up, or if it is taken out of a containing backpack. Cooking a lantern while it has remaining fuel will cause it to explode, dealing up to 20 to scouts within 4.8 meters, depending on their distance. Can be extinguished to preserve the remaining fuel. Will stay lit while stowed in a dropped Backpack. 烹饪：Explodes, dealing up to 20 to all players within 4.8m.
+
+@@@ [74] Magic Bean | 魔豆 | achievement=NULL
+effect: USES +1
+The Magic Bean is an deployable item in PEAK. It can be found growing on the environment in the Shore, Tropics, Roots, Alpine or Mesa. When dropped or thrown, and after a 3 seconds wait, the bean will begin to grow a large beanstalk that can reach up to 12 meters tall if unobstructed. Players climbing the beanstalk will move twice as quickly at no additional stamina cost. The bean can be picked up before it begins to grow. After 3 seconds from being dropped or thrown it will begin to grow a vine up to 10 metres tall if unobstructed.
+
+@@@ [75] Mandrake | 曼德拉草 | achievement=Cryptogastronomy
+effect: HUNGER -10, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+__NOTOC__ Infobox item The Mandrake is a natural food item in PEAK. It has a 28.57% chance to spawn instead of a Medicinal Root in Roots. Until uprooted, it looks identical to a Medicinal Root. Once uprooted and near a conscious player, the Mandrake will scream loudly for 3 seconds, followed by a cooldown of 0.75-2 seconds. While it is screaming, players within 16 meters gain 5 every quarter second. Cooking the Mandrake will stop the screaming. The Mandrake cannot be stored in a player's inventory slots, but it can be stored in a backpack. Eating (or being fed) a cooked Mandrake grants the player theand removes 25. Cooking the Mandrake stops it from screaming. Eating (or being fed) a raw Mandrake applies the numb effect to the player for 60 seconds.effect. Source: Has a 50% chance to spawn instead of a Medicinal Root. Hides Stamina bar for 60 seconds when eaten uncooked. Starts screaming when uprooted in 3 second intervals, inflictingon nearby players. Cooking stops the screaming. Required for. 烹饪：Disables scream and removes 25.
+
+@@@ [76] Marshmallow | 棉花糖 | achievement=NULL
+effect: HUNGER -15, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10
+The Marshmallow is a natural food in PEAK found near the campfires. At each campfire, either a Marshmallow (62.5% chance) or a Hot Dog (37.5% chance) spawns for each player in the expedition.
+
+@@@ [77] Medicinal Root | 药用根茎 | achievement=NULL
+effect: HUNGER -5, INJURY -10, POISON -25, SPORES -25, USES +1, HUNGER_COOKED -10, BONUS_COOKED +10, POISON_COOKED -25, SPORES_COOKED -25
+The Medicinal Root is a natural food in PEAK found growing out of the ground in the Shore, Tropics, Roots, and Mesa. Cooking a Medicinal Root causes it to remove an extra 20 and 20, in addition to the normal effects. 烹饪：Removes an extra 20 and 20.
+
+@@@ [78] Napberry | 晚安莓 | achievement=NULL
+effect: HUNGER -100, DROWSY +100, USES +1, HUNGER_COOKED -200, BONUS_COOKED +10
+The Napberry is a natural food in PEAK found growing in the mountain caves of the Alpine. Eating it will remove all status effects except, but replaces the entire stamina bar within the process, knocking the player out for a time until gradually fading away. Players also gainfrom being in the vicinity of an unpicked Napberry plant and having it in their camera view. Eating it will remove all status effects except.
+
+@@@ [79] Orange Winterberry | 橙雪莓 | achievement=NULL
+effect: HUNGER -15, HEAT -30, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10
+The Orange Winterberry is a natural food in PEAK found growing on trees in the Alpine.
+
+@@@ [80] Pandora's Lunchbox | 潘多拉餐盒 | achievement=NULL
+effect: HUNGER +0, BONUS +0, HEAT +0, COLD +0, INJURY +0, POISON +0, SPORES +0, DROWSY +0, CURSE +0, USES +3
+The Pandora's Lunchbox is a consumable mystical item in PEAK. When used, it clearsall status effects besides(includingand ), then gives the player a random amount,,,,,,, and. It does not remove status over time effects, such as those gained from eating poisonous food or from a Zombie Bite although the zombie infection will stop if the player has 0 after using Pandora's Lunchbox. Pandora's Lunchbox can give anywhere from 0-100 total statuses, with an average amount of 40. Half as muchis applied on average compared to other statuses. A player can receive anywhere from 0-100(limited by ), with an average amount of 30. The effects of Pandora's Lunchbox bypass invincibility. Cooking Pandora's Lunchbox causes it to explode, applying its effects to all players within 4.8 meters. Randomizes the user's status effects. 烹饪：Explodes, applying its effects to all players within 4.8m.
+
+@@@ [81] Parasol | 太阳伞 | achievement=NULL
+effect: USES +1
+The Parasol is an equipment item in PEAK found in luggages in Roots and Mesa, and in Clown Luggage regardless of biome. It can be used to slow a player's descent while falling, allowing them to safely land without taking damage, and it also provides some protection from the hot sun. However, it should not be used when jumping to clear gaps, as horizontal movement is slowed significantly while falling with the parasol open. When being blown around by strong winds in the Roots, opening the parasol will instead cause players to be pulled further at greater speed. Protects the player from the harsh sunlight in the Mesa. Slows the player's falling speed while in the air.
+
+@@@ [82] Passport | 护照 | achievement=NULL
+effect: USES +1
+The Passport is a lobby exclusive item in PEAK which allows players to customize the appearance of their Scout. Available customization options include skin color, hair, eyes, mouth, fit (clothing/costumes), hats, and sashes. The Passport is only accessible in the Airport and cannot be dropped. Customizes the appearance of the player's scout.
+
+@@@ [83] Pawn | 兵卒 | achievement=NULL
+effect: USES +1
+The Pawn is an item in PEAK that can be found in the Airport. When dropped, chess pieces will automatically lock into place on the floor to avoid being accidentally displaced. There are 16 pawns in total to be found in the Airport, with eight of each color set up on the the chess board.
+
+@@@ [84] Pink Berrynana | 粉莓蕉 | achievement=NULL
+effect: HUNGER -15, POISON +15, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10, POISON_COOKED +0
+The Pink Berrynana is a natural food in PEAK found growing on vines in the Tropics. Eating a Pink Berrynana will restore 15 and will slowly inflict 15 over 6 seconds beginning 2 seconds after eating. After eating the Berrynana, the player receives a Pink Berrynana Peel. If the Pink Berrynana is fed to another, the other player will receive the peel. If the other player's inventory and hands are full, the peel will drop at their feet. Cooking a Pink Berrynana removes theeffect. Produces a Pink Berrynana Peel after eating. 烹饪：Removeseffect.
+
+@@@ [85] Pink Berrynana Peel | 粉莓蕉皮 | achievement=NULL
+effect: USES +1
+The Pink Berrynana Peel is an item in PEAK that is acquired after eating Pink Berrynanas from the Tropics. Players walking over a peel will slip and fall to the ground, losing control for a moment. Source: Acquired after eating a Pink Berrynana.
+
+@@@ [86] Pirate's Compass | 海盗罗盘 | achievement=NULL
+effect: USES +1
+The Pirate's Compass is an equipment item in PEAK. The compass points to the nearest unopened luggage or unused Ancient Statue. Points to the nearest unopened luggage or unused Ancient Statue.
+
+@@@ [87] Piton | 岩钉 | achievement=NULL
+effect: USES +1
+The Piton (pē- tän) is a deployable item in PEAK. When present in the inventory, a Scout can place it on the cliff while climbing without letting go. Once placed, it becomes a permanent handhold, letting Scouts recover their stamina while holding onto it. Only one Scout can hang on a piton at a time. Grabbing a piton is accomplished by looking at it and pressing the interact button (Key). Players do not need to hold the climbing button to hang on the piton. While inserting a piton into a cliff, a preview will be shown of the piton's position. Placing a piton is only possible when the preview is blue. During the insertion, the Scout's stamina drains considerably slower, although any movement will reset the insertion progress. Attaches to a climbable surface to provide a point for scouts to grab and rest to regenerate stamina. Limited to 1 scout at a time. Items from the main inventory can be used while hanging on a placed piton. 烹饪：Immediately incinerated.
+
+@@@ [88] Portable Stove | 便携火炉 | achievement=NULL
+effect: USES +1
+The Portable Stove is an deployable item in PEAK found in luggages anywhere outside of the Shore. It can be placed down, allowing you to cook items and removing 5 per second from players within 3.2 meters.. The Portable Stove extinguishes itself after 1 minute. Cooking a Portable Stove causes it to explode, dealing up to 20 to scouts within within 4.8 meters, depending on their distance. Used to cook items. Lasts for 60 seconds after being placed. 烹饪：Explodes, dealing up to 20 to all players within 4.8m.
+
+@@@ [89] Purple Kingberry | 紫荔莓 | achievement=NULL
+effect: HUNGER -30, BONUS +35, USES +1, HUNGER_COOKED -60, BONUS_COOKED 52.5
+The Purple Kingberry is a natural food in PEAK found growing on trees in the Tropics. Eating it will restore 30 and give 35. Unlike with other types of Kingberries, eating a Purple Kingberry has no negative effects.
+
+@@@ [90] Purple Shroomberry | 紫菇莓 | achievement=NULL
+effect: HUNGER -10, SPORES +5, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Purple Shroomberry is a type of Shroomberry. It produces a random good or bad effect when eaten. Cooking a Purple Shroomberry removes the Spore effect. Produces a random effect (good or bad) when eaten. 烹饪：Removes 5 effect.
+
+@@@ [91] Queen | 皇后 | achievement=NULL
+effect: USES +1
+The Queen is an item in PEAK that can be found in the Airport. When dropped, chess pieces will automatically lock into place on the floor to avoid being accidentally displaced. There are four queen pieces in total to be found in the Airport: one of each color will spawn on the the chess board, and another queen piece of each color of will be off to the side.
+
+@@@ [92] Red Clusterberry | 红葚莓 | achievement=NULL
+effect: HUNGER -10, INJURY -20, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Red Clusterberry is a natural food in PEAK found growing on Giant Ivy in the Tropics.
+
+@@@ [93] Red Crispberry | 红脆莓 | achievement=NULL
+effect: HUNGER -5, USES +1, HUNGER_COOKED -10, BONUS_COOKED +10
+The Red Crispberry is a natural food in PEAK found growing on bushes commonly in the Shore and Tropics. The bushes around the Campfire in the Roots, near the Hot Spring and Campfire in the Alpine, the Oasis in the Mesa, and at the foot of the Peak occasionally also grow them. Cooking once doubles the removedand gains 10.
+
+@@@ [94] Red Prickleberry | 红刺莓 | achievement=NULL
+effect: HUNGER -15, HEAT -10, THORNS +10, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10, THORNS_COOKED +0
+The Red Prickleberry is a natural food in PEAK found growing on Big Cacti in the Mesa. Eating it restores 15 and 10 and attaches 2 thorns to the Scout's head, inflicting 10. Because the thorns are attached to the head, you cannot remove them yourself. Cooking a Red Prickleberry removes theeffect, in addition to the normal effects of cooking. 烹饪：Removeseffect.
+
+@@@ [95] Red Shroomberry | 红菇莓 | achievement=NULL
+effect: HUNGER -10, SPORES +5, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Red Shroomberry is a type of Shroomberry. It produces a random good effect when eaten. Cooking a Red Shroomberry removes the Spore effect. Produces a good effect when eaten. 烹饪：Removes 5 effect.
+
+@@@ [96] Remedy Fungus | 灵药菇 | achievement=NULL
+effect: INJURY -52.5, POISON -35, SPORES -35, USES +1
+The Remedy Fungus is a consumable item in PEAK. When dropped or thrown, it releases an explosion that immediately heals players within 8 meters for 17.5 with an additional 35,, andremoved over the course of 14 seconds if they remain in the area of effect. Creates a cloud of healing smoke when dropped, with a range of 8 meters. Immediately removes 17.5. Removes up to 35, 35 and 35 (a rate of 2.5/s) over the course of 14 seconds while within the area of effect.
+
+@@@ [97] Rescue Claw | 救援抓钩 | achievement=Disaster Response
+effect: USES +3
+The Rescue Claw is a consumable item in PEAK found in regular and largeluggage throughout the island. It can be used to pull the wielding player towards terrain, or to pull other scouts towards them. When aiming at all upwards, the claw has a range of 48 meters. When aiming downwards, the claw has a range of 64 meters. Using a Rescue Claw to pull an unconscious scout player 30 meters will grant you. Cooking a Rescue Claw immediately incinerates it, making it unusable. Can be used to pull the wielder towards terrain, or pull others towards them. Can be used for. 烹饪：Immediately incinerated.
+
+@@@ [98] Ritual Dagger | 仪式匕首 | achievement=Last Resort
+effect: HUNGER -100, BONUS +100, HEAT -100, COLD -100, INJURY -100, POISON -100, SPORES -100, DROWSY -100, USES +1
+The Ritual Dagger is a consumable Mystical item in PEAK. It can be obtained from Ancient Luggages or an Ancient Statues when playing co-op. The dagger can be used by "sacrificing" another Scout from behind, killing that Scout and healing the user (in a small AOE) of most negative status effects. The Ritual Dagger can be cooked but its functionality or effects don't change. Removing more than 75% negative status effects in one use grants the user.
+
+@@@ [99] Rocketpack | 火箭背包 | achievement=NULL
+effect: USES +1
+The Rocketpack is a wearable Equipment item in PEAK. It takes the fourth equipment slot similar to the Backpack, and you cannot wear both at the same time. While equipped, another Scout or the wearer (with the right angle) can light the fuse to the Rocketpack. After 3 seconds, the rocket ignites for 3 seconds and causes the wearer to fly. While flying, you can use your movement keys to slightly steer the flying direction, but control over movement is very negligible. After the flying time is up, the rocket explodes into fireworks, dealing up to 20 to nearby Scouts.
+
+@@@ [100] Rook | 战车 | achievement=NULL
+effect: USES +1
+The Rook is an item in PEAK that can be found in the Airport. When dropped, chess pieces will automatically lock into place on the floor to avoid being accidentally displaced. There are four rook pieces in total to be found in the Airport, with two of each color set up on the the chess board.
+
+@@@ [101] Rope Cannon | 绳索炮 | achievement=NULL
+effect: USES +1
+The Rope Cannon is a deployable item in PEAK. Using a rope cannon allows the player to attach a 7.5 meter rope to a surface up to 48 meters away, embedding one end of it into the surface via a hook. It is the normal version of the Anti-Rope Cannon. Cooking a Rope Cannon immediately incinerates it, making it unusable. Shoots a harpoon that will drop a length of rope on contact with a compatible surface. 烹饪：Immediately incinerated.
+
+@@@ [102] Rope Spool | 绳索 | achievement=NULL
+effect: USES +1
+The Rope Spool is an deployable item in PEAK. It provides a total of 12.5 meters of climbable rope, placeable in lengths from 0.75m to 10m long. The rope will then allow Scouts to climb it while using less stamina than normal. The Anti-Rope Spool is a gravity-defying variant of the Rope Spool. Cooking a Rope Spool immediately incinerates it, making it unusable. Creates lengths of climbable rope (up to 10 meters) that can be attached to any climbable surface. Rope is affected by gravity. Each spool contains 12.5 meters of rope. 烹饪：Immediately incinerated.
+
+@@@ [103] Scorchberry | 火烧莓 | achievement=NULL
+effect: HUNGER -10, HEAT +25, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Scorchberry is a natural food in PEAK found growing on bushes in the Tropics, near by the campfire of the Roots or Alpine, and near the hot spring of the Alpine.
+
+@@@ [104] Scorpion | 蝎子 | achievement=NULL
+effect: USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Scorpion is a creature found in the Mesa, specifically in the canyons and the cliffs of the biome. It wanders around aimlessly until it spots a Scout, at which point it will attempt to sting them. Obtained by cooking a scorpion manually or with a Dynamite explosion. Cannot be eaten raw. Can be held, but not placed into any inventory slot.
+
+@@@ [105] Scout Cannon | 童子军大炮 | achievement=NULL
+effect: INJURY +50, USES +1
+The Scout Cannon is a deployable item in PEAK found in luggage. Cannons can be used to launch players across great distances. To setup a cannon, first adjust the angle and desired placement, then place the cannon. To activate, light the fuse and have a player enter the cannon's opening. The fuse lasts roughly 3 seconds before firing. As a player begins to fall after being launched, an effect is applied lasting 5 seconds which slows the player's descent to prevent injury, much like the effect of an open Parasol. Cooking a Scout Cannon causes it to explode identically to Dynamite, although the extra damage from being held does not apply. When used, places down a cannon. Once you are inside the cannon after the fuse has been lit, you will get launched out and get sent flying. 烹饪：Explodes identically to Dynamite but does not apply the extra damage from being held.
+
+@@@ [106] Scout Cookies | 童军饼干 | achievement=NULL
+effect: HUNGER -10, BONUS +10, USES +4, HUNGER_COOKED -20, BONUS_COOKED +15
+The Scout Cookies is a packaged food in PEAK found in regular or large luggage. It can be consumed 4 times, restoring 10 and granting 10.
+
+@@@ [107] Scout Effigy | 童军雕像 | achievement=NULL
+effect: USES +1
+The Scout Effigy is a consumable mystical item in PEAK that can be obtained from Ancient Luggage or the Ancient Statues. The effigy can be used to resurrect a random dead or unconscious player at the target location. If the effigy is placed while there are no ghost scouts, the effigy is still consumed without resurrecting any player. Cooking a Scout Effigy causes it to grant 10 when used. Incinerating gives the user, as usual for food. The Scout Effigy will not spawn when playing alone. Used to resurrect a dead scout at the target location. Cannot spawn in solo play.
+
+@@@ [108] Scout's Ambition | 童军的野心 | achievement=NULL
+effect: 
+The Scout's Ambition is a mystical item in PEAK. As an amulet, it can be obtained from one of the Amulet Statues found across the mountain. Upon use, a yellow bubble is formed for 8 seconds around the user with a range of 9.6 meters, granting Infinite to the user and all Scouts within the bubble. The user gains 30 upon use. Scout's Ambition cannot be cooked.
+
+@@@ [109] Scout's Generosity | 童军的盛情 | achievement=NULL
+effect: USES +1
+The Scout's Generosity is a mystical item in PEAK. As an amulet, it can be obtained from one of the Amulet Statues found across the mountain. On use, it duplicates an item sitting close enough to be highlighted. When duplicating an item, the user either gains 25 for a normal item or 45 for a mystical item. Amulets,Scout Effigyand Checkpoint Flags cannot be duplicated by the Scout's Generosity. Scout's Generosity cannot be cooked.
+
+@@@ [110] Scout's Honor | 童军的荣耀 | achievement=NULL
+effect: USES +1
+The Scout's Honor is an mystical item in PEAK that is obtained by transforming the Strange Gem after bestowing the four amulets upon the Stone Scout found at the Peak. Scouts can hold Key Left Mouse to commune with it, distorting the screen heavily before transporting all players to Nadir. When cooked, the Scout's Honor explodes into a 40 meter Anti-Sphere that launches all scouts within away from the center before quickly vanishing. Additionally, the Scoutmaster will be spawned targeting the player who cooked it, chasing them for up to 1 hour.
+
+@@@ [111] Scout's Initiative | 童军的进取 | achievement=NULL
+effect: USES +1
+The Scout's Initiative is a mystical item in PEAK. As an amulet, it can be obtained from one of the Amulet Statues found across the mountain. Upon use, it applies slow falling for.55 to the user and all Scouts within 12.8 meters of the user, then applies wind walking for 3 seconds to all affected Scouts. Upon use, the user gains 7. Scout's Initiative cannot be cooked.
+
+@@@ [112] Scout's Tenacity | 童军的毅力 | achievement=NULL
+effect: HEAT -60, COLD -60, INJURY -60, POISON -60, SPORES -60, DROWSY -60
+The Scout's Tenacity is a mystical item in PEAK. As an amulet, it can be obtained from one of the Amulet Statues found across the mountain. It can be used on the holder or another Scout, which heals up to 60 total amount of the following effects, in the specific order:######After which it appliesto the user based on the amount of injury healed, ranging from 10 to a maximum of 30 and 10 seconds of Invincibility. Scout's Tenacity cannot be cooked.
+
+@@@ [113] Scoutmaster's Bugle | 童军领队的喇叭 | achievement=Animal Serenading
+effect: BONUS +100, USES +1
+The Scoutmaster's Bugle is a mystical equipment item in PEAK. It has an extremely rare chance of being obtained from Ancient Luggage or an Ancient Statue. Blowing the bugle will produce a distorted noise, drastically different than the standard Bugle. The Scoutmaster's Bugle can only be used once. When consumed, it will grant a Morale Boost to the user and all other Scouts, granting 100. It will also summon The Scoutmaster, who will mark the bugle's user as his target. The Scoutmaster doesn't appear on Tenderfoot difficulty. The Scoutmaster will chase his target for 2 minutes before despawning, ignoring his normal despawn conditions. If the Scoutmaster's Bugle is incinerated, it will inflicton the user when played, in the same way as consuming incinerated Food. spoiler Playing a Scoutmaster's Bugle while standing next to a capybara grants the user. The bugle does not need to be consumed to unlock the badge. User and nearby scouts gain 100. Summons the Scoutmaster for two minutes and marks the user as his target. Much rarer than other mystical items.
+
+@@@ [114] Scroll | 卷轴 | achievement=Bookworm
+effect: USES +1
+The Scroll is an item in PEAK. It can be found at the campfires located at the top of each biome, excluding the Caldera and Gloom. The scroll can be opened to reveal a Torn Page. The exact page revealed depends on the player who opens the scroll. When the scroll is opened, the highest-numbered unread page that player meets the requirements for is revealed. If that player has read all the currently available pages, then an available page is spawned at random. Biome requirements are based on the closest campfire, regardless of whether it's been lit. Revealing or reading page 12 unlocks. Each torn page is a diary entry from Scoutmaster Myres, detailing his experience on the island. Cooking a scroll will cause it to give 10 upon use. Can be opened to reveal a torn page.
+
+@@@ [115] Shelf Fungus | 踏板菇 | achievement=NULL
+effect: USES +1
+The Shelf Fungus is an deployable item in PEAK found on steep surfaces in most Biomes. It can be thrown or dropped to create a platform at the point of impact with terrain, an item, player, or other object with valid collision. Thrown items and falling players can also trigger a shelf fungus to become a platform. Creates a platform when it is thrown at a wall.
+
+@@@ [116] Small Egg | 小小蛋 | achievement=NULL
+effect: USES +1
+Found in the Gloom inside Raven nests, can be cracked open to receive an Egg similar to the Big Egg. Has a 99% chance to spawn Egg when cracked and 1% chance to spawn a Cooked Bird. Cooking the Egg causes the resulting Egg to also be cooked when cracked open.
+
+@@@ [117] Snowball | 雪球 | achievement=NULL
+effect: USES +1
+The Snowball is an item in PEAK that can gained by picking up Snow Piles on the ground. Snowballs can be thrown and will be destroyed if they impact a player or the environment at a fast enough velocity. Throwing a Snowball at a player will cause the player to gain 5 to 10 and will cause the player to enter a ragdoll state. Cooking a Snowball will inflictto the player but will not knock them down. Rolling a Snowball on snowy ground causes it to get larger but has no effect on its Weight. Larger snowballs apply more knockback when thrown at a player. Once a Snowball is sufficiently large, it can no longer be picked up.
+
+@@@ [118] Sports Drink | 运动饮料 | achievement=NULL
+effect: BONUS +30, HEAT -200, USES +1, BONUS_COOKED +45
+The Sports Drink is a packaged food in PEAK found in regular or big luggage. Drinking the Sports Drink restores 30 and removes 200 from the user. Cooking the Sports Drink gives 15 more stamina to the Scout, for 45 total. Cooking a Sports Drink beyond the first stage, including incineration, has no effect.
+
+@@@ [119] Strange Gem | 奇怪水晶 | achievement=NULL
+effect: USES +1
+The Strange Gem is an mystical item in PEAK found in the hands of the Stone Scout behind the mountain top of the peak biome. Picking up the gem and pressing Key Left Click displays a message reading "Gem Activated" in the top left corner of the screen, doing it again displays another message reading "Gem Deactivated". Cooking the strange gem will cause it to apply 10 when bestowed. Burning it will applyunder the same circumstances.
+
+@@@ [120] Sunscreen | 防晒喷雾 | achievement=NULL
+effect: USES +3
+The Sunscreen is a consumable item in PEAK found in luggage in the Mesa. It can be used to create a small cloud spanning 4.8 meters that will apply a sunscreen effect to any players passing through it, offering 90 seconds of protection from the sun'sdamage in the Mesa. Sunscreen will appear as a white sheen on the Scout's skin and a white cloudy texture around the edges of the screen. The sunscreen cloud will dissipate after 4 seconds. Cooking a Sunscreen causes it to explode, creating a cloud 9.6 meters across that gives any scouts within the sunscreen effect for the normal 90 seconds. This cloud also dissipates after 4 seconds. Sprays a cloud of sunscreen that gives temporary protection from the harsh sunlight in the Mesa for 90 seconds. Protection is giving to any player that enters the cloud. 烹饪：Explodes, applying the sunscreen effect to all players within 4.8m.
+
+@@@ [121] The Book of Bones | 骸骨之书 | achievement=Applied Esoterica
+effect: CURSE +25, USES +1
+The Book of Bones is a consumable mystical item in PEAK. It can be used to turn dead Scouts (and alive ones) into Living Skeletons. The Book of Bones can only be acquired from Ancient Statues and Ancient Luggage. Cooking The Book of Bones has no effect, even when incinerated. Using The Book of Bones on another dead player grants. Removes all status effects exceptandand prevents gaining any further (see the full page for details). 烹饪：No effect.
+
+@@@ [122] The Early Worm | 早起虫儿 | achievement=Well Rested
+effect: HUNGER -5, DROWSY -100, USES +1
+The Early Worm is a NPC and natural food item in PEAK. It can be found on the ground in the Gloom, moving in circles. It can be consumed, removing 5 and clearing anythe player has. Consuming The Early Worm grants the player. When you are nearby or holding a living early worm, you can hear its distinct moving sound cue. When cooked, it causes the worm to stop moving, but gains no additional bonuses. Source: Can be found on the surface of the Gloom. 烹饪：No additional bonuses are gained and the worm stops moving.
+
+@@@ [123] Tick | 蜱虫 | achievement=NULL
+effect: HUNGER -20, USES +1, HUNGER_COOKED -40, BONUS_COOKED +10
+The Tick is a natural food in PEAK. They have a 1% chance to spawn on a Scout as they walk through Monstera plants in the Tropics and will inflict up to 50 over time until removed. Once removed, it can be eaten to restore 20. While latched onto a Scout, it will grow overtime. The size of the tick has no effect on how much Hunger it restores. As with other bug-like creatures, turning on Bug Phobia Mode in the Settings will turn the Tick into its Bing Bong variant. Consuming as food does not inflict poison.
+
+@@@ [124] Torch | 火炬 | achievement=NULL
+effect: USES +1
+Torches are an equipment item in PEAK. They are found exclusively inside the Tomb, serving as lighting. When an unlit torch is in hand, it can be activated and lit up, providing an additional lighting source. Found only inside the Tomb. Provides temporary light source.
+
+@@@ [125] Trail Mix | 混合坚果 | achievement=NULL
+effect: HUNGER -10, BONUS +10, USES +1, HUNGER_COOKED -20, BONUS_COOKED +15
+The Trail Mix is a packaged food in PEAK found in regular or large luggage.
+
+@@@ [126] Warp Compass | 曲迁罗盘 | achievement=NULL
+effect: USES +3
+The Warp Compass is a mystical equipment item in PEAK. The warp compass is no longer available to acquire during regular gameplay since patch 1.1.a due to it not behaving properly. When used, the intended result is for the compass to teleport the player to another random player. It has no effect during single-player sessions. The item was removed the day after it was introduced due to a bug that teleported players off the map when used. It is unlikely that it will be re-added in the future.
+
+@@@ [127] Warp Fungus | 曲迁菇 | achievement=NULL
+effect: USES +1
+The Warp Fungus is a consumable item in PEAK. When dropped or thrown, it teleports the user to the location that it lands. The Warp Fungus can be found in all biomes except biomes past the Alpine and Mesa. Teleports user to where it lands.
+
+@@@ [128] Yellow Berrynana | 黄莓蕉 | achievement=NULL
+effect: HUNGER -15, USES +1, HUNGER_COOKED -30, BONUS_COOKED +10
+The Yellow Berrynana is a natural food in PEAK found growing on vines in the Tropics and the Gloom. After eating the Berrynana, the player receives a Yellow Berrynana Peel. If the Yellow Berrynana is fed to another, the other player will receive the peel. If the other player's inventory and hands are full, the peel will drop at their feet. Produces a Yellow Berrynana Peel after eating.
+
+@@@ [129] Yellow Berrynana Peel | 黄莓蕉皮 | achievement=NULL
+effect: USES +1
+The Yellow Berrynana Peel is an item in PEAK that is acquired after eating Yellow Berrynanas from the Tropics or the Gloom. Players walking over a peel will slip and fall to the ground, losing control for a moment. It can also be obtained on its own in Clown Luggage. Source: Acquired after eating a Yellow Berrynana.
+
+@@@ [130] Yellow Clusterberry | 黄葚莓 | achievement=NULL
+effect: HUNGER -10, BONUS +10, USES +1, HUNGER_COOKED -20, BONUS_COOKED +15
+The Yellow Clusterberry is a natural food in PEAK found growing on Giant Ivy in the Tropics.
+
+@@@ [131] Yellow Crispberry | 黄脆莓 | achievement=NULL
+effect: HUNGER -5, BONUS +10, USES +1, HUNGER_COOKED -10, BONUS_COOKED +15
+The Yellow Crispberry is a natural food in PEAK found growing on bushes in the Shore and Tropics. It is also possible for them to grow on the bushes near the Campfire in the Roots and Alpine, around the Alpine's Hot Spring and Mesa's Oasis, and at the foot of the Peak.
+
+@@@ [132] Yellow Kingberry | 黄荔莓 | achievement=NULL
+effect: HUNGER -30, POISON +25, USES +1, HUNGER_COOKED -60, BONUS_COOKED +10, POISON_COOKED +0
+The Yellow Kingberry is a natural food in PEAK found growing on trees in the Tropics. Eating it restores 30 and will slowly inflict 25 over 10 seconds, beginning 3 seconds after eating. Cooking a Yellow Kingberry removes theeffect. 烹饪：Removeseffect.
+
+@@@ [133] Yellow Shroomberry | 黄菇莓 | achievement=NULL
+effect: HUNGER -10, SPORES +5, USES +1, HUNGER_COOKED -20, BONUS_COOKED +10
+The Yellow Shroomberry is a type of Shroomberry. It produces a random good effect when eaten. Cooking a Yellow Shroomberry removes the Spore effect. Produces a good effect when eaten. 烹饪：Removes 5 effect.
+
+@@@ [134] Yellow Winterberry | 黄雪莓 | achievement=Gourmand, Foraging
+effect: HUNGER -30, BONUS +35, HEAT -50, INJURY -20, USES +1, HUNGER_COOKED -60, BONUS_COOKED 52.5
+The Yellow Winterberry is a natural food in PEAK, found growing on trees in the Alpine. They will also appear on the heads of capybaras which can be found in the hot spring of the Alpine and the oasis of the Mesa. The Yellow Winterberry has a very low chance (0.5%) to spawn on trees. The most reliable way to acquire them (for, for example) is to locate the capybaras in either the Hot spring (in the Alpine) or Oasis (in the Mesa) as Yellow Winterberries have a 100% chance to spawn in this location. Yellow Winterberries count towards theif an Orange Winterberry has not been consumed. Part .
+
