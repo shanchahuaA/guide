@@ -9,3 +9,25 @@
   <!-- 演示用跳级后门：连点三次升一级（契约 §7.6） -->
   <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
 </view>
+
+<!-- 「问答」分段（契约 §7.4）。本单只做图鉴内问题；「练习」与「路线」是后面两条切片 -->
+<view class="section">
+  <view class="section-title">问答</view>
+
+  <!-- 没存 Key 时先引导填写。hasApiKey 来自身份条那份 profile -->
+  <block wx:if="{{profile && !profile.hasApiKey}}">
+    <view class="hint">问答要用你自己的 DeepSeek API Key。填一次就长期有效，只存在你的账号下。</view>
+    <input class="input" type="text" password placeholder="sk-..." value="{{keyDraft}}" bindinput="onKeyInput" />
+    <button class="btn" bindtap="onSaveKey">保存 Key</button>
+  </block>
+
+  <block wx:else>
+    <input class="input" type="text" placeholder="问问图鉴里的事，比如「蘑菇有什么用」"
+           value="{{question}}" bindinput="onQuestionInput" confirm-type="send" bindconfirm="onAsk" />
+    <button class="btn" bindtap="onAsk" disabled="{{asking}}">{{asking ? '思考中…' : '提问'}}</button>
+
+    <view class="answer" wx:if="{{answer}}">
+      <text class="answer-text">{{answer}}</text>
+    </view>
+  </block>
+</view>

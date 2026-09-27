@@ -848,6 +848,68 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     Assert-True ($null -ne (Get-Field $profileData 'streakTarget')) 'profile 带 streakTarget' '契约 §7.1 要 streakTarget'
 }
 
+# ── 第 4 组（续）：问答的 Key 与鉴权（契约 §7.2 / §7.4 / §7.5）───────────────
+#
+# ⚠️ 这一段**不碰大模型**，所以它不需要真 Key，也不需要 appid/secret 之外的任何外部依赖。
+# 真调 DeepSeek 那一条（"填了 Key 后问图鉴问题拿到回答"）**脚本验不了** —— Key 是用户本人的、
+# 不在仓库里，也没有任何接口能证明"这次调用真的花了那个 Key 的额度"。
+# 那条 AC 的验收方式写在报告里，不在这个脚本里假装跑过。
+#
+# ⚠️ 仍然按 token 分支：拿不到 token（appid/secret 没配）时这一整段跳过，不静默空转。
+Section '4c. 教学问答的 Key 与鉴权'
+
+# 未登录时三个端点都必须是 401（HTTP 状态仍是 200，用响应包里的 code 表达未登录）
+$askNoToken = Invoke-Json 'POST' '/api/teach/ask' 60 $null @{ question = 'probe' }
+Assert-True ((Get-Field $askNoToken.Json 'code') -eq 401) 'ask 不带 token 时 code=401' `
+    ("实际 code=" + (Get-Field $askNoToken.Json 'code'))
+
+$keyNoToken = Invoke-Json 'POST' '/api/teach/apikey' 60 $null @{ apiKey = 'sk-probe' }
+Assert-True ((Get-Field $keyNoToken.Json 'code') -eq 401) 'apikey 不带 token 时 code=401' `
+    ("实际 code=" + (Get-Field $keyNoToken.Json 'code'))
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过问答的鉴权断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    # 带 token 但没填 Key：必须是 -100 + 提示先填，**不是 500**（契约 §7.5）
+    # 这一步顺带证明了"claim 了的 Key 才能问"这条路径是通的，且没有真去调大模型
+    $authHeader = @{ token = $loginToken }
+    $askNoKey = Invoke-Json 'POST' '/api/teach/ask' 60 $authHeader @{ question = '蘑菇有什么用' }
+    Assert-True ((Get-Field $askNoKey.Json 'code') -eq -100) 'ask 未填 Key 时 code=-100（不是 500）' `
+        ("实际 code=" + (Get-Field $askNoKey.Json 'code') + " message=" + (Get-Field $askNoKey.Json 'message'))
+    Assert-True ($null -ne (Get-Field $askNoKey.Json 'message') -and (Get-Field $askNoKey.Json 'message') -ne '') `
+        'ask 未填 Key 时带非空 message（前端 reject 分支直接弹它）' `
+        ("实际 message=" + (Get-Field $askNoKey.Json 'message'))
+    # 失败分支没有 data：前端靠 success=false 判成败，不该给出半个 answer
+    Assert-True ($null -eq (Get-Field $askNoKey.Json 'data')) 'ask 失败时 data 为 null' `
+        ("实际 data=" + (Format-Actual (Get-Field $askNoKey.Json 'data')))
+
+    # 空问题也是 -100 + 提示，不能是 500
+    $askEmpty = Invoke-Json 'POST' '/api/teach/ask' 60 $authHeader @{ question = '' }
+    Assert-True ((Get-Field $askEmpty.Json 'code') -eq -100) 'ask 空问题时 code=-100（不是 500）' `
+        ("实际 code=" + (Get-Field $askEmpty.Json 'code'))
+
+    # 不预校验（契约 §7.2）：随便填一个明显无效的 Key 也要 200，有效性留到真调用时才知道。
+    # 这一条是在**钉行为**而不是走过场 —— 预校验会把"用户先填后充值"这种正常路径变成死路
+    $saveKey = Invoke-Json 'POST' '/api/teach/apikey' 60 $authHeader @{ apiKey = 'sk-smoke-test-not-a-real-key' }
+    Assert-True ((Get-Field $saveKey.Json 'code') -eq 200) 'apikey 填任意值都回 200（不预校验）' `
+        ("实际 code=" + (Get-Field $saveKey.Json 'code') + " message=" + (Get-Field $saveKey.Json 'message'))
+
+    # 存下之后身份条要能看见（契约 §7.1 的 hasApiKey 是前端的引导开关）
+    $profileAfterKey = Invoke-Json 'GET' '/api/teach/profile' 60 $authHeader
+    Assert-True ((Get-Field (Get-Data $profileAfterKey) 'hasApiKey') -eq $true) `
+        '存了 Key 之后 profile 的 hasApiKey=true（前端据此收起填写引导）' `
+        ("实际 hasApiKey=" + (Format-Actual (Get-Field (Get-Data $profileAfterKey) 'hasApiKey')))
+
+    # ⚠️ 超时给足：这一步真的会拿那个无效 Key 去调 DeepSeek，拿到 401 才算对。
+    # 网络不通时它会走"AI 服务连不上"那条兜底，同样是 -100 —— 两种都算这一条通过，
+    # 因为这一条验的是"大模型的失败不会变成 500"，不是"网络一定通"
+    $askBadKey = Invoke-Json 'POST' '/api/teach/ask' 90 $authHeader @{ question = 'smoke-test-bad-key-probe' }
+    Assert-True ((Get-Field $askBadKey.Json 'code') -eq -100) 'ask 用无效 Key 时 code=-100（不是 500）' `
+        ("实际 code=" + (Get-Field $askBadKey.Json 'code') + " message=" + (Get-Field $askBadKey.Json 'message'))
+    Assert-True ((Get-Field $askBadKey.Json 'success') -eq $false) 'ask 用无效 Key 时 success=false' `
+        ("实际 success=" + (Get-Field $askBadKey.Json 'success'))
+}
+
 # ── Redis 缓存：读到的到底是缓存、还是每次都回源 ─────────────────────────────
 #
 # ⚠️ 这一段**不要求 Redis 一定在跑**：契约 §8.3 明写"Redis 连不上时接口照常返（回源 MySQL）"，
@@ -935,6 +997,30 @@ if (-not $cacheReachable) {
     Assert-True ((Get-Field $afterEvictDetailItem 'isCookable') -eq $true) `
         '回填后的缓存里 flag=cookable 标签仍能判出来（tags 元素没退化成 Map）' `
         ("实际 " + (Format-Actual (Get-Field $afterEvictDetailItem 'isCookable')))
+
+    # ── AI 问答缓存（契约 §7.4）────────────────────────────────────────────
+    #
+    # ⚠️ 这一段在 Redis 段**内部**，用的是上面刚验过的"Redis 可达"这个前提 ——
+    # 缓存有没有生效从接口响应上完全看不出来（那是设计意图），所以按票面口径一律走 redis-cli，
+    # **不新增 HTTP 检查端点**（上一个正是因此被停用）。
+    #
+    # ⚠️ 这里**只验 key 的存在与形态**，不验"第二次不再调大模型"：后者要有真 Key 才能造出
+    # "第一次真的成功了"这个前提。本段的做法是自己往 key 里塞一条回答，再确认它落在
+    # 契约约定的前缀下、且能原样读回 —— 钉的是 key 口径，不是调用次数（调用次数由
+    # TeachServiceImplTest 的单测覆盖，那里能精确断言"只调了一次"）。
+    $ANSWER_PREFIX = 'guide:answer:'
+    $answerProbeKey = $ANSWER_PREFIX + 'smoke-test-probe'
+
+    $probeSet = & $script:RedisCli SET $answerProbeKey 'probe' 2>&1
+    Assert-True (($LASTEXITCODE -eq 0) -and (("$probeSet").Trim() -eq 'OK')) `
+        ('能往 ' + $ANSWER_PREFIX + '* 下写 key（前缀就是契约 §7.4 的口径）') `
+        ("redis-cli 返回：`"$probeSet`"（期望 OK，exit=$LASTEXITCODE）")
+
+    $probeGet = & $script:RedisCli GET $answerProbeKey 2>&1
+    Assert-Equal (("$probeGet").Trim()) 'probe' '回答缓存能原样读回（不是写进去就丢）'
+
+    # 收掉探针：它是脚本自己造的，留着会污染下次运行的观察（真回答缓存的清理走采集失效）
+    $null = & $script:RedisCli DEL $answerProbeKey 2>&1
 
     Write-Host ''
     Write-Host '  缓存单 key 断言完成 —— 下面轮到字典组（不依赖库内容，也不依赖缓存里还有没有东西）'

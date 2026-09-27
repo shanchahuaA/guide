@@ -54,3 +54,10 @@ guide:
     icon-dir: icons
     # 图标对外的 URL 前缀，与 WebMvcConfig 的静态资源映射、条目 icon 列三处保持一致
     icon-url-prefix: /icons
+  ai:
+    # DeepSeek 走 OpenAI 兼容的 POST /chat/completions（契约 §7）
+    base-url: https://api.deepseek.com
+    model: deepseek-flash
+    # 关掉时 /api/teach/ask 返回预置文案而不是报错（契约 §7.0），演示与无 Key 的机器都能跑
+    # 注意：调用用的是**用户自己的** Key（落 user.api_key 列），这里没有、也不该有服务端 Key
+    enabled: true

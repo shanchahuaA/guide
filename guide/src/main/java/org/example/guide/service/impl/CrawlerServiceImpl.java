@@ -1,5 +1,6 @@
 package org.example.guide.service.impl;
 
+import org.example.guide.cache.AnswerCache;
 import org.example.guide.cache.ItemCache;
 import org.example.guide.crawler.CargoItemRow;
 import org.example.guide.crawler.ConvertedItem;
@@ -33,19 +34,22 @@ public class CrawlerServiceImpl implements ICrawlerService {
     private final IItemService itemService;
     private final ItemIconDownloader iconDownloader;
     private final ItemCache itemCache;
+    private final AnswerCache answerCache;
 
     public CrawlerServiceImpl(WikiApiClient wikiApiClient,
                               ItemPageParser itemPageParser,
                               ItemConverter itemConverter,
                               IItemService itemService,
                               ItemIconDownloader iconDownloader,
-                              ItemCache itemCache) {
+                              ItemCache itemCache,
+                              AnswerCache answerCache) {
         this.wikiApiClient = wikiApiClient;
         this.itemPageParser = itemPageParser;
         this.itemConverter = itemConverter;
         this.itemService = itemService;
         this.iconDownloader = iconDownloader;
         this.itemCache = itemCache;
+        this.answerCache = answerCache;
     }
 
     /**
@@ -187,10 +191,14 @@ public class CrawlerServiceImpl implements ICrawlerService {
     }
 
     /**
-     * 缓存失效：采集跑完删掉图鉴的全量缓存（契约 §8.3、CONTEXT.md 缓存节）。
+     * 缓存失效：采集跑完删掉图鉴的全量缓存与全部问答缓存（契约 §8.3、CONTEXT.md 缓存节）。
      *
      * <p>放在最后一步、且**只有这一步**：采集过程中途失效会让读请求回源到"半新半旧"的库，
      * 跑完再删则下一次请求一次到位地看到采集后的新数据，不用重启应用。
+     *
+     * <p>问答缓存一并删是因为它的**依据**就是图鉴数据（契约 §7.4 的上下文来自图鉴）：
+     * 图鉴换了，旧回答里那些数值就成了错的。它不需要单独判断"这次采集有没有改到问答涉及的条目"——
+     * 演示环境里回答只有几十条，一并删掉重生成比做精细失效便宜。
      *
      * <p>失败不上抛 —— 采集本体已经成功，缓存删不掉只是"新数据要等下一次失效才生效"；
      * 把它冒出去会让一份完整的 {@link CrawlReport} 变成一个 500。
@@ -200,6 +208,11 @@ public class CrawlerServiceImpl implements ICrawlerService {
             itemCache.evict();
         } catch (Exception e) {
             log.warn("采集完成但图鉴缓存失效失败，接口可能仍返回旧数据", e);
+        }
+        try {
+            answerCache.evictAll();
+        } catch (Exception e) {
+            log.warn("采集完成但问答缓存失效失败，AI 可能仍按旧图鉴数据回答", e);
         }
     }
 

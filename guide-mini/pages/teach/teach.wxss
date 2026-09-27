@@ -42,3 +42,67 @@ page {
   border: 2rpx solid #ded7c2;
   border-radius: 28rpx;
 }
+
+/* 「问答」分段的卡片。与详情页的 section 同一套语言：米白底 + 细描边、无阴影 */
+.section {
+  margin: 24rpx 24rpx 0;
+  padding: 28rpx;
+  background: #fffdf6;
+  border: 2rpx solid #e6e0cc;
+  border-radius: 20rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2b2823;
+  margin-bottom: 20rpx;
+}
+
+.hint {
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: #9a9384;
+  margin-bottom: 20rpx;
+}
+
+.input {
+  height: 84rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #2b2823;
+  background: #f7f4ea;
+  border: 2rpx solid #e6e0cc;
+  border-radius: 16rpx;
+}
+
+.btn {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  color: #6b6353;
+  background: #f0ebdb;
+  border: 2rpx solid #ded7c2;
+  border-radius: 16rpx;
+}
+
+/* 禁用态（提问中）：按钮 self 去掉立体感，免得看起来能再点一次 */
+.btn[disabled] {
+  opacity: 0.6;
+  background: #f0ebdb;
+  color: #9a9384;
+}
+
+.answer {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  background: #f7f4ea;
+  border-radius: 16rpx;
+}
+
+.answer-text {
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: #3d3830;
+  /* 答案是多行长文本，保留换行 */
+  white-space: pre-wrap;
+}

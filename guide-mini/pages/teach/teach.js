@@ -8,7 +8,12 @@ Page({
 
   data: {
     profile: null,      // /api/teach/profile 的 data，null = 还没拿到（未登录 / 后端没起）
-    taps: 0             // 跳级按钮已点击数，显示成"跳级 x/3"
+    taps: 0,            // 跳级按钮已点击数，显示成"跳级 x/3"
+    // 「问答」分段。apiKey 是输入到一半的草稿，answer 是上一条答案
+    question: '',
+    answer: '',
+    asking: false,
+    keyDraft: ''
   },
 
   onShow() {
@@ -27,6 +32,56 @@ Page({
     api.request('/api/teach/profile', { header: { token } })
       .then(profile => this.setData({ profile }))
       .catch(() => this.setData({ profile: null }))
+  },
+
+  // ── 问答分段（契约 §7.4）──────────────────────────────────────────────
+
+  onQuestionInput(e) {
+    this.setData({ question: e.detail.value })
+  },
+
+  onKeyInput(e) {
+    this.setData({ keyDraft: e.detail.value })
+  },
+
+  // 提交 Key：成功后就地把身份条刷成 hasApiKey=true，不必重新登录
+  onSaveKey() {
+    const apiKey = this.data.keyDraft.trim()
+    if (!apiKey) {
+      wx.showToast({ title: '请先填入 Key', icon: 'none' })
+      return
+    }
+    api.request('/api/teach/apikey', {
+      method: 'POST',
+      header: { token: wx.getStorageSync('token') },
+      data: { apiKey }
+    }).then(() => {
+      wx.showToast({ title: '已保存', icon: 'none' })
+      this.setData({ keyDraft: '' })
+      this.loadProfile()
+    }).catch(err => {
+      wx.showToast({ title: err.message || '保存失败', icon: 'none' })
+    })
+  },
+
+  // 提问。失败时后端已经给了一句中文 message（如「API Key 无效」），直接弹出来 ——
+  // 统一请求封装的 reject 分支带的就是它，前端不再自己翻译错误码
+  onAsk() {
+    const question = this.data.question.trim()
+    if (!question || this.data.asking) {
+      return
+    }
+    this.setData({ asking: true })
+    api.request('/api/teach/ask', {
+      method: 'POST',
+      header: { token: wx.getStorageSync('token') },
+      data: { question }
+    }).then(res => {
+      this.setData({ answer: res.answer || '', asking: false })
+    }).catch(err => {
+      this.setData({ asking: false })
+      wx.showToast({ title: err.message || '提问失败', icon: 'none' })
+    })
   },
 
   // 演示后门：连点三次升一级。第三次才打后端，成功后计数归零并提示
