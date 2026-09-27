@@ -24,7 +24,8 @@ import org.springframework.stereotype.Service;
  * 顺序是有意的：缓存放在最前面，命中时连 Key 在不在都不必看 ——
  * 同一个问题问第二次不该因为"用户把 Key 删了"而失败，答案本来就与 Key 无关。
  *
- * <p>本单**只做图鉴内问题**。路线类链接（#44）还没做，{@code links} 恒为 {@code []}。
+ * <p>图鉴内问题走"缓存 → Key → 图鉴上下文 → DeepSeek"；**路线类问题**（#44）不走这条，
+ * 只把 {@link BilibiliRouteService} 构造好的链接回给前端，{@code links} 非空。
  *
  * <p><b>等级约束（#43）分两层</b>：**硬拦在路由层**（{@code TeachGate}）—— 拦下的请求根本到不了
  * 这里，也就不查缓存、不调大模型；到了这里的请求，等级只用来把边界注入系统提示词（软约束），
@@ -38,6 +39,9 @@ public class TeachServiceImpl implements ITeachService {
 
     /** 契约 §7.0：{@code ai.enabled = false} 时返回的预置文案 */
     static final String DISABLED_ANSWER = "AI 老师暂时休息中，稍后再来问吧。图鉴里能查到的数据照样看得到。";
+
+    /** 路线类问题的引导语。链接本身由 {@link BilibiliRouteService} 构造（#44） */
+    static final String ROUTE_ANSWER = "这是今天的 B站 攻略链接，点开来看看：";
 
     /** 系统提示词的固定部分：以图鉴为准、不编。等级边界由 {@link TeachGate#boundaryFor} 追加在后 */
     private static final String SYSTEM_PROMPT = """
@@ -54,6 +58,7 @@ public class TeachServiceImpl implements ITeachService {
     private final ItemCache itemCache;
     private final AnswerCache answerCache;
     private final DeepSeekClient deepSeekClient;
+    private final BilibiliRouteService routeService;
 
     /** 契约 §7.0 的降级开关。读成字段而不是每次注入 —— 它是启动期配置，不热更 */
     private final boolean enabled;
@@ -62,11 +67,13 @@ public class TeachServiceImpl implements ITeachService {
                             ItemCache itemCache,
                             AnswerCache answerCache,
                             DeepSeekClient deepSeekClient,
+                            BilibiliRouteService routeService,
                             @Value("${guide.ai.enabled:true}") boolean enabled) {
         this.userService = userService;
         this.itemCache = itemCache;
         this.answerCache = answerCache;
         this.deepSeekClient = deepSeekClient;
+        this.routeService = routeService;
         this.enabled = enabled;
     }
 
@@ -74,6 +81,15 @@ public class TeachServiceImpl implements ITeachService {
     public BaseResult ask(String openid, String question, Integer level) {
         if (question == null || question.isBlank()) {
             return fail("请输入你想问的问题");
+        }
+
+        // 路线类（#44）：链接由后端构造，**不调大模型** —— 模型不能联网（CONTEXT.md「每日路线」），
+        // 更不需要用户的 Key。放在回答缓存与降级开关之前有两个理由：
+        //   1. 链接里带**当天日期**，缓存到明天就是过期链接，所以不缓存；
+        //   2. 它压根不走大模型，guide.ai.enabled 这个开关管不着它。
+        // 越级问题到不了这里 —— 控制器已按等级硬拦（TeachGate）。
+        if (TeachGate.classify(question) == TeachGate.Category.ROUTE) {
+            return routeAnswer();
         }
 
         // 回答缓存：key 用问题文本（契约 §7.4）。命中就直接回，不碰大模型
@@ -118,7 +134,13 @@ public class TeachServiceImpl implements ITeachService {
         return success(answer);
     }
 
-    /** {@code data} 的形状见契约 §7.4：{@code answer} + {@code links}（本单恒空数组） */
+    /** 路线类问题的回答：引导语 + 后端构造的 B站 链接（契约 §7.4，{@code links} 非空） */
+    private BaseResult routeAnswer() {
+        return BaseResult.setResult(ResultCodeEnum.SUCCESS,
+                new AnswerDto(ROUTE_ANSWER, routeService.links()).toMap());
+    }
+
+    /** {@code data} 的形状见契约 §7.4：{@code answer} + {@code links}（图鉴内问题恒空数组） */
     private BaseResult success(String answer) {
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, new AnswerDto(answer).toMap());
     }

@@ -32,6 +32,27 @@
   </block>
 </view>
 
+<!-- 「路线」分段（契约 §7.4）：仅高手可问。非高手**置灰可见**，点了只在本地弹窗、不发请求；
+     后端那道越级硬拦是防手改前端的兜底（票面 AC）。链接由后端构造，不看用户的 Key -->
+<view class="section">
+  <view class="section-title">路线</view>
+
+  <view class="hint" wx:if="{{profile && !isExpert}}">路线类问题要成为高手才能问，先去练习升级吧。</view>
+
+  <button class="btn route-btn {{isExpert ? '' : 'is-disabled'}}"
+          bindtap="onAskRoute" disabled="{{askingRoute}}">{{askingRoute ? '获取中…' : '今日路线'}}</button>
+
+  <view class="answer" wx:if="{{routeAnswer}}">
+    <text class="answer-text">{{routeAnswer}}</text>
+    <!-- 小程序打不开外部网页，点一条复制链接给用户自己去打开 -->
+    <view class="route-link" wx:for="{{routeLinks}}" wx:key="url"
+          data-url="{{item.url}}" bindtap="onCopyLink">
+      <text class="route-link-title">{{item.title}}</text>
+      <text class="route-link-url">{{item.url}}</text>
+    </view>
+  </view>
+</view>
+
 <!-- 「练习」分段（契约 §7.3）：四选一，后端判题，答完展开解析。连对 10 题升一级 -->
 <view class="section">
   <view class="section-title">练习</view>

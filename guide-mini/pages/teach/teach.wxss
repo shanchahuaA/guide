@@ -107,6 +107,39 @@ page {
   white-space: pre-wrap;
 }
 
+/* ── 「路线」分段（契约 §7.4）──────────────────────────────────────────── */
+
+/* 非高手：按钮置灰但仍可点 —— 点了弹本地提示、不发请求 */
+.route-btn.is-disabled {
+  opacity: 0.7;
+  color: #9a9384;
+  background: #f0ebdb;
+  border-color: #ded7c2;
+}
+
+/* 一条路线链接：标题在上、URL 在下，点一条复制 */
+.route-link {
+  margin-top: 16rpx;
+  padding: 20rpx 24rpx;
+  background: #fffdf6;
+  border: 2rpx solid #e6e0cc;
+  border-radius: 16rpx;
+}
+
+.route-link-title {
+  display: block;
+  font-size: 28rpx;
+  color: #3d3830;
+  margin-bottom: 6rpx;
+}
+
+.route-link-url {
+  display: block;
+  font-size: 24rpx;
+  color: #6b6353;
+  word-break: break-all;
+}
+
 /* ── 「练习」分段（契约 §7.3）──────────────────────────────────────────── */
 
 .quiz-stem {

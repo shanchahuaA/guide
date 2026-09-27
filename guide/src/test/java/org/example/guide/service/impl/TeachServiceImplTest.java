@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,6 +54,8 @@ class TeachServiceImplTest {
     private AnswerCache answerCache;
     @Mock
     private DeepSeekClient deepSeekClient;
+    @Mock
+    private BilibiliRouteService routeService;
 
     @BeforeEach
     void setUp() {
@@ -62,7 +65,7 @@ class TeachServiceImplTest {
     }
 
     private TeachServiceImpl service(boolean enabled) {
-        return new TeachServiceImpl(userService, itemCache, answerCache, deepSeekClient, enabled);
+        return new TeachServiceImpl(userService, itemCache, answerCache, deepSeekClient, routeService, enabled);
     }
 
     private void givenUserWithKey(String apiKey) {
@@ -122,6 +125,34 @@ class TeachServiceImplTest {
         var systemPrompt = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(deepSeekClient).chat(eq("sk-good"), systemPrompt.capture(), anyString());
         assertThat(systemPrompt.getValue()).contains(TeachGate.boundaryFor(UserLevels.EXPERT));
+    }
+
+    // ── 路线类（#44）─────────────────────────────────────────────────────────
+
+    @Test
+    void 路线类问题回后端构造的链接且不调大模型() {
+        when(routeService.links()).thenReturn(List.of(
+                Map.of("title", "攻略", "url", "https://www.bilibili.com/video/BV1xx")));
+
+        BaseResult result = service(true).ask(OPENID, "今日最佳路线", UserLevels.EXPERT);
+
+        assertThat(result.getCode()).isEqualTo(200);
+        assertThat(result.getData().get("answer")).isEqualTo(TeachServiceImpl.ROUTE_ANSWER);
+        assertThat((List<?>) result.getData().get("links")).hasSize(1);
+        // 链接由后端构造，模型不能联网（CONTEXT.md「每日路线」），也就不需要用户的 Key
+        verifyNoInteractions(deepSeekClient);
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void 路线类问题不进回答缓存() {
+        when(routeService.links()).thenReturn(List.of(
+                Map.of("title", "攻略", "url", "https://www.bilibili.com/video/BV1xx")));
+
+        service(true).ask(OPENID, "今日最佳路线", UserLevels.EXPERT);
+
+        // 链接里带当天日期，缓存到明天就是过期链接，所以路线回答一律不落缓存
+        verify(answerCache, never()).put(anyString(), anyString());
     }
 
     // ── 降级 ────────────────────────────────────────────────────────────────

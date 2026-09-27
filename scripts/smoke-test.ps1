@@ -1040,6 +1040,49 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     }
 }
 
+# ── 第 4 组（续）：每日路线（契约 §7.4 / #44）────────────────────────────────
+#
+# ⚠️ 路线只有高手能问：先用 dev/level 把等级顶到 2。它只能升不能降、封顶也是 2，
+# 所以连叫两次一定到 2（无论当前是 0 还是 1）。dev/level 与 testInsertUser 同类，是演示后门。
+#
+# ⚠️ 这一条**不依赖大模型、也不依赖用户的 Key** —— 链接由后端构造
+# （模型不能联网，CONTEXT.md「每日路线」）。第一级真会去打 api.bilibili.com；即便被风控挡下，
+# 也会降级到空间/全站搜索页，仍然是 bilibili.com 域，所以这一条**联网不可用时依然成立**。
+#
+# ⚠️ 中文 title 不比对（响应头不带 charset，PS 5.1 读出来是乱码，见文件头说明），只验非空与域名。
+Section '4f. 每日路线'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过路线断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $routeHeader = @{ token = $loginToken }
+    # 顶到高手：叫一次可能停在 1，叫第二次一定到 2（封顶也是 2）
+    $null = Invoke-Json 'POST' '/api/teach/dev/level' 60 $routeHeader
+    $routeLevel = [int](Get-Field (Get-Data (Invoke-Json 'POST' '/api/teach/dev/level' 60 $routeHeader)) 'level')
+    Assert-Equal $routeLevel 2 'dev/level 把等级顶到高手（路线断言的前提）'
+
+    $route = Invoke-Json 'POST' '/api/teach/ask' 90 $routeHeader @{ question = '今日最佳路线' }
+    Assert-True ((Get-Field $route.Json 'code') -eq 200) '高手问路线类 code=200（不被门禁拦）' `
+        ("实际 code=" + (Get-Field $route.Json 'code') + " message=" + (Get-Field $route.Json 'message'))
+
+    $routeData = Get-Data $route
+    $routeLinks = As-Array (Get-Field $routeData 'links')
+    Assert-True ($routeLinks.Count -gt 0) '路线回答带非空 links' ("实际 " + $routeLinks.Count + " 条")
+
+    $badRouteUrl = @()
+    $badRouteShape = @()
+    foreach ($l in $routeLinks) {
+        $u = [string](Get-Field $l 'url')
+        $t = [string](Get-Field $l 'title')
+        # title 后端给的是中文短语（含日期），只验非空；域名是 ASCII，可以精确验
+        if ([string]::IsNullOrWhiteSpace($t)) { $badRouteShape += '(title 为空)' }
+        if ([string]::IsNullOrWhiteSpace($u) -or ($u -notlike '*bilibili.com*')) { $badRouteUrl += $u }
+    }
+    Assert-True ($badRouteShape.Count -eq 0) '每条路线链接都带非空 title' ('缺 title ' + $badRouteShape.Count + ' 处')
+    Assert-True ($badRouteUrl.Count -eq 0) '每条路线链接都是 bilibili.com 域' `
+        ('非 bilibili 域：' + (($badRouteUrl | Select-Object -First 3) -join ', '))
+}
+
 # ── Redis 缓存：读到的到底是缓存、还是每次都回源 ─────────────────────────────
 #
 # ⚠️ 这一段**不要求 Redis 一定在跑**：契约 §8.3 明写"Redis 连不上时接口照常返（回源 MySQL）"，
