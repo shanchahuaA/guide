@@ -58,6 +58,14 @@
     </block>
 
     <block wx:else>
+      <!-- 题库档位：等级单调包含 —— 只能选 ≤ 自己等级的档，高的能回头练低的 -->
+      <view class="banks">
+        <view class="bank {{level <= profile.level ? '' : 'is-locked'}} {{quizLevel === level ? 'is-on' : ''}}"
+              wx:for="{{bankNames}}" wx:for-item="bankName" wx:for-index="level" wx:key="bankName"
+              data-level="{{level}}" bindtap="onChooseBank">{{bankName}}</view>
+      </view>
+      <view class="hint">也可以回头练低档的题；换档会重新开始这一档的连对。</view>
+
       <block wx:if="{{quiz}}">
         <view class="quiz-stem">{{quiz.stem}}</view>
 

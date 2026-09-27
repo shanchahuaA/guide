@@ -32,8 +32,11 @@ Page({
     routeAnswer: '',
     routeLinks: [],
     askingRoute: false,
-    // 「练习」分段。quiz 是当前题目（**不含答案**），quizResult 是判题结果，
-    // selectedIndex 是用户选的那一项，quizLoading 防重复出题
+    // 「练习」分段。quizLevel 是想练的题库档位（只能 ≤ 自己的等级；null = 跟随自己等级），
+    // bankNames 是档位中文名（与后端 UserLevels 一致）；quiz 是当前题目（**不含答案**），
+    // quizResult 是判题结果，selectedIndex 是用户选的那一项，quizLoading 防重复出题
+    quizLevel: null,
+    bankNames: ['菜鸟', '入门', '高手'],
     quiz: null,
     quizResult: null,
     selectedIndex: null,
@@ -55,7 +58,11 @@ Page({
     }
     api.request('/api/teach/profile', { header: { token } })
       .then(profile => {
-        this.setData({ profile, isExpert: profile.level >= EXPERT_LEVEL, loginError: null })
+        // 选中的档位不能高于自己的等级；等级变了（跳级）就跟随到自己等级
+        const quizLevel = this.data.quizLevel === null
+          ? profile.level
+          : Math.min(this.data.quizLevel, profile.level)
+        this.setData({ profile, isExpert: profile.level >= EXPERT_LEVEL, loginError: null, quizLevel })
         // 填过 Key 且还没出过题，进页面就把练习的第一题拉出来
         if (profile.hasApiKey && !this.data.quiz && !this.data.quizResult) {
           this.loadQuiz()
@@ -205,6 +212,22 @@ Page({
 
   // ── 练习分段（契约 §7.3）──────────────────────────────────────────────
 
+  // 选题库档位（契约 §7.3）：等级单调包含 —— 只能选 ≤ 自己等级的档（高手能回头练低级题）。
+  // 换档会从零开始算连对（后端把排除集也清了，因为题号跨档重号），所以顺手清掉当前题目重抽
+  onChooseBank(e) {
+    // dataset 里的值可能是字符串，统一收敛成数字再比
+    const level = Number(e.currentTarget.dataset.level)
+    if (level > this.data.profile.level) {
+      wx.showToast({ title: '这个档位还没解锁', icon: 'none' })
+      return
+    }
+    if (level === this.data.quizLevel && this.data.quiz) {
+      return
+    }
+    this.setData({ quizLevel: level, quiz: null, quizResult: null, selectedIndex: null })
+    this.loadQuiz()
+  },
+
   // 抽一题。响应只有题号 / 题干 / 选项，答案要答完才由后端下发
   loadQuiz() {
     const token = wx.getStorageSync('token')
@@ -212,7 +235,11 @@ Page({
       return
     }
     this.setData({ quizLoading: true, quizResult: null, selectedIndex: null })
-    api.request('/api/teach/quiz/next', { method: 'POST', header: { token } })
+    api.request('/api/teach/quiz/next', {
+      method: 'POST',
+      header: { token },
+      data: { level: this.data.quizLevel }
+    })
       .then(quiz => this.setData({ quiz: quiz || null, quizLoading: false }))
       .catch(err => {
         this.setData({ quizLoading: false })
@@ -230,7 +257,8 @@ Page({
     api.request('/api/teach/quiz/answer', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') },
-      data: { questionId: quiz.questionId, choice: optionIndex }
+      // 带上档位：后端据此在同一档里判题（换档会从零开始算连对）
+      data: { level: this.data.quizLevel, questionId: quiz.questionId, choice: optionIndex }
     }).then(result => {
       this.setData({ quizResult: result, selectedIndex: optionIndex })
       // 连对与等级都可能变，就地把身份条刷新（loadProfile 里 quizResult 已在，不会重抽题）
@@ -299,9 +327,9 @@ Page({
       method: 'POST',
       header: { token: wx.getStorageSync('token') }
     }).then(() => {
-      // 等级换了、题库也换了：把手上这道旧题清掉，loadProfile 会自动抽新等级的题。
-      // 后端在 dev/level 里也把连对进度清了（旧排除集里是旧题库的题号）
-      this.setData({ quiz: null, quizResult: null, selectedIndex: null })
+      // 等级换了、题库也换了：把手上这道旧题清掉、档位跟随到新等级，
+      // loadProfile 会自动抽新等级的题。后端在 dev/level 里也把连对进度清了
+      this.setData({ quiz: null, quizResult: null, selectedIndex: null, quizLevel: null })
       wx.showToast({ title: '成功跳级', icon: 'none' })
       this.loadProfile()
     }).catch(err => {

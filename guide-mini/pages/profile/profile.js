@@ -169,6 +169,37 @@ Page({
     })
   },
 
+  // ── 重置学习进度（契约 §7.3）────────────────────────────────────────────
+
+  // 会清掉连对与排除集，所以先弹一次确认；**等级保留**（等级是练出来的成果，重置练习不退级）
+  onResetProgress() {
+    const token = wx.getStorageSync('token')
+    if (!token) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    wx.showModal({
+      title: '重置学习进度',
+      content: '会清空当前的连对进度并重新开始，等级保留。确定吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) {
+          return
+        }
+        api.request('/api/teach/quiz/reset', {
+          method: 'POST',
+          header: { token }
+        }).then(() => {
+          wx.showToast({ title: '已重置', icon: 'none' })
+          this.loadProfile()
+        }).catch(err => {
+          wx.showToast({ title: err.message || '重置失败', icon: 'none' })
+        })
+      }
+    })
+  },
+
   // ── 身份：演示用跳级（契约 §7.6）────────────────────────────────────────
 
   // **每次点击都先弹一次确认**，三次都点「确定」才真的发请求；中途取消不计次、也不发请求

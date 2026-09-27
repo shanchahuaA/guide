@@ -1091,6 +1091,12 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $streakAfterReset = Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)) 'streak'
         Assert-Equal $streakAfterReset 0 '重置后 streak 归零'
 
+        # 选题库档位（契约 §7.3）：只能 ≤ 自己等级（单调包含）。越档回 403，
+        # 而且是在碰题库之前就拒 —— 所以不需要那一档的题库存在也能验。
+        $lockedBank = Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader @{ level = ($startLevel + 1) }
+        Assert-True ((Get-Field $lockedBank.Json 'code') -eq 403) ('选高于自己等级的档位回 403（当前 ' + $startLevel + '）') `
+            ("实际 code=" + (Get-Field $lockedBank.Json 'code') + " message=" + (Get-Field $lockedBank.Json 'message'))
+
         # 连答 10 题正确（题 i 的正确项是 i % 4）
         $quizFailed = $false
         $lastAnswer = $null

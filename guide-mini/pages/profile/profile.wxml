@@ -36,6 +36,7 @@
       <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
     </view>
     <view class="hint">演示用跳级：连点三次升一级。当前等级决定能问什么 —— 图鉴问答不限、路线需入门、速通需高手。</view>
+    <button class="btn btn--ghost" bindtap="onResetProgress">重置学习进度</button>
   </view>
 
   <!-- API Key：填过也照样给输入框，随时能换一把 -->

@@ -256,6 +256,43 @@ page {
   word-break: break-all;
 }
 
+/* ── 练习：题库档位选择（等级单调包含）───────────────────────────────── */
+
+.banks {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+
+.bank {
+  flex: 1;
+  margin-right: 16rpx;
+  padding: 14rpx 0;
+  font-size: 26rpx;
+  text-align: center;
+  color: #7a7263;
+  background: #f2eee1;
+  border: 2rpx solid #e6e0cc;
+  border-radius: 16rpx;
+}
+
+.bank:last-child {
+  margin-right: 0;
+}
+
+/* 选中：绿描边绿字，与能力条上"已解锁"同色系 */
+.bank.is-on {
+  color: #2f6b3a;
+  background: #eaf4ec;
+  border-color: #b8d8bf;
+  font-weight: 600;
+}
+
+/* 还没解锁的档（高于自己等级）：整块压暗，点了只提示 */
+.bank.is-locked {
+  color: #c4bdae;
+  background: #f5f2e9;
+}
+
 /* ── 练习分段（契约 §7.3）────────────────────────────────────────────── */
 
 .quiz-stem {
