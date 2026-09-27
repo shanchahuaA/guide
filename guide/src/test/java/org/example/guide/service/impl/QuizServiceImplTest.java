@@ -227,6 +227,22 @@ class QuizServiceImplTest {
         assertThat(written.answeredIdsOrEmpty()).isEmpty();
     }
 
+    @Test
+    void 练低档时连对走满周期但不升级() {
+        givenUser(1, "sk-good");
+        when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
+        // 菜鸟档已经连对 9，正是"再答对一题就满 10"的临界
+        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(9, new HashSet<>(), 0));
+
+        BaseResult result = service().answer(OPENID, 0, 3, 1);
+
+        // 升级只认自己那一档：连对满 10 照常进新周期，但等级纹丝不动
+        assertThat(result.getData().get("upgraded")).isEqualTo(false);
+        assertThat(result.getData().get("level")).isEqualTo(1);
+        assertThat(result.getData().get("streak")).isEqualTo(0);
+        verify(userService, never()).updateLevel(anyString(), anyInt());
+    }
+
     // ── 测试数据 ────────────────────────────────────────────────────────────
 
     private void givenUser(int level, String apiKey) {

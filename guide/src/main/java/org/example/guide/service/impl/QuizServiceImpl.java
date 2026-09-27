@@ -134,7 +134,12 @@ public class QuizServiceImpl implements IQuizService {
         // 换档当空进度（**不落盘**：下面那次 put 会带上新档位）
         QuizProgress current = sameBank(stored, bank) ? stored : QuizProgress.empty(bank);
         QuizStreak.Outcome outcome = QuizStreak.advance(correct, level, questionId, current);
-        if (outcome.levelUp()) {
+
+        // 升级只认**练自己那一档**：回头刷低档可以练手，但不推进等级（契约 §7.3）。
+        // 连对满 10 照样进新周期（否则排除集会无上限地攒），只是不升级 —— 与"已是高手"同一种处理
+        boolean ownBank = bank == level;
+        boolean levelUp = ownBank && outcome.levelUp();
+        if (levelUp) {
             userService.updateLevel(openid, outcome.level());
         }
         quizProgressCache.put(openid, new QuizProgress(outcome.streak(), outcome.answeredIds(), bank));
@@ -144,8 +149,8 @@ public class QuizServiceImpl implements IQuizService {
                 question.getAnswerIndex(),
                 question.getExplanation(),
                 outcome.streak(),
-                outcome.level(),
-                outcome.levelUp());
+                ownBank ? outcome.level() : level,
+                levelUp);
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, dto.toMap());
     }
 

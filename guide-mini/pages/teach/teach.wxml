@@ -64,7 +64,7 @@
               wx:for="{{bankNames}}" wx:for-item="bankName" wx:for-index="level" wx:key="bankName"
               data-level="{{level}}" bindtap="onChooseBank">{{bankName}}</view>
       </view>
-      <view class="hint">也可以回头练低档的题；换档会重新开始这一档的连对。</view>
+      <view class="hint">也可以回头练低档的题；换档会重新开始这一档的连对，且只有练自己这一档才计升级。</view>
 
       <block wx:if="{{quiz}}">
         <view class="quiz-stem">{{quiz.stem}}</view>
