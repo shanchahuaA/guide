@@ -25,11 +25,16 @@
   </scroll-view>
 </view>
 
-<view class="grid">
+<!-- 三种空态：加载中 / 拉取失败 / 过滤后无结果。有数据才渲染网格 -->
+<view wx:if="{{loading}}" class="status">加载中…</view>
+<view wx:elif="{{error}}" class="status">{{error}}</view>
+<view wx:elif="{{!items.length}}" class="status">没有匹配的条目</view>
+
+<view wx:else class="grid">
   <view
     class="cell"
     wx:for="{{items}}"
-    wx:key="id"
+    wx:key="slug"
     data-index="{{index}}"
     bindtap="onTapItem"
   >

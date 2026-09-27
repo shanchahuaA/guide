@@ -28,16 +28,34 @@ App({
         method: 'POST',
         data: { js_code: code },
         success: ({ data: res }) => {
-          if (!res || !res.success || !res.data) return
+          if (!res || !res.success || !res.data) {
+            // 失败**不再静默**：把后端给的中文原因记下来（存 globalData + storage），
+            // 个人页/身份条据此显示"为什么没登录"，而不是空白一片
+            this.failLogin((res && res.message) || '登录失败：后端没返回 token')
+            return
+          }
           this.globalData.openid = res.data.openid
+          this.globalData.loginError = null
+          wx.removeStorageSync('loginError')
           wx.setStorageSync('openid', res.data.openid)
           wx.setStorageSync('token', res.data.token)
         },
-        // 登录失败不弹 toast 打扰用户：身份条拿不到 profile 时自己会退化成"未登录"
-        fail: () => {}
+        // 请求根本没发出去（后端没起 / 没勾"不校验合法域名"）也要留痕，别让页面无从解释
+        fail: err => this.failLogin((err && err.errMsg) || '登录请求没发出去')
       })
     })
   },
 
-  globalData: { openid: null, items: [], tags: [], biomes: [], error: null }
+  failLogin(message) {
+    this.globalData.loginError = message
+    wx.setStorageSync('loginError', message)
+    console.warn('[login]', message)
+  },
+
+  // 个人页的"重试登录"按钮走这里
+  retryLogin() {
+    this.login()
+  },
+
+  globalData: { openid: null, items: [], tags: [], biomes: [], error: null, loginError: null }
 })

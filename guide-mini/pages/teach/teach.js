@@ -4,18 +4,39 @@ const api = require('../../utils/api')
 // 跳级后门：连点三次算升一级（契约 §7.6），计数到 3 才发请求
 const TAPS_PER_LEVEL = 3
 
+// 高手才配问路线（契约 §7.0 的等级矩阵）
+const EXPERT_LEVEL = 2
+
+// 跳级三段确认：每点一次都要用户点头，第三次也确认了才真的发请求
+const JUMP_CONFIRMS = [
+  '你确定要跳级吗？',
+  '你的实力真的已经达标了吗？',
+  '最后确认一次，你要跳级吗？'
+]
+
 Page({
 
   data: {
     profile: null,      // /api/teach/profile 的 data，null = 还没拿到（未登录 / 后端没起）
+    loginError: null,   // 未登录时展示的原因（来自 app.js 记下的登录失败信息）
+    isExpert: false,    // profile 的 level >= 2。路线分段靠它决定放行还是置灰
     taps: 0,            // 跳级按钮已点击数，显示成"跳级 x/3"
-    // 「问答」分段。apiKey 是输入到一半的草稿，answer 是上一条答案
+    tab: 'ask',         // 分段导航：ask / quiz / route
+    // 「问答」分段。questions/answers 走聊天气泡流，messages 是 [{role, text, pending}]
     question: '',
-    answer: '',
+    messages: [],
+    scrollInto: '',
     asking: false,
     keyDraft: '',
-    // 「练习」分段。quiz 是当前题目（**不含答案**），quizResult 是判题结果，
-    // selectedIndex 是用户选的那一项，quizLoading 防重复出题
+    // 「路线」分段。routeAnswer 是引导语，routeLinks 是后端构造的 B站 链接，askingRoute 防重复
+    routeAnswer: '',
+    routeLinks: [],
+    askingRoute: false,
+    // 「练习」分段。quizLevel 是想练的题库档位（只能 ≤ 自己的等级；null = 跟随自己等级），
+    // bankNames 是档位中文名（与后端 UserLevels 一致）；quiz 是当前题目（**不含答案**），
+    // quizResult 是判题结果，selectedIndex 是用户选的那一项，quizLoading 防重复出题
+    quizLevel: null,
+    bankNames: ['菜鸟', '入门', '高手'],
     quiz: null,
     quizResult: null,
     selectedIndex: null,
@@ -27,23 +48,51 @@ Page({
     this.loadProfile()
   },
 
-  // 身份条的数据源。没登录时后端返 code=401，api.request 走 reject 分支，
-  // 这里把 profile 归 null —— 页面退化成"未登录"，不弹窗
+  // 身份条的数据源。没登录时后端返 401，api.request 走 reject 分支 —— 把 profile 归 null，
+  // 并带上"为什么没登录"的原因（来自 app.js），页面据此显示明确提示而不是空白
   loadProfile() {
     const token = wx.getStorageSync('token')
     if (!token) {
-      this.setData({ profile: null, quiz: null, quizResult: null })
+      this.setData({ profile: null, isExpert: false, quiz: null, quizResult: null, loginError: this.loginErrorText() })
       return
     }
     api.request('/api/teach/profile', { header: { token } })
       .then(profile => {
-        this.setData({ profile })
+        // 选中的档位不能高于自己的等级；等级变了（跳级）就跟随到自己等级
+        const quizLevel = this.data.quizLevel === null
+          ? profile.level
+          : Math.min(this.data.quizLevel, profile.level)
+        this.setData({ profile, isExpert: profile.level >= EXPERT_LEVEL, loginError: null, quizLevel })
         // 填过 Key 且还没出过题，进页面就把练习的第一题拉出来
         if (profile.hasApiKey && !this.data.quiz && !this.data.quizResult) {
           this.loadQuiz()
         }
       })
-      .catch(() => this.setData({ profile: null, quiz: null, quizResult: null }))
+      .catch(err => this.setData({
+        profile: null, isExpert: false, quiz: null, quizResult: null,
+        loginError: err.message || this.loginErrorText()
+      }))
+  },
+
+  loginErrorText() {
+    const app = getApp()
+    const fromApp = app && app.globalData && app.globalData.loginError
+    return fromApp || wx.getStorageSync('loginError') || '未登录：后端没起，或 guide.wechat.appid / secret 没配'
+  },
+
+  onRetryLogin() {
+    const app = getApp()
+    if (app && app.retryLogin) {
+      app.retryLogin()
+    }
+    wx.showToast({ title: '正在重试登录', icon: 'none' })
+    setTimeout(() => this.loadProfile(), 1500)
+  },
+
+  // ── 分段导航 ──────────────────────────────────────────────────────────
+
+  onSwitchTab(e) {
+    this.setData({ tab: e.currentTarget.dataset.tab })
   },
 
   // ── 问答分段（契约 §7.4）──────────────────────────────────────────────
@@ -76,27 +125,108 @@ Page({
     })
   },
 
-  // 提问。失败时后端已经给了一句中文 message（如「API Key 无效」），直接弹出来 ——
-  // 统一请求封装的 reject 分支带的就是它，前端不再自己翻译错误码
+  // 提问。先把用户那句和一条「思考中…」气泡推进列表，结果回来再把气泡替换掉。
+  // 失败时后端已经给了一句中文 message（如「API Key 无效」），直接把它当回答气泡展示
   onAsk() {
     const question = this.data.question.trim()
     if (!question || this.data.asking) {
       return
     }
-    this.setData({ asking: true })
+    const messages = this.data.messages.concat([
+      { role: 'user', text: question },
+      { role: 'ai', text: '思考中…', pending: true }
+    ])
+    this.setData({ asking: true, question: '', messages }, () => this.scrollToLatest())
+
     api.request('/api/teach/ask', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') },
       data: { question }
     }).then(res => {
-      this.setData({ answer: res.answer || '', asking: false })
-    }).catch(err => {
+      this.replaceLatest(res.answer || '（空回答）')
       this.setData({ asking: false })
-      wx.showToast({ title: err.message || '提问失败', icon: 'none' })
+    }).catch(err => {
+      this.replaceLatest(err.message || '提问失败')
+      this.setData({ asking: false })
     })
   },
 
+  // 把最后一条 ai 气泡的占位文本换成真结果
+  replaceLatest(text) {
+    const messages = this.data.messages.slice()
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'ai') {
+      return
+    }
+    messages[messages.length - 1] = { role: 'ai', text }
+    this.setData({ messages }, () => this.scrollToLatest())
+  },
+
+  // scroll-view 的 scroll-into-view 需要一个 id，气泡的 id 就是 "m<下标>"
+  scrollToLatest() {
+    const index = this.data.messages.length - 1
+    if (index >= 0) {
+      this.setData({ scrollInto: 'm' + index })
+    }
+  },
+
+  // ── 路线分段（契约 §7.4，仅高手）──────────────────────────────────────
+
+  // 「今日路线」＝自动提问一句固定的路线问题。非高手只弹本地弹窗、**不发请求**（票面 AC）——
+  // 后端那道硬拦是防手改前端的兜底，不是前端偷懒的替代。
+  onAskRoute() {
+    if (!this.data.isExpert) {
+      wx.showModal({
+        title: '还不能问',
+        content: '路线类问题要成为高手才能问，先去练习升级吧！',
+        showCancel: false
+      })
+      return
+    }
+    const token = wx.getStorageSync('token')
+    if (!token) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    if (this.data.askingRoute) {
+      return
+    }
+    this.setData({ askingRoute: true })
+    // 分级入口（契约 §7.7）：等级门禁在 Shiro 的 /api/teach/beginner/** 路径规则上，
+    // 前端只负责发起，链接由后端构造。不走 /api/teach/ask 那条自由提问
+    api.request('/api/teach/beginner/route', {
+      method: 'POST',
+      header: { token }
+    }).then(res => {
+      this.setData({ routeAnswer: res.answer || '', routeLinks: res.links || [], askingRoute: false })
+    }).catch(err => {
+      this.setData({ askingRoute: false })
+      wx.showToast({ title: err.message || '获取路线失败', icon: 'none' })
+    })
+  },
+
+  // 小程序不能直接打开外部网页，链接复制给用户自己去浏览器/App 里打开
+  onCopyLink(e) {
+    wx.setClipboardData({ data: e.currentTarget.dataset.url })
+  },
+
   // ── 练习分段（契约 §7.3）──────────────────────────────────────────────
+
+  // 选题库档位（契约 §7.3）：等级单调包含 —— 只能选 ≤ 自己等级的档（高手能回头练低级题）。
+  // 换档会从零开始算连对（后端把排除集也清了，因为题号跨档重号），所以顺手清掉当前题目重抽
+  onChooseBank(e) {
+    // dataset 里的值可能是字符串，统一收敛成数字再比
+    const level = Number(e.currentTarget.dataset.level)
+    if (level > this.data.profile.level) {
+      wx.showToast({ title: '这个档位还没解锁', icon: 'none' })
+      return
+    }
+    if (level === this.data.quizLevel && this.data.quiz) {
+      return
+    }
+    this.setData({ quizLevel: level, quiz: null, quizResult: null, selectedIndex: null })
+    this.loadQuiz()
+  },
 
   // 抽一题。响应只有题号 / 题干 / 选项，答案要答完才由后端下发
   loadQuiz() {
@@ -105,7 +235,11 @@ Page({
       return
     }
     this.setData({ quizLoading: true, quizResult: null, selectedIndex: null })
-    api.request('/api/teach/quiz/next', { header: { token } })
+    api.request('/api/teach/quiz/next', {
+      method: 'POST',
+      header: { token },
+      data: { level: this.data.quizLevel }
+    })
       .then(quiz => this.setData({ quiz: quiz || null, quizLoading: false }))
       .catch(err => {
         this.setData({ quizLoading: false })
@@ -123,7 +257,8 @@ Page({
     api.request('/api/teach/quiz/answer', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') },
-      data: { questionId: quiz.id, optionIndex }
+      // 带上档位：后端据此在同一档里判题（换档会从零开始算连对）
+      data: { level: this.data.quizLevel, questionId: quiz.questionId, choice: optionIndex }
     }).then(result => {
       this.setData({ quizResult: result, selectedIndex: optionIndex })
       // 连对与等级都可能变，就地把身份条刷新（loadProfile 里 quizResult 已在，不会重抽题）
@@ -138,18 +273,63 @@ Page({
     this.loadQuiz()
   },
 
-  // 演示后门：连点三次升一级。第三次才打后端，成功后计数归零并提示
+  // 重置练习（契约 §7.3）：清连对进度 + 换一批新题。会清掉连对，所以先确认一次
+  onResetQuiz() {
+    wx.showModal({
+      title: '重置练习',
+      content: '会清空当前连对进度并重新开始，确定吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) {
+          return
+        }
+        api.request('/api/teach/quiz/reset', {
+          method: 'POST',
+          header: { token: wx.getStorageSync('token') }
+        }).then(() => {
+          this.setData({ quiz: null, quizResult: null, selectedIndex: null })
+          wx.showToast({ title: '已重置', icon: 'none' })
+          this.loadProfile()
+        }).catch(err => {
+          wx.showToast({ title: err.message || '重置失败', icon: 'none' })
+        })
+      }
+    })
+  },
+
+  // 演示后门：连点三次升一级（契约 §7.6）。**每次点击都先弹一次确认**，
+  // 三次都点「确定」才真的发请求；中途取消不计次、也不发请求
   onTapJump() {
-    const taps = this.data.taps + 1
-    if (taps < TAPS_PER_LEVEL) {
-      this.setData({ taps })
-      return
-    }
-    this.setData({ taps: 0 })
+    const step = this.data.taps
+    wx.showModal({
+      title: '跳级确认',
+      content: JUMP_CONFIRMS[step],
+      confirmText: '确定',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) {
+          return
+        }
+        const taps = step + 1
+        if (taps < TAPS_PER_LEVEL) {
+          this.setData({ taps })
+          return
+        }
+        this.setData({ taps: 0 })
+        this.doJump()
+      }
+    })
+  },
+
+  doJump() {
     api.request('/api/teach/dev/level', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') }
     }).then(() => {
+      // 等级换了、题库也换了：把手上这道旧题清掉、档位跟随到新等级，
+      // loadProfile 会自动抽新等级的题。后端在 dev/level 里也把连对进度清了
+      this.setData({ quiz: null, quizResult: null, selectedIndex: null, quizLevel: null })
       wx.showToast({ title: '成功跳级', icon: 'none' })
       this.loadProfile()
     }).catch(err => {

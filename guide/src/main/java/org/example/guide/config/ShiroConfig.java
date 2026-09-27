@@ -84,8 +84,9 @@ public class ShiroConfig {
      * 过滤链规则（首匹配生效，具体路径在前）：
      * <ul>
      *   <li>登录、图鉴三件套 —— anon</li>
-     *   <li>分级内容 —— tokenAuthc, roleAuthc[角色]</li>
-     *   <li>教学其余端点 —— tokenAuthc（登录即可）</li>
+     *   <li>分级内容 —— tokenAuthc + roleAuthc[角色]：{@code /api/teach/beginner/**} 要 beginner
+     *       （≥入门，「今日路线」）、{@code /api/teach/expert/**} 要 expert（仅高手，速通）</li>
+     *   <li>教学其余端点 —— tokenAuthc（登录即可；越级由控制器里的内容门禁兜底）</li>
      *   <li>其余（/icons/**、演示后门等）—— anon</li>
      * </ul>
      */

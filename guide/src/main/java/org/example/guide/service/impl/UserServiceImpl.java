@@ -58,4 +58,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
         return baseMapper.update(user, wrapper) > 0;
     }
 
+    @Override
+    public boolean updateProfile(String openid, String nickname, String avatar) {
+        User user = new User();
+        if (nickname != null && !nickname.isBlank()) {
+            user.setNickname(nickname);
+        }
+        if (avatar != null && !avatar.isBlank()) {
+            user.setAvatar(avatar);
+        }
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getOpenid, openid);
+        return baseMapper.update(user, wrapper) > 0;
+    }
+
 }

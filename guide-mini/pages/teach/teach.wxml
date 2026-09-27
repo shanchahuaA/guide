@@ -1,62 +1,110 @@
 <!--pages/teach/teach.wxml-->
-<!-- 身份条：profile 拿到之前不渲染，避免闪一行 "连对 /" 的空壳。
-     profile 为 null 只发生在未登录 / 后端没起，此时整条不显示 -->
-<view class="identity section" wx:if="{{profile}}">
-  <view class="identity-text">
-    <text class="identity-level">{{profile.levelName}}</text>
-    <text class="identity-streak">连对 {{profile.streak}}/{{profile.streakTarget}}</text>
+<!-- 顶栏：身份条 + 能力解锁条。未登录时整条换成一条明确提示，不再静默空白 -->
+<view class="section identity" wx:if="{{profile}}">
+  <view class="id-line">
+    <text class="id-level">{{profile.levelName}}</text>
+    <text class="id-streak">连对 {{profile.streak}}/{{profile.streakTarget}}</text>
+    <!-- 演示用跳级后门：连点三次升一级（契约 §7.6） -->
+    <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
   </view>
-  <!-- 演示用跳级后门：连点三次升一级（契约 §7.6） -->
-  <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
+  <!-- 能力/解锁状态：亮着=能问，灰着=还没解锁（契约 §7.0 的等级矩阵） -->
+  <view class="caps">
+    <view class="cap is-on">图鉴问答</view>
+    <view class="cap {{profile.level >= 1 ? 'is-on' : ''}}">路线 · 需入门</view>
+    <view class="cap {{profile.level >= 2 ? 'is-on' : ''}}">速通 · 需高手</view>
+  </view>
 </view>
 
-<!-- 「问答」分段（契约 §7.4）。本单只做图鉴内问题；「路线」是后面一条切片 -->
-<view class="section">
-  <view class="section-title">问答</view>
+<view class="section" wx:if="{{!profile}}">
+  <view class="section-title">未登录</view>
+  <view class="hint">{{loginError}}</view>
+  <button class="btn" bindtap="onRetryLogin">重试登录</button>
+</view>
 
-  <!-- 没存 Key 时先引导填写。hasApiKey 来自身份条那份 profile -->
-  <block wx:if="{{profile && !profile.hasApiKey}}">
-    <view class="hint">问答要用你自己的 DeepSeek API Key。填一次就长期有效，只存在你的账号下。</view>
-    <input class="input" type="text" password placeholder="sk-..." value="{{keyDraft}}" bindinput="onKeyInput" />
-    <button class="btn" bindtap="onSaveKey">保存 Key</button>
-  </block>
+<block wx:else>
+  <!-- 分段导航：问答 / 练习 / 路线 -->
+  <view class="seg">
+    <view class="seg-item {{tab === 'ask' ? 'is-on' : ''}}" data-tab="ask" bindtap="onSwitchTab">问答</view>
+    <view class="seg-item {{tab === 'quiz' ? 'is-on' : ''}}" data-tab="quiz" bindtap="onSwitchTab">练习</view>
+    <view class="seg-item {{tab === 'route' ? 'is-on' : ''}}" data-tab="route" bindtap="onSwitchTab">路线</view>
+  </view>
 
-  <block wx:else>
-    <input class="input" type="text" placeholder="问问图鉴里的事，比如「蘑菇有什么用」"
-           value="{{question}}" bindinput="onQuestionInput" confirm-type="send" bindconfirm="onAsk" />
-    <button class="btn" bindtap="onAsk" disabled="{{asking}}">{{asking ? '思考中…' : '提问'}}</button>
+  <!-- ── 问答（聊天式，契约 §7.4）────────────────────────────────────────── -->
+  <view class="section" wx:if="{{tab === 'ask'}}">
+    <!-- 没存 Key 时先引导填写。输入框保留在问答里（个人页也能配） -->
+    <block wx:if="{{!profile.hasApiKey}}">
+      <view class="hint">问答要用你自己的 DeepSeek API Key。填一次就长期有效，也可以随时在「个人」页里改。</view>
+      <input class="input" type="text" password placeholder="sk-..." value="{{keyDraft}}" bindinput="onKeyInput" />
+      <button class="btn" bindtap="onSaveKey">保存 Key</button>
+    </block>
 
-    <view class="answer" wx:if="{{answer}}">
-      <text class="answer-text">{{answer}}</text>
+    <block wx:else>
+      <scroll-view class="chat" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation>
+        <view class="chat-empty" wx:if="{{messages.length === 0}}">问问图鉴里的事，比如「蘑菇有什么用」</view>
+        <view class="msg msg--{{item.role}}" wx:for="{{messages}}" wx:key="index" id="m{{index}}">
+          <view class="bubble {{item.pending ? 'is-pending' : ''}}">{{item.text}}</view>
+        </view>
+      </scroll-view>
+      <input class="input chat-input" type="text" placeholder="问点什么…"
+             value="{{question}}" bindinput="onQuestionInput" confirm-type="send" bindconfirm="onAsk" />
+      <button class="btn" bindtap="onAsk" disabled="{{asking}}">{{asking ? '思考中…' : '发送'}}</button>
+    </block>
+  </view>
+
+  <!-- ── 练习（契约 §7.3）：四选一，后端判题，答完展开解析 ────────────────── -->
+  <view class="section" wx:elif="{{tab === 'quiz'}}">
+    <block wx:if="{{!profile.hasApiKey}}">
+      <view class="hint">出题也要用你自己的 DeepSeek API Key，先去「问答」或「个人」页填好再回来练。</view>
+    </block>
+
+    <block wx:else>
+      <!-- 题库档位：等级单调包含 —— 只能选 ≤ 自己等级的档，高的能回头练低的 -->
+      <view class="banks">
+        <view class="bank {{level <= profile.level ? '' : 'is-locked'}} {{quizLevel === level ? 'is-on' : ''}}"
+              wx:for="{{bankNames}}" wx:for-item="bankName" wx:for-index="level" wx:key="bankName"
+              data-level="{{level}}" bindtap="onChooseBank">{{bankName}}</view>
+      </view>
+      <view class="hint">也可以回头练低档的题；换档会重新开始这一档的连对，且只有练自己这一档才计升级。</view>
+
+      <block wx:if="{{quiz}}">
+        <view class="quiz-stem">{{quiz.stem}}</view>
+
+        <view class="quiz-option {{quizResult ? (index === quizResult.correctIndex ? 'is-correct' : (index === selectedIndex ? 'is-wrong' : '')) : ''}}"
+              wx:for="{{quiz.options}}" wx:key="index"
+              data-index="{{index}}" bindtap="onChooseOption">{{item}}</view>
+
+        <view class="quiz-result" wx:if="{{quizResult}}">
+          <text class="quiz-verdict {{quizResult.correct ? 'is-right' : 'is-wrong'}}">{{quizResult.correct ? '答对了' : '答错了'}}</text>
+          <text class="quiz-explanation">正确答案：{{quiz.options[quizResult.correctIndex]}}</text>
+          <text class="quiz-explanation">{{quizResult.explanation}}</text>
+          <button class="btn" bindtap="onNextQuestion">下一题</button>
+        </view>
+      </block>
+
+      <block wx:else>
+        <button class="btn" bindtap="loadQuiz" disabled="{{quizLoading}}">{{quizLoading ? '出题中…' : '开始练习'}}</button>
+      </block>
+
+      <!-- 重置练习：连对进度归零 + 重新抽题（跳级换档后手上还挂着旧题时，一键重来） -->
+      <button class="btn btn--ghost" bindtap="onResetQuiz">重置练习</button>
+    </block>
+  </view>
+
+  <!-- ── 路线（契约 §7.4）：仅高手可问。非高手置灰可见，点了只弹本地弹窗、不发请求 ── -->
+  <view class="section" wx:else>
+    <view class="hint" wx:if="{{!isExpert}}">路线类问题要成为高手才能问，先去「练习」升级吧。</view>
+
+    <button class="btn route-btn {{isExpert ? '' : 'is-disabled'}}"
+            bindtap="onAskRoute" disabled="{{askingRoute}}">{{askingRoute ? '获取中…' : '今日路线'}}</button>
+
+    <view class="answer" wx:if="{{routeAnswer}}">
+      <text class="answer-text">{{routeAnswer}}</text>
+      <!-- 小程序打不开外部网页，点一条复制链接给用户自己去打开 -->
+      <view class="route-link" wx:for="{{routeLinks}}" wx:key="url"
+            data-url="{{item.url}}" bindtap="onCopyLink">
+        <text class="route-link-title">{{item.title}}</text>
+        <text class="route-link-url">{{item.url}}</text>
+      </view>
     </view>
-  </block>
-</view>
-
-<!-- 「练习」分段（契约 §7.3）：四选一，后端判题，答完展开解析。连对 10 题升一级 -->
-<view class="section">
-  <view class="section-title">练习</view>
-
-  <!-- 出题要用用户自己的 Key，没填先引导 -->
-  <block wx:if="{{profile && !profile.hasApiKey}}">
-    <view class="hint">出题也要用你自己的 DeepSeek API Key，先在上面填好再回来练。</view>
-  </block>
-
-  <block wx:elif="{{quiz}}">
-    <view class="quiz-stem">{{quiz.stem}}</view>
-
-    <view class="quiz-option {{quizResult ? (index === quizResult.answerIndex ? 'is-correct' : (index === selectedIndex ? 'is-wrong' : '')) : ''}}"
-          wx:for="{{quiz.options}}" wx:key="index"
-          data-index="{{index}}" bindtap="onChooseOption">{{item}}</view>
-
-    <view class="quiz-result" wx:if="{{quizResult}}">
-      <text class="quiz-verdict {{quizResult.correct ? 'is-right' : 'is-wrong'}}">{{quizResult.correct ? '答对了' : '答错了'}}</text>
-      <text class="quiz-explanation">正确答案：{{quiz.options[quizResult.answerIndex]}}</text>
-      <text class="quiz-explanation">{{quizResult.explanation}}</text>
-      <button class="btn" bindtap="onNextQuestion">下一题</button>
-    </view>
-  </block>
-
-  <block wx:elif="{{profile}}">
-    <button class="btn" bindtap="loadQuiz" disabled="{{quizLoading}}">{{quizLoading ? '出题中…' : '开始练习'}}</button>
-  </block>
-</view>
+  </view>
+</block>

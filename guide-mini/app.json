@@ -4,10 +4,8 @@
     "pages/main/main",
     "pages/archive/archive",
     "pages/detail/detail",
-    "pages/location/location",
     "pages/teach/teach",
-
-
+    "pages/profile/profile",
     "pages/logs/logs"
   ],
   "tabBar": {
@@ -26,16 +24,16 @@
         "selectedIconPath":"images/item.png"
       },
       {
-        "pagePath": "pages/location/location",
-        "text": "地图",
-        "iconPath":"images/map.png",
-        "selectedIconPath":"images/map.png"
-      },
-      {
         "pagePath": "pages/teach/teach",
         "text": "快速上手",
         "iconPath":"images/guidebook.png",
         "selectedIconPath":"images/guidebook.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "个人",
+        "iconPath":"images/map.png",
+        "selectedIconPath":"images/map.png"
       }
     ]
   },

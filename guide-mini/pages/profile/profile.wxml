@@ -1,0 +1,49 @@
+<!--pages/profile/profile.wxml-->
+<!-- 个人页。三段卡片：头像昵称 / 身份 / API Key；未登录时整段换成一条明确提示 + 重试。
+     风格与 teach、detail 同一套（米白卡片、细描边、无阴影） -->
+
+<!-- 未登录：不再静默空白 —— 说清楚为什么，并给一个重试入口 -->
+<view class="section" wx:if="{{!profile}}">
+  <view class="section-title">未登录</view>
+  <view class="hint">{{loginError}}</view>
+  <button class="btn" bindtap="onRetryLogin">重试登录</button>
+</view>
+
+<block wx:else>
+  <!-- 头像 + 昵称。微信不给自动获取，得用户点一下 chooseAvatar、再填昵称 -->
+  <view class="section">
+    <view class="section-title">头像与昵称</view>
+    <view class="id-row">
+      <!-- 圆形靠外面的 view 裁：button 上的 overflow/border-radius 在微信里裁不住子元素，
+           所以按钮做成透明的一层盖在上面，只管触发 chooseAvatar -->
+      <view class="avatar-wrap">
+        <image class="avatar" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}" />
+        <view class="avatar-placeholder" wx:else>点击设置</view>
+        <button class="avatar-hit" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar"></button>
+      </view>
+      <input class="input nickname-input" type="nickname" placeholder="填个昵称"
+             value="{{nicknameDraft}}" bindinput="onNicknameInput" bindchange="onNicknameInput" />
+    </view>
+    <button class="btn" bindtap="onSaveProfile" disabled="{{savingProfile}}">{{savingProfile ? '保存中…' : '保存头像昵称'}}</button>
+  </view>
+
+  <!-- 身份：等级 / 连对 / 跳级后门。等级决定能问什么（契约 §7.0） -->
+  <view class="section">
+    <view class="section-title">身份</view>
+    <view class="id-line">
+      <text class="id-level">{{profile.levelName}}</text>
+      <text class="id-streak">连对 {{profile.streak}}/{{profile.streakTarget}}</text>
+      <view class="jump" bindtap="onTapJump">跳级 {{taps}}/3</view>
+    </view>
+    <view class="hint">演示用跳级：连点三次升一级。当前等级决定能问什么 —— 图鉴问答不限、路线需入门、速通需高手。</view>
+    <button class="btn btn--ghost" bindtap="onResetProgress">重置学习进度</button>
+  </view>
+
+  <!-- API Key：填过也照样给输入框，随时能换一把 -->
+  <view class="section">
+    <view class="section-title">DeepSeek API Key</view>
+    <view class="hint">{{profile.hasApiKey ? '已配置。想换一把就直接重填、再保存。' : '还没配置 —— 问答和练习都走你自己的 Key。'}}</view>
+    <input class="input" type="text" password placeholder="sk-..." value="{{keyDraft}}" bindinput="onKeyInput" />
+    <button class="btn" bindtap="onSaveKey" disabled="{{savingKey}}">{{savingKey ? '保存中…' : '保存 Key'}}</button>
+  </view>
+</block>

@@ -13,9 +13,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class QuizStreakTest {
 
+    /** 进度里的档位（{@code bankLevel}）本状态机不用 —— 它只推进"给哪一档出的题"，由调用方带上 */
+    private static final int BANK = UserLevels.NOVICE;
+
     @Test
     void 答对时连对加一且该题进排除集() {
-        QuizProgress before = new QuizProgress(3, new HashSet<>(Set.of(1, 2, 3)));
+        QuizProgress before = new QuizProgress(3, new HashSet<>(Set.of(1, 2, 3)), BANK);
 
         QuizStreak.Outcome outcome = QuizStreak.advance(true, UserLevels.NOVICE, 5, before);
 
@@ -28,7 +31,7 @@ class QuizStreakTest {
 
     @Test
     void 答错时连对归零且排除集清空() {
-        QuizProgress before = new QuizProgress(4, new HashSet<>(Set.of(1, 2, 3, 5)));
+        QuizProgress before = new QuizProgress(4, new HashSet<>(Set.of(1, 2, 3, 5)), BANK);
 
         QuizStreak.Outcome outcome = QuizStreak.advance(false, UserLevels.BEGINNER, 7, before);
 
@@ -42,7 +45,7 @@ class QuizStreakTest {
 
     @Test
     void 连对满十升级并清零() {
-        QuizProgress before = new QuizProgress(9, new HashSet<>(Set.of(1, 2, 3, 4, 5, 6, 7, 8, 9)));
+        QuizProgress before = new QuizProgress(9, new HashSet<>(Set.of(1, 2, 3, 4, 5, 6, 7, 8, 9)), BANK);
 
         QuizStreak.Outcome outcome = QuizStreak.advance(true, UserLevels.NOVICE, 10, before);
 
@@ -55,7 +58,7 @@ class QuizStreakTest {
 
     @Test
     void 已是高手时满十不再升级但连对清零() {
-        QuizProgress before = new QuizProgress(9, new HashSet<>(Set.of(1, 2, 3)));
+        QuizProgress before = new QuizProgress(9, new HashSet<>(Set.of(1, 2, 3)), BANK);
 
         QuizStreak.Outcome outcome = QuizStreak.advance(true, UserLevels.MAX, 10, before);
 

@@ -2,7 +2,29 @@
 Page({
   data: {
     dragY: 0,       // 布的当前位移（px），正数=往下
-    dragging: false
+    dragging: false,
+    // 官方外链。小程序不能直接打开任意外部网址（要「业务域名」白名单，那要求域名归自己
+    // 且能放校验文件），所以点一下是复制链接，由用户自己去浏览器打开
+    links: [
+      { text: 'Official PEAK website', icon: '/images/official_website.jpg', url: 'https://peakpeakpeak.com/' },
+      { text: 'Official PEAK Discord', icon: '/images/Discord.png', url: 'https://discord.gg/peakgame' },
+      { text: 'PEAK on Steam', icon: '/images/Steam.png', url: 'https://s.team/a/3527290' }
+    ]
+  },
+
+  // 与其它 tab 页同一套：每次显示都告诉 tabBar 高亮自己。
+  // 这里必须调 —— custom-tab-bar 的 selected 初值是 -1、页面隐藏时又归零，
+  // 不调的话停在主页时任何 tab 都不高亮
+  onShow() {
+    this.getTabBar().select('/pages/main/main')
+  },
+
+  onTapLink(e) {
+    const { url } = e.currentTarget.dataset
+    wx.setClipboardData({
+      data: url,
+      success: () => wx.showToast({ title: '链接已复制', icon: 'none' })
+    })
   },
 
   onDragStart(e) {

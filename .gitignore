@@ -33,6 +33,11 @@ docs/local/
 guide/icons/
 /icons/
 
+### 用户上传的头像（二进制，用户自己传的，随时可覆盖；见 POST /api/teach/avatar）###
+### 与 icons 同理，目录相对后端进程的工作目录 ###
+guide/avatars/
+/avatars/
+
 ### STS ###
 .apt_generated
 .classpath

@@ -39,8 +39,8 @@ import static org.mockito.Mockito.when;
  * <p>状态机本身的四条路径在 {@code QuizStreakTest} 里，题库解析与重试在 {@code QuizGeneratorTest} 里；
  * 这里只钉"编排有没有接上"。
  *
- * <p>判题结果的连对/排除集不在响应里（响应只有正确项与解析），所以断言改成**抓写进缓存的那个
- * {@link QuizProgress}** —— 那才是状态真正落地的地方，比断言响应字段更贴事实。
+ * <p>判题响应按契约 §7.3 回带 {@code streak / level / upgraded}，但**排除集只落缓存**，所以
+ * "答对/答错后状态对不对"仍以**抓写进缓存的 {@link QuizProgress}** 为准 —— 那才是状态真正落地的地方。
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -71,11 +71,11 @@ class QuizServiceImplTest {
         when(quizBankCache.get(0)).thenReturn(List.of(question(0, 2)));
         when(quizProgressCache.get(OPENID)).thenReturn(QuizProgress.empty());
 
-        BaseResult result = service().next(OPENID);
+        BaseResult result = service().next(OPENID, null);
 
         assertThat(result.getCode()).isEqualTo(200);
         // 票面 AC：/quiz/next 的响应里只有题号 / 题干 / 选项三样，没有答案
-        assertThat(result.getData()).containsOnlyKeys("id", "stem", "options");
+        assertThat(result.getData()).containsOnlyKeys("questionId", "stem", "options");
         assertThat(result.getData().get("options")).isEqualTo(List.of("A", "B", "C", "D"));
     }
 
@@ -83,11 +83,11 @@ class QuizServiceImplTest {
     void 当前周期内已答对的题不再出() {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(0, 0), question(1, 1)));
-        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(1, new HashSet<>(Set.of(0))));
+        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(1, new HashSet<>(Set.of(0)), 0));
 
         // 反复抽，已答对的题号 0 不该再出现
         for (int i = 0; i < 20; i++) {
-            assertThat(service().next(OPENID).getData().get("id")).isEqualTo(1);
+            assertThat(service().next(OPENID, null).getData().get("questionId")).isEqualTo(1);
         }
     }
 
@@ -99,7 +99,7 @@ class QuizServiceImplTest {
         when(quizGenerator.generate(eq("sk-good"), anyList(), eq(0))).thenReturn(List.of(question(0, 0)));
         when(quizProgressCache.get(OPENID)).thenReturn(QuizProgress.empty());
 
-        service().next(OPENID);
+        service().next(OPENID, null);
 
         // 懒生成落缓存是"第一次有人要某级的题时才生成，之后复用"这条的实现
         verify(quizBankCache).put(eq(0), anyList());
@@ -110,7 +110,7 @@ class QuizServiceImplTest {
         givenUser(0, null);
         when(quizBankCache.get(0)).thenReturn(null);
 
-        BaseResult result = service().next(OPENID);
+        BaseResult result = service().next(OPENID, null);
 
         assertThat(result.getCode()).isEqualTo(-100);
         assertThat(result.getMessage()).contains("Key");
@@ -125,13 +125,17 @@ class QuizServiceImplTest {
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
         when(quizProgressCache.get(OPENID)).thenReturn(QuizProgress.empty());
 
-        BaseResult result = service().answer(OPENID, 3, 1);
+        BaseResult result = service().answer(OPENID, null, 3, 1);
 
-        // 响应只有正确项与解析（契约 §7.3）—— 连对/等级由 profile 下发
-        assertThat(result.getData()).containsOnlyKeys("correct", "answerIndex", "explanation");
+        // 契约 §7.3：正确项 + 解析 + 作答后的 streak / level / upgraded
+        assertThat(result.getData()).containsOnlyKeys(
+                "correct", "correctIndex", "explanation", "streak", "level", "upgraded");
         assertThat(result.getData().get("correct")).isEqualTo(true);
-        assertThat(result.getData().get("answerIndex")).isEqualTo(1);
+        assertThat(result.getData().get("correctIndex")).isEqualTo(1);
         assertThat(result.getData().get("explanation")).isEqualTo("解析");
+        assertThat(result.getData().get("streak")).isEqualTo(1);
+        assertThat(result.getData().get("level")).isEqualTo(0);
+        assertThat(result.getData().get("upgraded")).isEqualTo(false);
 
         QuizProgress written = capturedProgress();
         assertThat(written.getStreak()).isEqualTo(1);
@@ -143,9 +147,9 @@ class QuizServiceImplTest {
     void 答错时连对归零且排除集清空() {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
-        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(5, new HashSet<>(Set.of(1, 2))));
+        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(5, new HashSet<>(Set.of(1, 2)), 0));
 
-        BaseResult result = service().answer(OPENID, 3, 0);
+        BaseResult result = service().answer(OPENID, null, 3, 0);
 
         assertThat(result.getData().get("correct")).isEqualTo(false);
         QuizProgress written = capturedProgress();
@@ -158,10 +162,14 @@ class QuizServiceImplTest {
     void 连对满十升级并落库且连对归零() {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
-        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(9, new HashSet<>()));
+        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(9, new HashSet<>(), 0));
 
-        service().answer(OPENID, 3, 1);
+        BaseResult result = service().answer(OPENID, null, 3, 1);
 
+        // 响应里的 level / upgraded / streak 也反映这次升级（契约 §7.3）
+        assertThat(result.getData().get("level")).isEqualTo(1);
+        assertThat(result.getData().get("upgraded")).isEqualTo(true);
+        assertThat(result.getData().get("streak")).isEqualTo(0);
         verify(userService).updateLevel(OPENID, 1);
         QuizProgress written = capturedProgress();
         assertThat(written.getStreak()).isZero();
@@ -173,10 +181,66 @@ class QuizServiceImplTest {
         givenUser(0, "sk-good");
         when(quizBankCache.get(0)).thenReturn(List.of(question(0, 0)));
 
-        BaseResult result = service().answer(OPENID, 99, 0);
+        BaseResult result = service().answer(OPENID, null, 99, 0);
 
         assertThat(result.getCode()).isEqualTo(-100);
         verifyNoInteractions(quizProgressCache);
+    }
+
+    // ── 选题库档位（等级单调包含）─────────────────────────────────────────────
+
+    @Test
+    void 高手可以回头练低档题库() {
+        givenUser(2, "sk-good");
+        when(quizBankCache.get(0)).thenReturn(List.of(question(0, 0)));
+        when(quizProgressCache.get(OPENID)).thenReturn(QuizProgress.empty(0));
+
+        BaseResult result = service().next(OPENID, 0);
+
+        assertThat(result.getCode()).isEqualTo(200);
+    }
+
+    @Test
+    void 选高于自己等级的档位回403且不碰题库() {
+        givenUser(0, "sk-good");
+
+        BaseResult result = service().next(OPENID, 2);
+
+        assertThat(result.getCode()).isEqualTo(403);
+        assertThat(result.getMessage()).contains("没解锁");
+        verifyNoInteractions(quizBankCache);
+    }
+
+    @Test
+    void 换档时连对与排除集从零开始() {
+        givenUser(2, "sk-good");
+        when(quizBankCache.get(1)).thenReturn(List.of(question(0, 0), question(1, 1)));
+        // 上一档（菜鸟）已连对 5、排除集里是菜鸟档的题号 —— 题号跨档重号，不能沿用
+        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(5, new HashSet<>(Set.of(0)), 0));
+
+        BaseResult result = service().next(OPENID, 1);
+
+        assertThat(result.getCode()).isEqualTo(200);
+        QuizProgress written = capturedProgress();
+        assertThat(written.getBankLevel()).isEqualTo(1);
+        assertThat(written.getStreak()).isZero();
+        assertThat(written.answeredIdsOrEmpty()).isEmpty();
+    }
+
+    @Test
+    void 练低档时连对走满周期但不升级() {
+        givenUser(1, "sk-good");
+        when(quizBankCache.get(0)).thenReturn(List.of(question(3, 1)));
+        // 菜鸟档已经连对 9，正是"再答对一题就满 10"的临界
+        when(quizProgressCache.get(OPENID)).thenReturn(new QuizProgress(9, new HashSet<>(), 0));
+
+        BaseResult result = service().answer(OPENID, 0, 3, 1);
+
+        // 升级只认自己那一档：连对满 10 照常进新周期，但等级纹丝不动
+        assertThat(result.getData().get("upgraded")).isEqualTo(false);
+        assertThat(result.getData().get("level")).isEqualTo(1);
+        assertThat(result.getData().get("streak")).isEqualTo(0);
+        verify(userService, never()).updateLevel(anyString(), anyInt());
     }
 
     // ── 测试数据 ────────────────────────────────────────────────────────────

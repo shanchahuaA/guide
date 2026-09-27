@@ -196,10 +196,20 @@ function Invoke-Json([string] $method, [string] $path, [int] $timeoutSec, $Heade
         if ($_.Exception.Response) {
             try { $status = [int]$_.Exception.Response.StatusCode } catch { }
         }
+        # 非 2xx 时 Invoke-RestMethod 会抛异常，响应体在 $_.ErrorDetails.Message（PS 5.1）。
+        # Shiro 的 TokenAuthFilter 对未登录回 HTTP 401 + 响应壳 code=401，教学端点那几条 401
+        # 断言读的就是这里解析出来的 code。取不到（或不是 JSON）就留 $null —— 只看 Status 的
+        # 断言不受影响，取不到的旁边会记一条 INFO，不当失败。
+        $errorJson = $null
+        try {
+            if ($_.ErrorDetails -and $_.ErrorDetails.Message) {
+                $errorJson = ConvertFrom-Json -InputObject ([string]$_.ErrorDetails.Message)
+            }
+        } catch { $errorJson = $null }
         return @{
             Ok     = $false
             Status = $status
-            Json   = $null
+            Json   = $errorJson
             Error  = $_.Exception.Message
         }
     }
@@ -810,6 +820,35 @@ Assert-True ($null -ne (Get-Data $bugleQuery)) '被改写过的 slug（bugle_）
 #   仓库里没有建表 SQL，表结构的唯一真相是 pojo/User.java；换机器要照它手写 DDL。
 #   表不存在时 login 会返 code=-100（MySQL 报 Table 'xxx.user' doesn't exist），
 #   下面"拿到非空 token"那条会 FAIL —— 同样是真失败，先把表建出来。
+
+# 未登录断言的公共形态：Shiro 的 tokenAuthc 在过滤链上把请求拦下，回 **HTTP 401**
+# + 响应壳 code=401（不再是控制器里 HTTP 200 + code=401 那套）。
+# ⚠️ PS 5.1 从异常里不一定取得到响应体（见 Invoke-Json），所以 **HTTP 状态是硬断言**，
+# 响应壳只在真取到时加验一条，取不到记 INFO —— 不让取体失败变成一次假 FAIL。
+function Assert-Unauthorized($resp, [string] $name) {
+    Assert-True ($resp.Status -eq 401) ($name + ' HTTP 401（Shiro tokenAuthc 拦下）') `
+        ("实际 status=" + $resp.Status + " error=" + $resp['Error'])
+    $code = Get-Field $resp.Json 'code'
+    if ($null -ne $code) {
+        Assert-Equal $code 401 ($name + ' 响应壳里 code=401')
+    } else {
+        Add-Note ($name + ' 的 401 响应体在 PS 5.1 里取不到，只验了 HTTP 状态')
+    }
+}
+
+# 路径门禁拦下：Shiro 的 roleAuthc 回 **HTTP 403** + 响应壳 code=403（与 401 同形，也是真 HTTP 状态）。
+# 与 Assert-Unauthorized 同一套路：HTTP 状态硬断言，响应壳取到才加验，取不到记 INFO。
+function Assert-Forbidden($resp, [string] $name) {
+    Assert-True ($resp.Status -eq 403) ($name + ' HTTP 403（Shiro 路径门禁拦下）') `
+        ("实际 status=" + $resp.Status + " error=" + $resp['Error'])
+    $code = Get-Field $resp.Json 'code'
+    if ($null -ne $code) {
+        Assert-Equal $code 403 ($name + ' 响应壳里 code=403')
+    } else {
+        Add-Note ($name + ' 的 403 响应体在 PS 5.1 里取不到，只验了 HTTP 状态')
+    }
+}
+
 Section '4b. 登录与教学身份'
 
 $loginCode = 'smoke-test-' + [guid]::NewGuid().ToString('N')
@@ -831,12 +870,8 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
     # 只写 `-eq ''` 的话 $null 穿不过去，下面会拿着空 token 去发请求。
     Write-Host '  登录没拿到 token，跳过身份条断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
 } else {
-    # 无 token → code = 401（HTTP 状态仍是 200，用响应包里的 code 表达未登录）
-    $noToken = Invoke-Json 'GET' '/api/teach/profile' 60
-    Assert-True ((Get-Field $noToken.Json 'code') -eq 401) 'profile 不带 token 时 code=401' `
-        ("实际 code=" + (Get-Field $noToken.Json 'code'))
-    Assert-True ((Get-Field $noToken.Json 'success') -eq $false) 'profile 不带 token 时 success=false' `
-        ("实际 success=" + (Get-Field $noToken.Json 'success'))
+    # 无 token → Shiro tokenAuthc 拦下：HTTP 401（响应壳 code 也是 401）
+    Assert-Unauthorized (Invoke-Json 'GET' '/api/teach/profile' 60) 'profile 不带 token 时'
 
     # 带 token → 200 + level / streak / streakTarget
     $profileResp = Invoke-Json 'GET' '/api/teach/profile' 60 @{ token = $loginToken }
@@ -858,14 +893,9 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
 # ⚠️ 仍然按 token 分支：拿不到 token（appid/secret 没配）时这一整段跳过，不静默空转。
 Section '4c. 教学问答的 Key 与鉴权'
 
-# 未登录时三个端点都必须是 401（HTTP 状态仍是 200，用响应包里的 code 表达未登录）
-$askNoToken = Invoke-Json 'POST' '/api/teach/ask' 60 $null @{ question = 'probe' }
-Assert-True ((Get-Field $askNoToken.Json 'code') -eq 401) 'ask 不带 token 时 code=401' `
-    ("实际 code=" + (Get-Field $askNoToken.Json 'code'))
-
-$keyNoToken = Invoke-Json 'POST' '/api/teach/apikey' 60 $null @{ apiKey = 'sk-probe' }
-Assert-True ((Get-Field $keyNoToken.Json 'code') -eq 401) 'apikey 不带 token 时 code=401' `
-    ("实际 code=" + (Get-Field $keyNoToken.Json 'code'))
+# 未登录时端点必须 401 —— 由 Shiro 的 tokenAuthc 在过滤链上拦下（HTTP 401 + 响应壳 code=401）
+Assert-Unauthorized (Invoke-Json 'POST' '/api/teach/ask' 60 $null @{ question = 'probe' }) 'ask 不带 token 时'
+Assert-Unauthorized (Invoke-Json 'POST' '/api/teach/apikey' 60 $null @{ apiKey = 'sk-probe' }) 'apikey 不带 token 时'
 
 if ($null -eq $loginToken -or $loginToken -eq '') {
     Write-Host '  登录没拿到 token，跳过问答的鉴权断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
@@ -910,6 +940,87 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         ("实际 success=" + (Get-Field $askBadKey.Json 'success'))
 }
 
+# ── 第 4 组（续）：分级入口的路径门禁（契约 §7.0 / §7.7）──────────────────────
+#
+# ⚠️ 必须在**登录取到的这个新用户还是菜鸟（level 0）时**验：login 用的是每次新生成的
+# js_code，findOrCreateByOpenid 建出来的就是 level 0。§4e 连对升级、§4f 顶到高手之后
+# 就再也造不出"菜鸟调高级入口"这个场景了（dev/level 只能升不能降）。
+#
+# 落在 Shiro 过滤链上的 roleAuthc 拦下时回**真 HTTP 403**（不是响应包 code），所以断言看 Status。
+Section '4c-2. 分级入口的路径门禁'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过路径门禁断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $tierHeader = @{ token = $loginToken }
+    # 菜鸟 → beginner/route（要 ≥入门）→ 403
+    Assert-Forbidden (Invoke-Json 'POST' '/api/teach/beginner/route' 60 $tierHeader) '菜鸟调 beginner/route 时'
+    # 菜鸟 → expert/speedrun（要高手）→ 403
+    Assert-Forbidden (Invoke-Json 'POST' '/api/teach/expert/speedrun' 60 $tierHeader @{ question = '怎么速通' }) `
+        '菜鸟调 expert/speedrun 时'
+}
+
+# ── 第 4 组（续）：个人页昵称（契约 §7.1）────────────────────────────────────
+#
+# ⚠️ 昵称里塞的是 ASCII（PS 5.1 中文解码坑），所以可以直接精确比对。
+# ⚠️ 头像上传（§7.8）不在这里验：PS 5.1 造 multipart 得手拼 body，不划算 ——
+#    "缺 file 回 -200 不是 500"由单测 TeachControllerTest 钉住。
+Section '4c-3. 个人资料（昵称）'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过个人资料断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $profileHeader = @{ token = $loginToken }
+    $smokeNick = 'smoke-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+
+    $saveProfile = Invoke-Json 'POST' '/api/teach/profile' 60 $profileHeader @{ nickname = $smokeNick }
+    Assert-True ((Get-Field $saveProfile.Json 'code') -eq 200) 'POST /api/teach/profile 存昵称回 200' `
+        ("实际 code=" + (Get-Field $saveProfile.Json 'code') + " message=" + (Get-Field $saveProfile.Json 'message'))
+
+    $profileAfter = Invoke-Json 'GET' '/api/teach/profile' 60 $profileHeader
+    Assert-Equal (Get-Field (Get-Data $profileAfter) 'nickname') $smokeNick 'GET profile 回读到刚存的昵称'
+
+    # 昵称头像都空 → 参数错误，不是 500
+    $emptyProfile = Invoke-Json 'POST' '/api/teach/profile' 60 $profileHeader @{ nickname = ''; avatar = '' }
+    Assert-True ((Get-Field $emptyProfile.Json 'code') -eq -200) '昵称头像都空时 code=-200（不是 500）' `
+        ("实际 code=" + (Get-Field $emptyProfile.Json 'code'))
+}
+
+# ── 第 4 组（续）：越级门禁（契约 §7.0 / #43）────────────────────────────────
+#
+# ⚠️ 只断言 ASCII 字段（code / success，以及 message 非空），**不比对中文文案** ——
+# 响应头不带 charset，PS 5.1 按 ISO-8859-1 解码，中文 message 读出来是乱码（见文件头说明）。
+# 文案选取由单测 TeachGateTest 逐个钉死，这里只做"越级确实被拦"的回归保护。
+#
+# ⚠️ 门禁按**当前等级**触发：dev/level 只能升不能降，所以按 profile 的 level 挑一个该等级
+# 一定被拦的类别（菜鸟禁路线、入门禁速通）。已是高手时无从触发，记 INFO 跳过。
+# 本段排在练习段**之前**：练习会答对 10 题升一级，放后面就把等级抬走了。
+Section '4d. 越级门禁'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过越级门禁断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $gateHeader = @{ token = $loginToken }
+    $gateLevel = [int](Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $gateHeader)) 'level')
+    $gateQuestion = $null
+    if ($gateLevel -eq 0) { $gateQuestion = '今日最佳路线' }    # 菜鸟禁路线类
+    elseif ($gateLevel -eq 1) { $gateQuestion = '怎么速通' }     # 入门禁速通类
+
+    if ($null -eq $gateQuestion) {
+        Add-Note ('当前等级 ' + $gateLevel + ' 是高手，越级门禁无从触发（把 user.level 置 0 可重验）')
+    } else {
+        # 越级：内容门禁拦在服务之前，不查回答缓存、不调大模型（票面 AC）。
+        # 响应码自门禁整合起是 403（取 Shiro 那套语义），HTTP 仍 200（统一响应包惯例）。
+        $blockedAsk = Invoke-Json 'POST' '/api/teach/ask' 60 $gateHeader @{ question = $gateQuestion }
+        Assert-True ((Get-Field $blockedAsk.Json 'code') -eq 403) ('越级问题被拦时 code=403（等级 ' + $gateLevel + '）') `
+            ("实际 code=" + (Get-Field $blockedAsk.Json 'code') + " message=" + (Get-Field $blockedAsk.Json 'message'))
+        Assert-True ((Get-Field $blockedAsk.Json 'success') -eq $false) '越级问题 success=false' `
+            ("实际 success=" + (Get-Field $blockedAsk.Json 'success'))
+        Assert-True ($null -ne (Get-Field $blockedAsk.Json 'message') -and (Get-Field $blockedAsk.Json 'message') -ne '') `
+            '越级问题带非空 message（文案内容不比对，只验有一句提示）' ''
+    }
+}
+
 # ── 第 4 组（续）：练习抽题与判题（契约 §7.3）────────────────────────────────
 #
 # ⚠️ 这一段**不真调 DeepSeek**：练习题库是懒生成的（首次要某级题时才生成），
@@ -919,7 +1030,7 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
 #
 # ⚠️ 题库 JSON 用 ASCII 题干（不含中文），值从 stdin（-x）送进去 —— 避开 PS 5.1
 # 传"含双引号的原生参数"时的转义地狱，也避开中文按 ANSI 编码的坑。
-Section '4d. 练习抽题与判题'
+Section '4e. 练习抽题与判题'
 
 if ($null -eq $loginToken -or $loginToken -eq '') {
     Write-Host '  登录没拿到 token，跳过练习断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
@@ -947,33 +1058,53 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $null = & $script:RedisCli DEL $progressKey 2>&1
 
         # 抽题：响应只有题号 / 题干 / 选项，**没有答案**（票面 AC）
-        $quizNext = Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader
+        $quizNext = Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader
         Assert-True ((Get-Field $quizNext.Json 'code') -eq 200) 'quiz/next code=200' `
             ("实际 code=" + (Get-Field $quizNext.Json 'code') + " message=" + (Get-Field $quizNext.Json 'message'))
         $quizNextData = Get-Data $quizNext
-        Assert-True ($null -ne (Get-Field $quizNextData 'id')) 'quiz/next 带题号 id' '响应里没有 id'
+        Assert-True ($null -ne (Get-Field $quizNextData 'questionId')) 'quiz/next 带题号 questionId' '响应里没有 questionId'
         Assert-True ($null -ne (Get-Field $quizNextData 'stem') -and (Get-Field $quizNextData 'stem') -ne '') 'quiz/next 带题干 stem' '响应里没有 stem'
         $quizOptions = As-Array (Get-Field $quizNextData 'options')
         Assert-Equal $quizOptions.Count 4 'quiz/next 带四个选项'
 
         # 响应里**绝不能**有答案字段：抓包就能看到它，下发答案等于把连对白送
         $quizLeaked = @()
-        foreach ($f in @('answerIndex', 'explanation', 'correct', 'answer')) {
+        foreach ($f in @('correctIndex', 'explanation', 'correct', 'answer')) {
             if ($null -ne (Get-Field $quizNextData $f)) { $quizLeaked += $f }
         }
-        Assert-True ($quizLeaked.Count -eq 0) 'quiz/next 响应不含任何答案字段（answerIndex / explanation / correct）' `
+        Assert-True ($quizLeaked.Count -eq 0) 'quiz/next 响应不含任何答案字段（correctIndex / explanation / correct）' `
             ('多带了：' + ($quizLeaked -join ', '))
         $quizKeys = @($quizNextData.PSObject.Properties | ForEach-Object { $_.Name })
         Assert-Equal $quizKeys.Count 3 'quiz/next 只有题号 / 题干 / 选项三个键' ('实际键：' + ($quizKeys -join ', '))
+
+        # 重置练习（契约 §7.3）：先答对一题把连对顶上 1，再重置，看它是否归零。
+        # 重置只清进度、不退等级 —— 所以这里只断 streak，不断 level。
+        $beforeReset = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader)
+        $beforeResetId = [int](Get-Field $beforeReset 'questionId')
+        $null = Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $beforeResetId; choice = ($beforeResetId % 4) }
+        $streakBeforeReset = Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)) 'streak'
+        Assert-Equal $streakBeforeReset 1 '答对一题后 streak=1（重置断言的前提）'
+
+        $resetResp = Invoke-Json 'POST' '/api/teach/quiz/reset' 60 $quizHeader
+        Assert-True ((Get-Field $resetResp.Json 'code') -eq 200) 'quiz/reset 回 200' `
+            ("实际 code=" + (Get-Field $resetResp.Json 'code') + " message=" + (Get-Field $resetResp.Json 'message'))
+        $streakAfterReset = Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)) 'streak'
+        Assert-Equal $streakAfterReset 0 '重置后 streak 归零'
+
+        # 选题库档位（契约 §7.3）：只能 ≤ 自己等级（单调包含）。越档回 403，
+        # 而且是在碰题库之前就拒 —— 所以不需要那一档的题库存在也能验。
+        $lockedBank = Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader @{ level = ($startLevel + 1) }
+        Assert-True ((Get-Field $lockedBank.Json 'code') -eq 403) ('选高于自己等级的档位回 403（当前 ' + $startLevel + '）') `
+            ("实际 code=" + (Get-Field $lockedBank.Json 'code') + " message=" + (Get-Field $lockedBank.Json 'message'))
 
         # 连答 10 题正确（题 i 的正确项是 i % 4）
         $quizFailed = $false
         $lastAnswer = $null
         for ($n = 1; $n -le 10; $n++) {
-            $q = Get-Data (Invoke-Json 'GET' '/api/teach/quiz/next' 60 $quizHeader)
-            $qId = Get-Field $q 'id'
+            $q = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader)
+            $qId = Get-Field $q 'questionId'
             $correctIndex = ([int]$qId) % 4
-            $ans = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $qId; optionIndex = $correctIndex })
+            $ans = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $qId; choice = $correctIndex })
             if ((Get-Field $ans 'correct') -ne $true) {
                 $quizFailed = $true
                 Add-Fail ('第 ' + $n + ' 题按已知答案作答却判错') ('id=' + $qId + ' 正确项=' + $correctIndex + ' 实际 correct=' + (Format-Actual (Get-Field $ans 'correct')))
@@ -982,7 +1113,11 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
             $lastAnswer = $ans
         }
         if (-not $quizFailed) {
-            # 题型 AC：等级涨 1、连对归零。判题响应里不带这两样，看身份条（profile 是唯一权威）
+            # 契约 §7.3：判题响应自带 correctIndex / streak / level / upgraded，前端据此就地刷身份条
+            foreach ($f in @('correctIndex', 'streak', 'level', 'upgraded')) {
+                Assert-True ($null -ne (Get-Field $lastAnswer $f)) ('quiz/answer 带 ' + $f) ('响应里没有 ' + $f)
+            }
+            # 题型 AC：等级涨 1、连对归零（身份条是权威，再用 profile 复核一份）
             $expectedLevel = [Math]::Min($startLevel + 1, 2)
             $profileAfterQuiz = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
             Assert-Equal (Get-Field $profileAfterQuiz 'level') $expectedLevel ('连对满 10 后 level = ' + $expectedLevel)
@@ -1000,6 +1135,50 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         # 收尾：清掉脚本自己塞的题库与连对 key（真实缓存由采集失效）
         $null = & $script:RedisCli DEL $QUIZ_BANK_KEY $progressKey 2>&1
     }
+}
+
+# ── 第 4 组（续）：每日路线（契约 §7.4 / #44）────────────────────────────────
+#
+# ⚠️ 前端把「今日路线」只开给高手，所以这里先 dev/level 顶到 2；端点本身要 ≥入门（§7.0）。
+# dev/level 只能升不能降、封顶 2，叫两次一定到 2（无论当前是 0 还是 1）。它与 testInsertUser 同类，是演示后门。
+#
+# ⚠️ 这一条**不依赖大模型、也不依赖用户的 Key** —— 链接由后端构造
+# （模型不能联网，CONTEXT.md「每日路线」）。第一级真会去打 api.bilibili.com；即便被风控挡下，
+# 也会降级到空间/全站搜索页，仍然是 bilibili.com 域，所以这一条**联网不可用时依然成立**。
+#
+# ⚠️ 中文 title 不比对（响应头不带 charset，PS 5.1 读出来是乱码，见文件头说明），只验非空与域名。
+Section '4f. 每日路线'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过路线断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $routeHeader = @{ token = $loginToken }
+    # 顶到高手：叫一次可能停在 1，叫第二次一定到 2（封顶也是 2）
+    $null = Invoke-Json 'POST' '/api/teach/dev/level' 60 $routeHeader
+    $routeLevel = [int](Get-Field (Get-Data (Invoke-Json 'POST' '/api/teach/dev/level' 60 $routeHeader)) 'level')
+    Assert-Equal $routeLevel 2 'dev/level 把等级顶到高手（路线断言的前提）'
+
+    # 高手走分级入口（§7.7）：Shiro 的 beginner/** 规则放行，后端构造链接、不调大模型
+    $route = Invoke-Json 'POST' '/api/teach/beginner/route' 90 $routeHeader
+    Assert-True ((Get-Field $route.Json 'code') -eq 200) '高手走 beginner/route 拿路线 code=200' `
+        ("实际 code=" + (Get-Field $route.Json 'code') + " message=" + (Get-Field $route.Json 'message'))
+
+    $routeData = Get-Data $route
+    $routeLinks = As-Array (Get-Field $routeData 'links')
+    Assert-True ($routeLinks.Count -gt 0) '路线回答带非空 links' ("实际 " + $routeLinks.Count + " 条")
+
+    $badRouteUrl = @()
+    $badRouteShape = @()
+    foreach ($l in $routeLinks) {
+        $u = [string](Get-Field $l 'url')
+        $t = [string](Get-Field $l 'title')
+        # title 后端给的是中文短语（含日期），只验非空；域名是 ASCII，可以精确验
+        if ([string]::IsNullOrWhiteSpace($t)) { $badRouteShape += '(title 为空)' }
+        if ([string]::IsNullOrWhiteSpace($u) -or ($u -notlike '*bilibili.com*')) { $badRouteUrl += $u }
+    }
+    Assert-True ($badRouteShape.Count -eq 0) '每条路线链接都带非空 title' ('缺 title ' + $badRouteShape.Count + ' 处')
+    Assert-True ($badRouteUrl.Count -eq 0) '每条路线链接都是 bilibili.com 域' `
+        ('非 bilibili 域：' + (($badRouteUrl | Select-Object -First 3) -join ', '))
 }
 
 # ── Redis 缓存：读到的到底是缓存、还是每次都回源 ─────────────────────────────
