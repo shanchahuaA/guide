@@ -1,0 +1,112 @@
+package org.example.guide.controller;
+
+import org.example.guide.pojo.User;
+import org.example.guide.service.ITeachService;
+import org.example.guide.service.IQuizService;
+import org.example.guide.service.IUserService;
+import org.example.guide.service.TeachGate;
+import org.example.guide.service.UserLevels;
+import org.example.guide.utils.BaseResult;
+import org.example.guide.utils.ResultCodeEnum;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+/**
+ * 越级门禁的**接线**断言（#43）。票面 AC 要的是"拦在路由层，不是靠提示词" ——
+ * 矩阵本身由 {@link TeachGateTest} 逐个钉，这里钉的是另一半：
+ * **拦下之后根本不会调服务**（也就不会查缓存、不会调大模型）。
+ *
+ * <p>纯 Mockito，不起 Spring（控制器字段虽是 {@code @Autowired}，Mockito 直接注入私有字段）。
+ */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class TeachControllerTest {
+
+    private static final String TOKEN = "oTest";
+
+    @Mock
+    private IUserService userService;
+    @Mock
+    private ITeachService teachService;
+    @Mock
+    private IQuizService quizService;
+
+    @InjectMocks
+    private TeachController controller;
+
+    @BeforeEach
+    void setUp() {
+        givenUser(UserLevels.NOVICE);
+    }
+
+    @Test
+    void 菜鸟问路线类被路由层拦下且不调服务() {
+        BaseResult result = controller.ask(TOKEN, body("今日最佳路线"));
+
+        assertThat(result.getCode()).isEqualTo(-100);
+        assertThat(result.getMessage()).isEqualTo(TeachGate.message(UserLevels.NOVICE));
+        // 票面 AC：越级时不调大模型 —— 服务那一层压根没被碰过
+        verifyNoInteractions(teachService);
+    }
+
+    @Test
+    void 图鉴内问题照常交给服务() {
+        when(teachService.ask(anyString(), anyString(), any())).thenReturn(ok());
+
+        controller.ask(TOKEN, body("蘑菇有什么用"));
+
+        verify(teachService).ask(eq(TOKEN), eq("蘑菇有什么用"), eq(UserLevels.NOVICE));
+    }
+
+    @Test
+    void 高手问路线类不被拦() {
+        givenUser(UserLevels.EXPERT);
+        when(teachService.ask(anyString(), anyString(), any())).thenReturn(ok());
+
+        controller.ask(TOKEN, body("今日最佳路线"));
+
+        // 高手没有禁问，请求照常进服务（服务答得对不对由它自己的测试管）
+        verify(teachService).ask(eq(TOKEN), anyString(), eq(UserLevels.EXPERT));
+    }
+
+    /** 控制器取的是**身份**上的等级，请求体里塞什么都不该改变门禁判定（契约 §7.0 防越权） */
+    @Test
+    void 请求体里的等级参数不影响门禁判定() {
+        BaseResult result = controller.ask(TOKEN, Map.of("question", "今日最佳路线", "level", "2"));
+
+        assertThat(result.getCode()).isEqualTo(-100);
+        verifyNoInteractions(teachService);
+    }
+
+    private void givenUser(int level) {
+        User user = new User();
+        user.setOpenid(TOKEN);
+        user.setLevel(level);
+        user.setApiKey("sk-x");
+        when(userService.findByOpenid(TOKEN)).thenReturn(user);
+    }
+
+    private static Map<String, String> body(String question) {
+        return Map.of("question", question);
+    }
+
+    private static BaseResult ok() {
+        return BaseResult.setResult(ResultCodeEnum.SUCCESS, Map.of("answer", "x"));
+    }
+}

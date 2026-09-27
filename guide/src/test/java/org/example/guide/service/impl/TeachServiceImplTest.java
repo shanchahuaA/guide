@@ -7,6 +7,8 @@ import org.example.guide.cache.ItemCache;
 import org.example.guide.pojo.Item;
 import org.example.guide.pojo.User;
 import org.example.guide.service.IUserService;
+import org.example.guide.service.TeachGate;
+import org.example.guide.service.UserLevels;
 import org.example.guide.utils.BaseResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,7 +78,7 @@ class TeachServiceImplTest {
     void 缓存命中时不调大模型也不看Key() {
         when(answerCache.get(QUESTION)).thenReturn("缓存里的答案");
 
-        BaseResult result = service(true).ask(OPENID, QUESTION);
+        BaseResult result = service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         assertThat(result.getCode()).isEqualTo(200);
         assertThat(result.getData().get("answer")).isEqualTo("缓存里的答案");
@@ -90,7 +92,7 @@ class TeachServiceImplTest {
     void 未命中时调大模型并把回答回填缓存() {
         givenUserWithKey("sk-good");
 
-        BaseResult result = service(true).ask(OPENID, QUESTION);
+        BaseResult result = service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         assertThat(result.getData().get("answer")).isEqualTo("模型给的答案");
         // 回填是"第二次不再调大模型"的唯一保证，漏了它缓存就永远只是穿透
@@ -101,7 +103,7 @@ class TeachServiceImplTest {
     void 上下文用的是图鉴缓存而不是直查库() {
         givenUserWithKey("sk-good");
 
-        service(true).ask(OPENID, QUESTION);
+        service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         verify(itemCache).getAll();
         // 上下文里要带图鉴条目本身：问"蘑菇有什么用"，模型必须看得见蘑菇的数值
@@ -110,11 +112,23 @@ class TeachServiceImplTest {
         assertThat(prompt.getValue()).contains("喇叭菇").contains(QUESTION);
     }
 
+    @Test
+    void 等级边界注入系统提示词软约束() {
+        givenUserWithKey("sk-good");
+
+        service(true).ask(OPENID, QUESTION, UserLevels.EXPERT);
+
+        // 契约 §7.0 的"双保险"：硬拦在路由层，系统提示词里再注入一次等级与边界
+        var systemPrompt = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(deepSeekClient).chat(eq("sk-good"), systemPrompt.capture(), anyString());
+        assertThat(systemPrompt.getValue()).contains(TeachGate.boundaryFor(UserLevels.EXPERT));
+    }
+
     // ── 降级 ────────────────────────────────────────────────────────────────
 
     @Test
     void ai未启用时返回预置文案而不是报错() {
-        BaseResult result = service(false).ask(OPENID, QUESTION);
+        BaseResult result = service(false).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         // 票面 AC：enabled=false 时仍返回文案（不是 -100、更不是 500）
         assertThat(result.getCode()).isEqualTo(200);
@@ -129,7 +143,7 @@ class TeachServiceImplTest {
     void 没填Key时提示先填且不调大模型() {
         givenUserWithKey(null);
 
-        BaseResult result = service(true).ask(OPENID, QUESTION);
+        BaseResult result = service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         assertThat(result.getCode()).isEqualTo(-100);
         assertThat(result.getMessage()).isEqualTo("请先填写你的 DeepSeek API Key");
@@ -142,7 +156,7 @@ class TeachServiceImplTest {
         when(deepSeekClient.chat(anyString(), anyString(), anyString()))
                 .thenThrow(new AiException(-100, "API Key 无效", null));
 
-        BaseResult result = service(true).ask(OPENID, QUESTION);
+        BaseResult result = service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         // 票面 AC：故意填错 Key → code = -100 + 「API Key 无效」，不是 500
         assertThat(result.getCode()).isEqualTo(-100);
@@ -153,7 +167,7 @@ class TeachServiceImplTest {
 
     @Test
     void 问题为空时回参数提示且不调大模型() {
-        BaseResult result = service(true).ask(OPENID, "  ");
+        BaseResult result = service(true).ask(OPENID, "  ", UserLevels.NOVICE);
 
         assertThat(result.getCode()).isEqualTo(-100);
         verifyNoInteractions(deepSeekClient);
@@ -164,7 +178,7 @@ class TeachServiceImplTest {
         givenUserWithKey("sk-good");
         when(itemCache.getAll()).thenReturn(List.of());
 
-        BaseResult result = service(true).ask(OPENID, QUESTION);
+        BaseResult result = service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         // 空上下文下模型只会编一段话出来 —— 那种回答比"取不到"更糟
         assertThat(result.getCode()).isEqualTo(-100);
@@ -176,14 +190,14 @@ class TeachServiceImplTest {
     void 用户行取不到时当未登录() {
         when(userService.findByOpenid(OPENID)).thenReturn(null);
 
-        assertThat(service(true).ask(OPENID, QUESTION).getCode()).isEqualTo(-100);
+        assertThat(service(true).ask(OPENID, QUESTION, UserLevels.NOVICE).getCode()).isEqualTo(-100);
     }
 
     @Test
     void 每次都只调一次大模型() {
         givenUserWithKey("sk-good");
 
-        service(true).ask(OPENID, QUESTION);
+        service(true).ask(OPENID, QUESTION, UserLevels.NOVICE);
 
         verify(deepSeekClient, times(1)).chat(anyString(), anyString(), anyString());
     }

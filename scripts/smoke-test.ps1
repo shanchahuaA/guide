@@ -910,6 +910,40 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         ("实际 success=" + (Get-Field $askBadKey.Json 'success'))
 }
 
+# ── 第 4 组（续）：越级门禁（契约 §7.0 / #43）────────────────────────────────
+#
+# ⚠️ 只断言 ASCII 字段（code / success，以及 message 非空），**不比对中文文案** ——
+# 响应头不带 charset，PS 5.1 按 ISO-8859-1 解码，中文 message 读出来是乱码（见文件头说明）。
+# 文案选取由单测 TeachGateTest 逐个钉死，这里只做"越级确实被拦"的回归保护。
+#
+# ⚠️ 门禁按**当前等级**触发：dev/level 只能升不能降，所以按 profile 的 level 挑一个该等级
+# 一定被拦的类别（菜鸟禁路线、入门禁速通）。已是高手时无从触发，记 INFO 跳过。
+# 本段排在练习段**之前**：练习会答对 10 题升一级，放后面就把等级抬走了。
+Section '4d. 越级门禁'
+
+if ($null -eq $loginToken -or $loginToken -eq '') {
+    Write-Host '  登录没拿到 token，跳过越级门禁断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow
+} else {
+    $gateHeader = @{ token = $loginToken }
+    $gateLevel = [int](Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $gateHeader)) 'level')
+    $gateQuestion = $null
+    if ($gateLevel -eq 0) { $gateQuestion = '今日最佳路线' }    # 菜鸟禁路线类
+    elseif ($gateLevel -eq 1) { $gateQuestion = '怎么速通' }     # 入门禁速通类
+
+    if ($null -eq $gateQuestion) {
+        Add-Note ('当前等级 ' + $gateLevel + ' 是高手，越级门禁无从触发（把 user.level 置 0 可重验）')
+    } else {
+        # 越级：拦在路由层，不查回答缓存、不调大模型（票面 AC）
+        $blockedAsk = Invoke-Json 'POST' '/api/teach/ask' 60 $gateHeader @{ question = $gateQuestion }
+        Assert-True ((Get-Field $blockedAsk.Json 'code') -eq -100) ('越级问题被拦时 code=-100（等级 ' + $gateLevel + '）') `
+            ("实际 code=" + (Get-Field $blockedAsk.Json 'code') + " message=" + (Get-Field $blockedAsk.Json 'message'))
+        Assert-True ((Get-Field $blockedAsk.Json 'success') -eq $false) '越级问题 success=false' `
+            ("实际 success=" + (Get-Field $blockedAsk.Json 'success'))
+        Assert-True ($null -ne (Get-Field $blockedAsk.Json 'message') -and (Get-Field $blockedAsk.Json 'message') -ne '') `
+            '越级问题带非空 message（文案内容不比对，只验有一句提示）' ''
+    }
+}
+
 # ── 第 4 组（续）：练习抽题与判题（契约 §7.3）────────────────────────────────
 #
 # ⚠️ 这一段**不真调 DeepSeek**：练习题库是懒生成的（首次要某级题时才生成），
@@ -919,7 +953,7 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
 #
 # ⚠️ 题库 JSON 用 ASCII 题干（不含中文），值从 stdin（-x）送进去 —— 避开 PS 5.1
 # 传"含双引号的原生参数"时的转义地狱，也避开中文按 ANSI 编码的坑。
-Section '4d. 练习抽题与判题'
+Section '4e. 练习抽题与判题'
 
 if ($null -eq $loginToken -or $loginToken -eq '') {
     Write-Host '  登录没拿到 token，跳过练习断言（先配好 guide.wechat.appid / secret 与 user 表再重跑）' -ForegroundColor Yellow

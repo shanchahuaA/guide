@@ -6,6 +6,7 @@ import org.example.guide.service.IQuizService;
 import org.example.guide.service.ITeachService;
 import org.example.guide.service.IUserService;
 import org.example.guide.service.QuizStreak;
+import org.example.guide.service.TeachGate;
 import org.example.guide.service.UserLevels;
 import org.example.guide.utils.BaseResult;
 import org.example.guide.utils.ResultCodeEnum;
@@ -92,7 +93,22 @@ public class TeachController {
             return unauthorized();
         }
         String question = body == null ? null : body.get("question");
-        return teachService.ask(user.getOpenid(), question);
+
+        // 越级门禁（#43）拦在**路由层、服务之前**：拦下的不查回答缓存、不调大模型（票面 AC）。
+        // 放在这一层而不是服务里，是因为等级只有拿到 user 行才知道，而回答缓存的 key 只认问题文本 ——
+        // 若先查缓存，一个高手问过的速通问题会把缓存里的答案漏给随后提问的菜鸟。
+        TeachGate.Category category = TeachGate.classify(question);
+        if (TeachGate.blocked(user.getLevel(), category)) {
+            return blocked(TeachGate.message(user.getLevel()));
+        }
+        return teachService.ask(user.getOpenid(), question, user.getLevel());
+    }
+
+    /** 门禁拦下：统一响应包的失败分支（code = -100）+ 按等级分支的文案，前端 reject 分支直接弹它 */
+    private static BaseResult blocked(String message) {
+        BaseResult result = BaseResult.setResult(ResultCodeEnum.FAILURE, null);
+        result.setMessage(message);
+        return result;
     }
 
     /**

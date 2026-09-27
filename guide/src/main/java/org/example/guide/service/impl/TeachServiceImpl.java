@@ -9,6 +9,7 @@ import org.example.guide.pojo.User;
 import org.example.guide.pojo.dto.AnswerDto;
 import org.example.guide.service.ITeachService;
 import org.example.guide.service.IUserService;
+import org.example.guide.service.TeachGate;
 import org.example.guide.utils.BaseResult;
 import org.example.guide.utils.ResultCodeEnum;
 import org.slf4j.Logger;
@@ -23,8 +24,12 @@ import org.springframework.stereotype.Service;
  * 顺序是有意的：缓存放在最前面，命中时连 Key 在不在都不必看 ——
  * 同一个问题问第二次不该因为"用户把 Key 删了"而失败，答案本来就与 Key 无关。
  *
- * <p>本单**只做图鉴内问题**。越级门禁（#43）与路线类链接（#44）是后面两条窄切片，
- * 所以这里没有等级参数、也没有 {@code links} 的来源，{@code links} 恒为 {@code []}。
+ * <p>本单**只做图鉴内问题**。路线类链接（#44）还没做，{@code links} 恒为 {@code []}。
+ *
+ * <p><b>等级约束（#43）分两层</b>：**硬拦在路由层**（{@code TeachGate}）—— 拦下的请求根本到不了
+ * 这里，也就不查缓存、不调大模型；到了这里的请求，等级只用来把边界注入系统提示词（软约束），
+ * 管住回答的深度与口吻。硬拦不放这一层的理由见 {@code TeachController.ask}：回答缓存的 key
+ * 只认问题文本，若先查缓存，一个高手问过的越级问题会把缓存里的答案漏给随后提问的菜鸟。
  */
 @Service
 public class TeachServiceImpl implements ITeachService {
@@ -34,7 +39,7 @@ public class TeachServiceImpl implements ITeachService {
     /** 契约 §7.0：{@code ai.enabled = false} 时返回的预置文案 */
     static final String DISABLED_ANSWER = "AI 老师暂时休息中，稍后再来问吧。图鉴里能查到的数据照样看得到。";
 
-    /** 系统提示词。本单没有等级约束（归 #43），只有"以图鉴为准、不编"这条硬边界 */
+    /** 系统提示词的固定部分：以图鉴为准、不编。等级边界由 {@link TeachGate#boundaryFor} 追加在后 */
     private static final String SYSTEM_PROMPT = """
             你是 PEAK 游戏的图鉴助手，只回答与 PEAK 游戏物品有关的问题。
 
@@ -66,7 +71,7 @@ public class TeachServiceImpl implements ITeachService {
     }
 
     @Override
-    public BaseResult ask(String openid, String question) {
+    public BaseResult ask(String openid, String question, Integer level) {
         if (question == null || question.isBlank()) {
             return fail("请输入你想问的问题");
         }
@@ -98,9 +103,12 @@ public class TeachServiceImpl implements ITeachService {
         }
         String context = ItemContextBuilder.build(items, question);
 
+        // 软约束：把同一份等级边界注入系统提示词（契约 §7.0 的"双保险"，硬拦那一半在路由层）
+        String systemPrompt = SYSTEM_PROMPT + "\n" + TeachGate.boundaryFor(level);
+
         String answer;
         try {
-            answer = deepSeekClient.chat(user.getApiKey(), SYSTEM_PROMPT, context + "\n\n用户的问题：" + question);
+            answer = deepSeekClient.chat(user.getApiKey(), systemPrompt, context + "\n\n用户的问题：" + question);
         } catch (AiException e) {
             // 错误码映射已经在客户端那一处做完，这里只负责把它塞进统一响应包（契约 §7.5）
             return fail(e.getMessage());
