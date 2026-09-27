@@ -1077,8 +1077,9 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $quizKeys = @($quizNextData.PSObject.Properties | ForEach-Object { $_.Name })
         Assert-Equal $quizKeys.Count 3 'quiz/next 只有题号 / 题干 / 选项三个键' ('实际键：' + ($quizKeys -join ', '))
 
-        # 重置练习（契约 §7.3）：先答对一题把连对顶上 1，再重置，看它是否归零。
-        # 重置只清进度、不退等级 —— 所以这里只断 streak，不断 level。
+        # 重置进度（契约 §7.3）：先答对一题把连对顶上 1，再重置，看连对与等级是不是都归零。
+        # ⚠️ 重置会把等级一并退回菜鸟 —— 本脚本的用户是每次新登录建的（level 0），
+        # 重置前后都是 0，所以不影响后面"连答 10 题升级"的基准（$startLevel 仍是 0）。
         $beforeReset = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader)
         $beforeResetId = [int](Get-Field $beforeReset 'questionId')
         $null = Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $beforeResetId; choice = ($beforeResetId % 4) }
@@ -1088,8 +1089,9 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $resetResp = Invoke-Json 'POST' '/api/teach/quiz/reset' 60 $quizHeader
         Assert-True ((Get-Field $resetResp.Json 'code') -eq 200) 'quiz/reset 回 200' `
             ("实际 code=" + (Get-Field $resetResp.Json 'code') + " message=" + (Get-Field $resetResp.Json 'message'))
-        $streakAfterReset = Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)) 'streak'
-        Assert-Equal $streakAfterReset 0 '重置后 streak 归零'
+        $resetAfter = Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)
+        Assert-Equal (Get-Field $resetAfter 'streak') 0 '重置后 streak 归零'
+        Assert-Equal (Get-Field $resetAfter 'level') 0 '重置后等级退回菜鸟'
 
         # 选题库档位（契约 §7.3）：只能 ≤ 自己等级（单调包含）。越档回 403，
         # 而且是在碰题库之前就拒 —— 所以不需要那一档的题库存在也能验。

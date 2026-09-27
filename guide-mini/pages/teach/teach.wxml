@@ -85,8 +85,8 @@
         <button class="btn" bindtap="loadQuiz" disabled="{{quizLoading}}">{{quizLoading ? '出题中…' : '开始练习'}}</button>
       </block>
 
-      <!-- 重置练习：连对进度归零 + 重新抽题（跳级换档后手上还挂着旧题时，一键重来） -->
-      <button class="btn btn--ghost" bindtap="onResetQuiz">重置练习</button>
+      <!-- 重置进度只放在「个人」页（它会把等级也退回菜鸟），这里只留一句指路 -->
+      <view class="hint">要把等级和进度全部清零？去「个人」页的「重置进度」。</view>
     </block>
   </view>
 
