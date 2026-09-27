@@ -163,6 +163,12 @@ class PageSourceTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             page_source.read_params("{{Infobox item\n| HungerCooked = abc }}", "X")
 
+    def test_params_value_with_html_comment_is_clean(self):
+        # 注释落在取值里时先剥掉，否则数字会带上注释文本、被当成解析失败
+        params = page_source.read_params(
+            "{{Infobox item\n| Hunger = -30<!-- 测试用 -->\n| HungerCooked = -80 }}", "X")
+        self.assertEqual(params.hunger_cooked, -80.0)
+
     def test_params_without_infobox_is_empty(self):
         self.assertIsNone(page_source.read_params("#REDIRECT [[Bugle Shroom]]", "X").hunger_cooked)
 

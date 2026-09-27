@@ -50,6 +50,9 @@ DROP_BLOCK = re.compile(r"(?s)\{\|.*?\|}|<!--.*?-->")
 COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 DROP_ELEMENT = re.compile(r"<(gallery|ref)\b[^>]*>.*?</\1\s*>", re.DOTALL | re.IGNORECASE)
 
+# 行首的列表 / 缩进标记（* # ; :）——列表项切行的位置标记，不是内容
+LINE_MARKERS = re.compile(r"(?m)^\s*[*#;:]+\s*")
+
 # [[File:…]] / [[Image:…]] 图片链接：从 [[File: 删到**第一个** ]]（与旧版非贪婪正则同口径）。
 # 说明文字里的内层链接会让删除提前收尾、残留一点文字，这是既有行为，照搬以保住金标准。
 MEDIA_LINK = re.compile(r"\[\[\s*(?:File|Image)\s*:.*?]]", re.DOTALL | re.IGNORECASE)
@@ -92,7 +95,6 @@ class CookParams:
     hunger_cooked: float | None = None
     bonus_cooked: float | None = None
     has_cooking_bonus: str | None = None
-    cooking_notes: str | None = None
 
     def suppresses_cooking_bonus(self) -> bool:
         """HasCookingBonus = no/breaks：烹饪不给饱食/加成（表现为熟食值不生成）。"""
@@ -109,10 +111,13 @@ EMPTY_PARAMS = CookParams()
 def _infoboxes(wikitext: str) -> list[dict]:
     """页面上所有 `{{Infobox item}}` 的参数表，按出现顺序。
 
+    先剥 HTML 注释再解析：注释可能落在取值里（如 `| Hunger = -30<!-- 测试用 -->`），
+    不剥的话解析出的数字会带上注释文本、被当成解析失败。
+
     只认一个模板名（普查里 `iteminfobox` 变体命中为 0，已删）。多 Infobox 页面在 134 页里
     也是 0，所以不再做 display 认领 —— 取第一个框即可。
     """
-    code = mwparserfromhell.parse(wikitext)
+    code = mwparserfromhell.parse(COMMENT.sub("", wikitext))
     return [_params(t) for t in code.filter_templates(recursive=False)
             if normalize_key(str(t.name)) == INFOBOX_TEMPLATE]
 
@@ -152,12 +157,11 @@ def read_params(wikitext: str | None, display_name: str | None) -> CookParams:
         hunger_cooked=_number(infobox, HUNGER_COOKED),
         bonus_cooked=_number(infobox, BONUS_COOKED),
         has_cooking_bonus=_lower_or_null(infobox.get(HAS_COOKING_BONUS)),
-        cooking_notes=_blank_to_null(infobox.get(COOKING_NOTES)),
     )
 
 
-def _number(params: dict, key: str) -> float | None:
-    raw = _blank_to_null(params.get(key))
+def _number(infobox: dict, key: str) -> float | None:
+    raw = _blank_to_null(infobox.get(key))
     if raw is None:
         return None
     try:
@@ -212,8 +216,7 @@ def _prose(text: str, page_name: str | None) -> str | None:
     for paragraph in _paragraphs(_skip_leading_templates(text)):
         if _has_section_heading(paragraph):
             break
-        plain = strip_markup(paragraph, page_name)
-        plain = re.sub(r"(?m)^\s*[*#;:]+\s*", "", plain).strip()
+        plain = LINE_MARKERS.sub("", strip_markup(paragraph, page_name)).strip()
         folded = re.sub(r"\s+", " ", plain).strip()
         if not folded:
             continue
@@ -253,14 +256,11 @@ def _wikitext_to_plain(raw: str | None, page_name: str | None) -> str | None:
 
     实测写成 ``* '''Source''': …`` 的列表形态，剥完标记要把行首项目符号收掉。
     """
-    stripped = strip_markup(raw, page_name)
+    stripped = LINE_MARKERS.sub("", strip_markup(raw, page_name))
     if not stripped:
         return None
-    lines: list[str] = []
-    for line in stripped.split("\n"):
-        content = re.sub(r"^\s*[*#;:]+\s*", "", line).strip()
-        if content:
-            lines.append(content)
+    lines = [line.strip() for line in stripped.split("\n")]
+    lines = [line for line in lines if line]
     return " ".join(lines) if lines else None
 
 
