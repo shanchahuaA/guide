@@ -295,9 +295,26 @@ public class TeachController {
     }
 
     /**
+     * 重置练习进度（契约 §7.3）：连对与排除集归零，之后重新抽题。
+     *
+     * <p>顺便也修掉一个真实的坑：跳级换档后排除集里还留着**旧题库的题号**，跨等级不成立。
+     */
+    @PostMapping("/api/teach/quiz/reset")
+    public BaseResult quizReset(@RequestHeader(value = "token", required = false) String token) {
+        User user = userByToken(token);
+        if (user == null) {
+            return unauthorized();
+        }
+        return quizService.reset(user.getOpenid());
+    }
+
+    /**
      * 演示用跳级后门（契约 §7.6）：当前用户 level + 1，封顶 2。
      *
      * <p>与 {@code UserController.testInsertUser} 同一类东西 —— 演示后门，留着不删。
+     *
+     * <p>换档后**顺带把连对进度清掉**：题库是按等级的，排除集里是旧等级的题号，
+     * 不清则新等级的抽题会被一堆不相干的题号误排，且前端重抽时容易撞"题目已过期"。
      */
     @PostMapping("/api/teach/dev/level")
     public BaseResult devLevel(@RequestHeader(value = "token", required = false) String token) {
@@ -307,6 +324,7 @@ public class TeachController {
         }
         int next = UserLevels.nextLevel(user.getLevel());
         userService.updateLevel(user.getOpenid(), next);
+        quizService.reset(user.getOpenid());
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, Map.of("level", next));
     }
 

@@ -7,6 +7,13 @@ const TAPS_PER_LEVEL = 3
 // 高手才配问路线（契约 §7.0 的等级矩阵）
 const EXPERT_LEVEL = 2
 
+// 跳级三段确认：每点一次都要用户点头，第三次也确认了才真的发请求
+const JUMP_CONFIRMS = [
+  '你确定要跳级吗？',
+  '你的实力真的已经达标了吗？',
+  '最后确认一次，你要跳级吗？'
+]
+
 Page({
 
   data: {
@@ -238,18 +245,63 @@ Page({
     this.loadQuiz()
   },
 
-  // 演示后门：连点三次升一级。第三次才打后端，成功后计数归零并提示
+  // 重置练习（契约 §7.3）：清连对进度 + 换一批新题。会清掉连对，所以先确认一次
+  onResetQuiz() {
+    wx.showModal({
+      title: '重置练习',
+      content: '会清空当前连对进度并重新开始，确定吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) {
+          return
+        }
+        api.request('/api/teach/quiz/reset', {
+          method: 'POST',
+          header: { token: wx.getStorageSync('token') }
+        }).then(() => {
+          this.setData({ quiz: null, quizResult: null, selectedIndex: null })
+          wx.showToast({ title: '已重置', icon: 'none' })
+          this.loadProfile()
+        }).catch(err => {
+          wx.showToast({ title: err.message || '重置失败', icon: 'none' })
+        })
+      }
+    })
+  },
+
+  // 演示后门：连点三次升一级（契约 §7.6）。**每次点击都先弹一次确认**，
+  // 三次都点「确定」才真的发请求；中途取消不计次、也不发请求
   onTapJump() {
-    const taps = this.data.taps + 1
-    if (taps < TAPS_PER_LEVEL) {
-      this.setData({ taps })
-      return
-    }
-    this.setData({ taps: 0 })
+    const step = this.data.taps
+    wx.showModal({
+      title: '跳级确认',
+      content: JUMP_CONFIRMS[step],
+      confirmText: '确定',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) {
+          return
+        }
+        const taps = step + 1
+        if (taps < TAPS_PER_LEVEL) {
+          this.setData({ taps })
+          return
+        }
+        this.setData({ taps: 0 })
+        this.doJump()
+      }
+    })
+  },
+
+  doJump() {
     api.request('/api/teach/dev/level', {
       method: 'POST',
       header: { token: wx.getStorageSync('token') }
     }).then(() => {
+      // 等级换了、题库也换了：把手上这道旧题清掉，loadProfile 会自动抽新等级的题。
+      // 后端在 dev/level 里也把连对进度清了（旧排除集里是旧题库的题号）
+      this.setData({ quiz: null, quizResult: null, selectedIndex: null })
       wx.showToast({ title: '成功跳级', icon: 'none' })
       this.loadProfile()
     }).catch(err => {

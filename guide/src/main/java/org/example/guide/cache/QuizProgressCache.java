@@ -72,4 +72,21 @@ public class QuizProgressCache {
     public static String keyOf(String openid) {
         return KEY_PREFIX + openid;
     }
+
+    /**
+     * 清掉某个用户的连对进度。
+     *
+     * <p>两处会调：**练习重置**（用户自己点）与**跳级换档**（等级变了，题库也换了）——
+     * 排除集里存的是**旧题库的题号**，跨等级不成立，留着重则误排、轻则无意义。
+     */
+    public void evict(String openid) {
+        if (openid == null || openid.isBlank()) {
+            return;
+        }
+        try {
+            redis.delete(keyOf(openid));
+        } catch (Exception e) {
+            log.warn("清连对缓存失败：openid={}", openid, e);
+        }
+    }
 }

@@ -4,6 +4,13 @@ const api = require('../../utils/api')
 // 跳级后门：连点三次算升一级（契约 §7.6），与 teach 页同一套口径
 const TAPS_PER_LEVEL = 3
 
+// 跳级三段确认：每点一次都要用户点头，第三次也确认了才真的发请求
+const JUMP_CONFIRMS = [
+  '你确定要跳级吗？',
+  '你的实力真的已经达标了吗？',
+  '最后确认一次，你要跳级吗？'
+]
+
 // 后端给的 avatar 是相对路径（/avatars/xxx.png），小程序 <image> 必须带 origin 才加载得出来。
 // 这里自带一份而不去用 utils/api.js 的 assetUrl —— 那个文件上还有未提交的改动，避免缠在一起
 function absoluteUrl(path) {
@@ -164,21 +171,35 @@ Page({
 
   // ── 身份：演示用跳级（契约 §7.6）────────────────────────────────────────
 
+  // **每次点击都先弹一次确认**，三次都点「确定」才真的发请求；中途取消不计次、也不发请求
   onTapJump() {
-    const taps = this.data.taps + 1
-    if (taps < TAPS_PER_LEVEL) {
-      this.setData({ taps })
-      return
-    }
-    this.setData({ taps: 0 })
-    api.request('/api/teach/dev/level', {
-      method: 'POST',
-      header: { token: wx.getStorageSync('token') }
-    }).then(() => {
-      wx.showToast({ title: '成功跳级', icon: 'none' })
-      this.loadProfile()
-    }).catch(err => {
-      wx.showToast({ title: err.message || '跳级失败', icon: 'none' })
+    const step = this.data.taps
+    wx.showModal({
+      title: '跳级确认',
+      content: JUMP_CONFIRMS[step],
+      confirmText: '确定',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) {
+          return
+        }
+        const taps = step + 1
+        if (taps < TAPS_PER_LEVEL) {
+          this.setData({ taps })
+          return
+        }
+        this.setData({ taps: 0 })
+        api.request('/api/teach/dev/level', {
+          method: 'POST',
+          header: { token: wx.getStorageSync('token') }
+        }).then(() => {
+          wx.showToast({ title: '成功跳级', icon: 'none' })
+          // 后端在 dev/level 里已清掉连对进度；这里刷新身份条（练习面板下次进入会重抽）
+          this.loadProfile()
+        }).catch(err => {
+          wx.showToast({ title: err.message || '跳级失败', icon: 'none' })
+        })
+      }
     })
   },
 

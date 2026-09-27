@@ -58,6 +58,13 @@ page {
   color: #9a9384;
 }
 
+/* 次级按钮（重置练习）：不上底色、只留描边，和主按钮拉开层级 */
+.btn--ghost {
+  color: #9a9384;
+  background: transparent;
+  border-color: #e6e0cc;
+}
+
 .answer {
   margin-top: 24rpx;
   padding: 24rpx;

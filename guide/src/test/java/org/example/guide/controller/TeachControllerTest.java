@@ -160,6 +160,24 @@ class TeachControllerTest {
         assertThat(result.getCode()).isEqualTo(-200);
     }
 
+    // ── 练习重置 / 跳级（§7.3 / §7.6）──────────────────────────────────────
+
+    @Test
+    void 重置练习把清进度交给服务() {
+        controller.quizReset(TOKEN);
+
+        verify(quizService).reset(TOKEN);
+    }
+
+    @Test
+    void 跳级换档时顺带清空连对进度() {
+        controller.devLevel(TOKEN);
+
+        verify(userService).updateLevel(TOKEN, UserLevels.BEGINNER);
+        // 题库按等级，换档后旧排除集里的题号不再成立，必须一并清
+        verify(quizService).reset(TOKEN);
+    }
+
     private void givenUser(int level) {
         User user = new User();
         user.setOpenid(TOKEN);

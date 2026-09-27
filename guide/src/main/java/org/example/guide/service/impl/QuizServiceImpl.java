@@ -136,6 +136,17 @@ public class QuizServiceImpl implements IQuizService {
         return quizProgressCache.get(openid).getStreak();
     }
 
+    @Override
+    public BaseResult reset(String openid) {
+        User user = userService.findByOpenid(openid);
+        if (user == null) {
+            return fail("请先登录");
+        }
+        // 只清进度，不碰 level —— 等级是"练出来的成果"，重置练习不该把等级也退了
+        quizProgressCache.evict(openid);
+        return BaseResult.setResult(ResultCodeEnum.SUCCESS, null);
+    }
+
     private static int levelOf(User user) {
         return user.getLevel() == null ? UserLevels.NOVICE : user.getLevel();
     }

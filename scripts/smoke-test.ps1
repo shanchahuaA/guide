@@ -1077,6 +1077,20 @@ if ($null -eq $loginToken -or $loginToken -eq '') {
         $quizKeys = @($quizNextData.PSObject.Properties | ForEach-Object { $_.Name })
         Assert-Equal $quizKeys.Count 3 'quiz/next 只有题号 / 题干 / 选项三个键' ('实际键：' + ($quizKeys -join ', '))
 
+        # 重置练习（契约 §7.3）：先答对一题把连对顶上 1，再重置，看它是否归零。
+        # 重置只清进度、不退等级 —— 所以这里只断 streak，不断 level。
+        $beforeReset = Get-Data (Invoke-Json 'POST' '/api/teach/quiz/next' 60 $quizHeader)
+        $beforeResetId = [int](Get-Field $beforeReset 'questionId')
+        $null = Invoke-Json 'POST' '/api/teach/quiz/answer' 60 $quizHeader @{ questionId = $beforeResetId; choice = ($beforeResetId % 4) }
+        $streakBeforeReset = Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)) 'streak'
+        Assert-Equal $streakBeforeReset 1 '答对一题后 streak=1（重置断言的前提）'
+
+        $resetResp = Invoke-Json 'POST' '/api/teach/quiz/reset' 60 $quizHeader
+        Assert-True ((Get-Field $resetResp.Json 'code') -eq 200) 'quiz/reset 回 200' `
+            ("实际 code=" + (Get-Field $resetResp.Json 'code') + " message=" + (Get-Field $resetResp.Json 'message'))
+        $streakAfterReset = Get-Field (Get-Data (Invoke-Json 'GET' '/api/teach/profile' 60 $quizHeader)) 'streak'
+        Assert-Equal $streakAfterReset 0 '重置后 streak 归零'
+
         # 连答 10 题正确（题 i 的正确项是 i % 4）
         $quizFailed = $false
         $lastAnswer = $null
