@@ -1,0 +1,41 @@
+<!--pages/archive/archive.wxml-->
+<view class="search-sticky">
+  <view class="search-bar">
+    <icon class="search-icon" type="search" size="16" color="#8a8a8a"></icon>
+    <input
+      class="search-input"
+      value="{{keyword}}"
+      placeholder="搜索图鉴条目"
+      placeholder-class="search-placeholder"
+      confirm-type="search"
+      bindinput="onKeywordInput"
+      bindconfirm="onSearch"
+    />
+    <view wx:if="{{keyword}}" class="search-clear" bindtap="onClearKeyword">×</view>
+  </view>
+
+  <scroll-view class="type-bar" scroll-x>
+    <view
+      wx:for="{{primaryTypes}}"
+      wx:key="label"
+      class="type-chip {{index === activeTypeIndex ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onSelectType"
+    >{{item.label}}</view>
+  </scroll-view>
+</view>
+
+<view class="grid">
+  <view
+    class="cell"
+    wx:for="{{items}}"
+    wx:key="id"
+    data-index="{{index}}"
+    bindtap="onTapItem"
+  >
+    <view class="tile">
+      <image wx:if="{{item.icon}}" class="tile-icon" src="{{item.icon}}" mode="aspectFit" lazy-load />
+    </view>
+    <view class="cell-name">{{item.nameZh}}</view>
+  </view>
+</view>

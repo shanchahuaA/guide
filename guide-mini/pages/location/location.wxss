@@ -1,0 +1,7 @@
+/* pages/location/location.wxss */
+
+page {
+  background-color: #f7f4ea;
+  background-image: radial-gradient(#e2dcc6 1.5rpx, transparent 1.5rpx);
+  background-size: 20rpx 20rpx;
+}

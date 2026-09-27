@@ -1,0 +1,36 @@
+<!--pages/main/main.wxml-->
+
+<!-- 背景层：固定定位，不跟着页面滚。布往下拉时露出的就是这一层 -->
+<view class="bg">
+  <image class="bg-img" src="/images/keyart-v.jpg" mode="aspectFill" />
+</view>
+
+<view class="page">
+  <view class="hero">
+    <image class="hero-img" src="/images/keyart-v.jpg" mode="widthFix" />
+  </view>
+
+  <!-- 底布：圆角压在背景图下沿，一路铺到底，把 tab 栏后面的空隙盖住。
+       用 transform 位移实现"往下拖"（transform 不参与布局，不会把后面内容挤走） -->
+  <view
+    class="sheet"
+    style="transform: translateY({{dragY}}px)"
+    bindtouchstart="onDragStart"
+    bindtouchmove="onDragMove"
+    bindtouchend="onDragEnd"
+  >
+    <view class="welcome">
+      <view class="welcome-title">欢迎来到登峰宝典</view>
+      <view class="welcome-sub">PEAK 图鉴 · 中文速查</view>
+    </view>
+
+    <view class="intro">
+      <view class="intro-item">收录 134 条游戏内物品，食物与道具一站查全</view>
+      <view class="intro-item">生食熟食效果左右对比，下锅前先看清楚</view>
+      <view class="intro-item">按主类型、标签、生态筛选，想找什么点一下就出来</view>
+    </view>
+
+    <!-- 占位：把布撑出可滑动的长度，等有真实模块后删掉 -->
+    <view class="filler"></view>
+  </view>
+</view>

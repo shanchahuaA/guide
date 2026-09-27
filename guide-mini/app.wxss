@@ -1,4 +1,14 @@
 /**app.wxss**/
+
+/* 全局页面底色：米黄 + 点阵纹理（纯 CSS 画，不需要贴图）。
+   放在 app.wxss 是为了所有页面自动一致；页面自带的 page{} 规则会覆盖这里，
+   所以重设 page 的页面要自行带上这两条背景属性 */
+page {
+  background-color: #f7f4ea;
+  background-image: radial-gradient(#e2dcc6 1.5rpx, transparent 1.5rpx);
+  background-size: 20rpx 20rpx;
+}
+
 .container {
   height: 100%;
   display: flex;

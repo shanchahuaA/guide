@@ -1,13 +1,50 @@
 {
   "pages": [
-    "pages/index/index",
+    
+    "pages/main/main",
+    "pages/archive/archive",
+    "pages/detail/detail",
+    "pages/location/location",
+    "pages/teach/teach",
+
+
     "pages/logs/logs"
   ],
+  "tabBar": {
+    "custom": true,
+    "list": [
+      {
+        "pagePath": "pages/main/main",
+        "text": "主页",
+        "iconPath":"images/main.png",
+        "selectedIconPath":"images/main.png"
+      },
+      {
+        "pagePath": "pages/archive/archive",
+        "text": "图鉴",
+        "iconPath":"images/item.png",
+        "selectedIconPath":"images/item.png"
+      },
+      {
+        "pagePath": "pages/location/location",
+        "text": "地图",
+        "iconPath":"images/map.png",
+        "selectedIconPath":"images/map.png"
+      },
+      {
+        "pagePath": "pages/teach/teach",
+        "text": "快速上手",
+        "iconPath":"images/guidebook.png",
+        "selectedIconPath":"images/guidebook.png"
+      }
+    ]
+  },
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Weixin",
+    "navigationBarTitleText": "登峰宝典",
     "navigationBarBackgroundColor": "#ffffff"
   },
+
   "style": "v2",
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",

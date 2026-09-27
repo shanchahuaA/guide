@@ -1,0 +1,96 @@
+/* pages/main/main.wxss */
+
+/* 整页可上下滑动 */
+page {
+  height: 100%;
+}
+
+/* 背景层：固定在下半屏，布往下拉时露出来。
+   不设 z-index，让它在文档流里自然垫底 */
+.bg {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 100%;
+}
+
+.bg-img {
+  width: 100%;
+  height: 100%;
+}
+
+/* 内容层：要在背景层之上 */
+.page {
+  position: relative;
+  z-index: 1;
+}
+
+/* 顶部主视觉：图片自带上下留白，用负外边距裁掉，只留主体。
+   这个负值越大，底部内容越往上顶；要拉开距离就往小了改（或改成 0） */
+.hero {
+  margin-top: -80rpx;
+}
+
+.hero-img {
+  display: block;
+  width: 100%;
+}
+
+/* 底布：负外边距盖住图片下沿，形成"布压在图上"的层叠。
+   压的量对齐参考图第一张：图片主体基本露完，布只盖住最下一条边 */
+.sheet {
+  position: relative;
+  z-index: 1;
+  margin-top: -400rpx;
+  padding: 40rpx 32rpx 200rpx; /* 底部让开 100rpx 的 tab 栏 + 安全区 */
+  background: #fffdf7;
+  border-radius: 40rpx 40rpx 0 0;
+  box-shadow: 0 -8rpx 32rpx rgba(90, 70, 30, 0.12);
+  /* 松手后弹回；拖动过程中会被 .dragging 关掉 */
+  transition: transform 280ms cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+/* 拖动中关掉过渡，否则手指还没松开，transform 就在被动画追赶 */
+.sheet.dragging {
+  transition: none;
+}
+
+.welcome-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #2b2823;
+}
+
+.welcome-sub {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  color: #9a9384;
+}
+
+.intro {
+  margin-top: 40rpx;
+}
+
+.intro-item {
+  position: relative;
+  padding-left: 32rpx;
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #4a453b;
+}
+
+/* 用 · 当行首标记，不用图片 */
+.intro-item::before {
+  content: '·';
+  position: absolute;
+  left: 8rpx;
+  color: #b9ae94;
+  font-weight: 700;
+}
+
+/* 布内的填充内容：把布撑高，保证在小屏上也能滑起来 */
+.filler {
+  height: 40vh;
+}

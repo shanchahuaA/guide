@@ -1,0 +1,127 @@
+/* pages/archive/archive.wxss */
+
+/* 吸顶层：底色必须不透明且与页面一致，否则滚动内容会从缝里透出来 */
+.search-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 20rpx 24rpx 16rpx;
+  background: #f7f4ea;
+}
+
+/* 胶囊形搜索框：圆角取高度的一半 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 72rpx;
+  padding: 0 24rpx;
+  background: #ffffff;
+  border: 2rpx solid #e3e4e6;
+  border-radius: 36rpx;
+}
+
+.search-icon {
+  flex-shrink: 0;
+  margin-right: 14rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 100%;
+  font-size: 28rpx;
+  color: #1a1a1a;
+}
+
+.search-placeholder {
+  color: #9a9a9a;
+}
+
+.search-clear {
+  flex-shrink: 0;
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 40rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: #9a9a9a;
+}
+
+/* 横向滚动的筛选条：nowrap + 子项 inline-block 才能溢出滚动 */
+.type-bar {
+  width: 100%;
+  margin-top: 16rpx;
+  white-space: nowrap;
+}
+
+.type-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 筛选胶囊：圆角同样取高度的一半 */
+.type-chip {
+  display: inline-block;
+  box-sizing: border-box;
+  height: 56rpx;
+  padding: 0 28rpx;
+  margin-right: 16rpx;
+  font-size: 26rpx;
+  line-height: 52rpx;
+  color: #4a4a4a;
+  background: #ffffff;
+  border: 2rpx solid #e3e4e6;
+  border-radius: 28rpx;
+}
+
+.type-chip.active {
+  color: #ffffff;
+  background: #2b2b2b;
+  border-color: #2b2b2b;
+}
+
+/* ---------- 图鉴网格 ---------- */
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8rpx 16rpx 140rpx; /* 底部让开 100rpx 的自定义 tab 栏 */
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  width: 25%;
+  padding: 8rpx;
+}
+
+/* 方形格：padding-top 100% 让高度跟着宽度走。
+   百分比 padding 按「包含块的宽度」算，这里的包含块是 .cell，所以正好是正方形。
+   不用 aspect-ratio 是因为老安卓 webview 不支持 */
+.tile {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  padding-top: 100%;
+  background: #f0ebdb;
+  border: 2rpx solid #ded7c2;
+  border-radius: 24rpx;
+}
+
+/* 图标绝对定位铺在方形格中间，四周留白由百分比控制 */
+.tile-icon {
+  position: absolute;
+  top: 14%;
+  left: 14%;
+  width: 72%;
+  height: 72%;
+}
+
+.cell-name {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.3;
+  color: #3d3a33;
+  text-align: center;
+}
