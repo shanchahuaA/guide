@@ -160,22 +160,24 @@ class TeachControllerTest {
         assertThat(result.getCode()).isEqualTo(-200);
     }
 
-    // ── 练习重置 / 跳级（§7.3 / §7.6）──────────────────────────────────────
+    // ── 重置学习进度 / 跳级（§7.3 / §7.6）──────────────────────────────────
 
     @Test
-    void 重置练习把清进度交给服务() {
+    void 重置学习进度把请求交给服务() {
         controller.quizReset(TOKEN);
 
         verify(quizService).reset(TOKEN);
     }
 
     @Test
-    void 跳级换档时顺带清空连对进度() {
+    void 跳级换档时只清连对不动等级() {
         controller.devLevel(TOKEN);
 
         verify(userService).updateLevel(TOKEN, UserLevels.BEGINNER);
-        // 题库按等级，换档后旧排除集里的题号不再成立，必须一并清
-        verify(quizService).reset(TOKEN);
+        // 换档要清旧排除集，但**不能**调那个连等级一起归零的 reset ——
+        // 否则刚升的这一级会被立刻抹掉，跳级变成空操作
+        verify(quizService).resetProgress(TOKEN);
+        verify(quizService, never()).reset(TOKEN);
     }
 
     private void givenUser(int level) {

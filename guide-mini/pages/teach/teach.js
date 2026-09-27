@@ -273,31 +273,6 @@ Page({
     this.loadQuiz()
   },
 
-  // 重置练习（契约 §7.3）：清连对进度 + 换一批新题。会清掉连对，所以先确认一次
-  onResetQuiz() {
-    wx.showModal({
-      title: '重置练习',
-      content: '会清空当前连对进度并重新开始，确定吗？',
-      confirmText: '确定',
-      cancelText: '取消',
-      success: res => {
-        if (!res.confirm) {
-          return
-        }
-        api.request('/api/teach/quiz/reset', {
-          method: 'POST',
-          header: { token: wx.getStorageSync('token') }
-        }).then(() => {
-          this.setData({ quiz: null, quizResult: null, selectedIndex: null })
-          wx.showToast({ title: '已重置', icon: 'none' })
-          this.loadProfile()
-        }).catch(err => {
-          wx.showToast({ title: err.message || '重置失败', icon: 'none' })
-        })
-      }
-    })
-  },
-
   // 演示后门：连点三次升一级（契约 §7.6）。**每次点击都先弹一次确认**，
   // 三次都点「确定」才真的发请求；中途取消不计次、也不发请求
   onTapJump() {

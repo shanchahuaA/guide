@@ -298,9 +298,10 @@ public class TeachController {
     }
 
     /**
-     * 重置练习进度（契约 §7.3）：连对与排除集归零，之后重新抽题。
+     * 重置学习进度（契约 §7.3）：连对与排除集归零、**等级退回菜鸟**，之后重新抽题。
      *
-     * <p>顺便也修掉一个真实的坑：跳级换档后排除集里还留着**旧题库的题号**，跨等级不成立。
+     * <p>个人页的「重置进度」按钮调它 —— 是"从头再来"，所以高手也退回第一档。
+     * 跳级换档那种"只清过程状态、不动等级"的场景走 {@code quizService.resetProgress}。
      */
     @PostMapping("/api/teach/quiz/reset")
     public BaseResult quizReset(@RequestHeader(value = "token", required = false) String token) {
@@ -318,6 +319,8 @@ public class TeachController {
      *
      * <p>换档后**顺带把连对进度清掉**：题库是按等级的，排除集里是旧等级的题号，
      * 不清则新等级的抽题会被一堆不相干的题号误排，且前端重抽时容易撞"题目已过期"。
+     * ⚠️ 这里只能清过程状态（{@code resetProgress}）—— 用那个连等级一起归零的
+     * {@code reset} 的话，刚加上去的一级会被立刻抹掉，跳级就成了空操作。
      */
     @PostMapping("/api/teach/dev/level")
     public BaseResult devLevel(@RequestHeader(value = "token", required = false) String token) {
@@ -327,7 +330,7 @@ public class TeachController {
         }
         int next = UserLevels.nextLevel(user.getLevel());
         userService.updateLevel(user.getOpenid(), next);
-        quizService.reset(user.getOpenid());
+        quizService.resetProgress(user.getOpenid());
         return BaseResult.setResult(ResultCodeEnum.SUCCESS, Map.of("level", next));
     }
 

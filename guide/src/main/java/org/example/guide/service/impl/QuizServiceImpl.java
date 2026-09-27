@@ -20,6 +20,7 @@ import org.example.guide.utils.ResultCodeEnum;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -180,9 +181,17 @@ public class QuizServiceImpl implements IQuizService {
         if (user == null) {
             return fail("请先登录");
         }
-        // 只清进度，不碰 level —— 等级是"练出来的成果"，重置练习不该把等级也退了
+        // 连对、排除集、**等级**一起归零：这是"重置进度"而不是"清缓存" ——
+        // 高手也要退回菜鸟、从第一档重新练起
         quizProgressCache.evict(openid);
-        return BaseResult.setResult(ResultCodeEnum.SUCCESS, null);
+        userService.updateLevel(openid, UserLevels.NOVICE);
+        return BaseResult.setResult(ResultCodeEnum.SUCCESS, Map.of("level", UserLevels.NOVICE));
+    }
+
+    @Override
+    public void resetProgress(String openid) {
+        // 跳级换档专用：只清过程状态，**不动等级**（等级是刚加完的那一格）
+        quizProgressCache.evict(openid);
     }
 
     private static int levelOf(User user) {
