@@ -1,5 +1,6 @@
 package org.example.guide.ai;
 
+import org.example.guide.crawler.TagDictionary;
 import org.example.guide.pojo.Effect;
 import org.example.guide.pojo.Item;
 import org.example.guide.pojo.ItemTag;
@@ -137,9 +138,9 @@ public final class ItemContextBuilder {
             if (tag == null || tag.getValue() == null) {
                 continue;
             }
-            if ("biome".equals(tag.getCode())) {
+            if (TagDictionary.BIOME.equals(tag.getCode())) {
                 sb.append("生态=").append(nullToEmpty(tag.getNameZh())).append('/').append(tag.getValue()).append('，');
-            } else if ("rarity".equals(tag.getCode())) {
+            } else if (TagDictionary.RARITY.equals(tag.getCode())) {
                 sb.append("稀有度=").append(nullToEmpty(tag.getNameZh())).append('/').append(tag.getValue()).append('，');
             }
         }
