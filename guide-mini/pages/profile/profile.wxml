@@ -14,10 +14,13 @@
   <view class="section">
     <view class="section-title">头像与昵称</view>
     <view class="id-row">
-      <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+      <!-- 圆形靠外面的 view 裁：button 上的 overflow/border-radius 在微信里裁不住子元素，
+           所以按钮做成透明的一层盖在上面，只管触发 chooseAvatar -->
+      <view class="avatar-wrap">
         <image class="avatar" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}" />
         <view class="avatar-placeholder" wx:else>点击设置</view>
-      </button>
+        <button class="avatar-hit" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar"></button>
+      </view>
       <input class="input nickname-input" type="nickname" placeholder="填个昵称"
              value="{{nicknameDraft}}" bindinput="onNicknameInput" bindchange="onNicknameInput" />
     </view>
