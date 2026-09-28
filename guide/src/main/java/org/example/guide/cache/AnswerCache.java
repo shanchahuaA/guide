@@ -59,7 +59,7 @@ public class AnswerCache {
      * 缓存一条成功的回答。失败只记日志 —— 这一轮的回答已经拿到了，
      * 不能因为"写不进缓存"把一次成功的问答变成失败（与 {@code ItemCache} 回填同一口径）。
      *
-     * <p>不设 TTL：回答的正确性只取决于图鉴数据，而图鉴变了会走 {@link #evictAll()}（采集跑完）。
+     * <p>不设 TTL：回答的正确性只取决于图鉴数据，而图鉴变了会走 {@link #evictAll()}。
      */
     public void put(String question, String answer) {
         if (question == null || question.isBlank() || answer == null || answer.isBlank()) {
@@ -73,8 +73,11 @@ public class AnswerCache {
     }
 
     /**
-     * 删掉全部回答缓存。采集跑完调它 —— 回答的依据是图鉴数据，图鉴变了旧回答就该作废
+     * 删掉全部回答缓存 —— 回答的依据是图鉴数据，图鉴变了旧回答就该作废
      * （与 {@code ItemCache.evict()} 同一个理由，见 CONTEXT.md「缓存」）。
+     *
+     * <p>图鉴变化只发生在应用外面的采集脚本里，所以这个应用内没有调用方；
+     * 脚本按同样的 key 口径直接删（{@code guide/tools/crawl_items.py}）。
      *
      * <p>用 {@code KEYS + DEL} 而不是 {@code SCAN}：演示环境里问答量是几十条的量级，
      * {@code KEYS} 的代价可以忽略，换来的是一次调用就删干净。

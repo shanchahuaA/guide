@@ -1,8 +1,8 @@
 package org.example.guide.pojo.dto;
 
 import lombok.Data;
-import org.example.guide.crawler.EffectDictionary;
-import org.example.guide.crawler.TagDictionary;
+import org.example.guide.dictionary.EffectDictionary;
+import org.example.guide.dictionary.TagDictionary;
 import org.example.guide.pojo.Effect;
 import org.example.guide.pojo.Item;
 import org.example.guide.pojo.ItemTag;

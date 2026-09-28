@@ -13,8 +13,9 @@ description_zh / name_zh 是「对照表回填」的地盘，一个字都不动 
 也是"不碰中文名"的落实。
 
 落库后删掉采集影响的三个缓存 key（图鉴全量 / 问答 / 题库）——「应用可见」的最后一环。
-与 Java 采集的 `CrawlerServiceImpl.evictItemCache()` 同一口径；用户连对进度（`quiz:progress`）
-是用户状态、不是缓存，不删。
+删的是应用侧那三个缓存组件（`ItemCache` / `AnswerCache` / `QuizBankCache`）的 key，
+口径与它们的常量一一对得上 —— #25 之后那三个 `evict*` 方法在应用里已没有调用方，
+删 key 的就是这里。用户连对进度（`quiz:progress`）是用户状态、不是缓存，不删。
 
 用法::
 
@@ -54,21 +55,21 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN = REPO_ROOT / "guide" / "src" / "test" / "resources" / "crawler" / "golden-items.json"
 
 WIKI_API = "https://peak.wiki.gg/api.php"
-# 与 crawler/WikiApiClient.USER_AGENT 同一个：伪装 Googlebot 是绕过 Cloudflare 的实测通道
+# 伪装 Googlebot 是绕过 Cloudflare 的实测通道（重写时照搬的原口径，实测过的）
 USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
 
-# 与 crawler/WikiApiClient 一致：全量 134 行一次拉完，不分页
+# 全量 134 行一次拉完，不分页
 LIMIT = 500
 TABLES = "Items"
 
-# 与 WikiApiClient.WIKITEXT_TITLES_PER_REQUEST 一致（MediaWiki 对普通用户的上限）
+# MediaWiki 对普通用户的上限：一次最多查 50 个标题
 WIKITEXT_TITLES_PER_REQUEST = 50
 
 # Windows 文件名建不出来的字符（`?` 是实测会遇到的那个：数据源上有 File:Bugle?.png）。
 # 与 freeze_baseline.py 的 UNSAFE_FILE_CHARS 同一口径：离线语料按同样的名字落盘。
 UNSAFE_FILE_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
-# 与 crawler/WikiApiClient.FIELDS 一致。加字段要同时改 CargoRow.from_map
+# 拉的字段清单。加字段要同时改 CargoRow.from_map
 FIELDS = ",".join([
     "_pageName=page", "display", "type", "rarity", "biome", "location", "source",
     "uses", "weight", "hunger", "bonus", "heat", "cold", "coldTime", "injury",
@@ -289,7 +290,8 @@ def _bool(m: dict, key: str) -> bool:
 
 
 # --------------------------------------------------------------------------------------
-# 中文名字典（写死；与 crawler/TagDictionary、crawler/EffectDictionary 一一对应）
+# 中文名字典（写死）。应用侧 dictionary/ 下有一份同口径的副本 —— 那份管响应组装，
+# 这份管落库时写进 JSON 列的 nameZh，改字典要两边一起改
 # --------------------------------------------------------------------------------------
 
 TYPE_ZH = {
@@ -357,7 +359,7 @@ HUNGER_FACTOR = 2.0
 BONUS_FACTOR = 1.5
 BONUS_FALLBACK = 10.0
 
-# location 的原值形如 [[Crash Site]] / [[Peak (biome)|Peak]]；与 crawler/WikitextUtil.LINK 同一口径
+# location 的原值形如 [[Crash Site]] / [[Peak (biome)|Peak]]，剥掉方括号只留显示文本
 LINK = re.compile(r"\[\[\s*([^\[\]|]*)\|([^\[\]]*?)\s*\]\]|\[\[\s*([^\[\]|]*?)\s*\]\]")
 
 
@@ -392,7 +394,7 @@ def convert(row: CargoRow, params: page_source.CookParams) -> tuple[dict, list[s
     item = {
         "nameEn": name_en,
         "weight": row.weight,
-        # 图标路径由英文名现算：文件名规则与 Java 版的 IconFileNames 同一口径（见 item_icons）
+        # 图标路径由英文名现算：与 utils/IconFileNames（应用侧算 slug 的那份）同一套白名单，见 item_icons
         "icon": item_icons.icon_path(name_en),
         "tag": build_tags(row, type_values, cooked, unknown),
         "effect": build_raw_effects(row) + cooked,
@@ -533,12 +535,12 @@ def persist(items: list[dict], failures: list[dict]) -> int:
     """逐条 upsert；单条失败只跳过那一条并记进 failures，不影响整批。
 
     表上没有 name_en 唯一索引（唯一真相是 pojo/Item.java，仓库里没有 DDL），
-    所以照 Java 版的做法：先按 name_en 查 id，命中就更新、否则插入。
+    所以：先按 name_en 查 id，命中就更新、否则插入。
 
     只写 weight / icon / tag / effect / description / achievement 六列：name_zh、
     description_zh 是「对照表回填」的地盘，一个字都不动 —— 这既是"已有中文名保留"的实现，
     也是"不碰中文名"的落实。icon 是 #24 的地盘：某张图标没下成功时这里是 NULL，
-    条目照常落库、图标留空（与 Java 版同口径）。
+    条目照常落库、图标留空。
     """
     import pymysql
 
@@ -757,7 +759,7 @@ def load_wikitext(args, page_names: list[str]) -> tuple[dict[str, str], list[str
     """取页面源文：`--wikitext-dir` 走离线语料，否则联网批量拉。
 
     整体失败只记警告、不中断采集：源文少了只会让熟食值退回公式、描述留空，
-    而结构化那半边是独立的、丢不起（与 Java 版 fetchWikitext 同一取舍）。
+    而结构化那半边是独立的、丢不起。
     """
     if args.wikitext_dir:
         return read_wikitext_dir(args.wikitext_dir, page_names), []

@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 /**
  * 用户头像存在哪、对外长什么 URL。
  *
- * <p>与 {@code crawler/IconStorage} 同一个思路：**写盘的一方**（{@code TeachController} 收上传）
+ * <p>与 {@code IconStorage} 同一个思路：**写盘的一方**（{@code TeachController} 收上传）
  * 和**对外暴露的一方**（{@link WebMvcConfig} 的静态资源映射）共用这一份路径，
  * 免得两边各写一份默认值、最后对不上（"文件写到 A、HTTP 去 B 找"最难查）。
  *

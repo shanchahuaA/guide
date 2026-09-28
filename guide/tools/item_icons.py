@@ -1,12 +1,12 @@
 """图标本地化（票 #24）：条目英文名 → 数据源直链 → 本地图标目录。
 
 图鉴条目的 ``icon`` 列存的是**相对路径**（``/icons/Hot_Dog.png``），文件落在后端
-对外暴露的那个目录（``application.yml`` 的 ``guide.crawler.icon-dir``；从 ``guide/``
+对外暴露的那个目录（``application.yml`` 的 ``guide.icon-dir``；从 ``guide/``
 启动后端就是 ``guide/icons/``）。两个都不动：应用与小程序读到的 URL 与之前一模一样。
 
 三件事按这个顺序做：
 
-1. **文件名规则** —— 与 Java 版 ``crawler/IconFileNames`` 同一口径：空格换下划线，
+1. **文件名规则** —— 与应用侧 ``utils/IconFileNames``（算 slug 用的那份）同一套：空格换下划线，
    再按白名单 ``[A-Za-z0-9._'()-]`` 把其余字符换成下划线。这条白名单是两端约束的交集：
    URL 路径段里不用转义（所以 ``icon`` 列的路径不必再编码），又都是合法 Windows 文件名。
    数据源上真有一个 ``File:Bugle?.png`` —— ``?`` 既建不出 Windows 文件，又会被 URL 当成
@@ -21,7 +21,7 @@
 装成 134 条单文件失败只会让报告更难读。
 
 这里是唯一一处联网取二进制的地方；与 ``crawl_items`` / ``freeze_baseline`` 重复的几处小工具
-（``http_json``、失败原因取异常文本、UA 与 api.php 常量）留待 #25 收口。
+（``http_json``、失败原因取异常文本、UA 与 api.php 常量）是有意留着的，合并是独立的一票。
 """
 
 import json
@@ -33,25 +33,25 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 WIKI_API = "https://peak.wiki.gg/api.php"
-# 与 crawler/WikiApiClient.USER_AGENT 同一个：伪装 Googlebot 是绕过 Cloudflare 的实测通道
+# 伪装 Googlebot 是绕过 Cloudflare 的实测通道（重写时照搬的原口径，实测过的）
 USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
 
-# 与 application.yml 的 guide.crawler.icon-url-prefix 一致（WebMvcConfig 的静态映射也用这个）
+# 与 application.yml 的 guide.icon-url-prefix 一致（WebMvcConfig 的静态映射也用这个）
 DEFAULT_URL_PREFIX = "/icons"
 
-# 图标落盘目录的默认值，就是后端对外暴露的那一个：application.yml 的 guide.crawler.icon-dir 是 `icons`，
+# 图标落盘目录的默认值，就是后端对外暴露的那一个：application.yml 的 guide.icon-dir 是 `icons`，
 # 而后端的工作目录必须是 guide/（见 CLAUDE.md），两者指向同一个目录。
 # 与 URL 前缀放在一起，是因为"写盘方"与"暴露方"必须对齐 —— 各写一份默认值迟早会对不上。
 DEFAULT_DIRECTORY = Path(__file__).resolve().parents[2] / "guide" / "icons"
 
-# 与 crawler/IconFileNames.UNSAFE 同一口径：白名单之外的字符一律换成下划线
+# 白名单之外的字符一律换成下划线（与 utils/IconFileNames 同一套白名单 —— 应用侧算 slug 用的也是它）
 SAFE = re.compile(r"[^A-Za-z0-9._'()-]")
 
 # 数据源的图片命名空间，以及那 134 张图统一的扩展名
 FILE_NAMESPACE = "File:"
 SUFFIX = ".png"
 
-# 与 WikiApiClient.MAX_TITLES_PER_REQUEST 一致（MediaWiki 对普通用户的上限）
+# MediaWiki 对普通用户的上限：一次最多查 50 个标题
 TITLES_PER_REQUEST = 50
 
 
@@ -168,7 +168,7 @@ def _query_imageinfo(titles: list[str], http_json) -> dict:
 
     # 数据源会对标题做规范化（下划线↔空格、首字母大写），响应里的 title 因此可能跟请求的写法不同：
     # 先按 normalized 对照还原成**请求时**的标题，对不上再拿请求时的写法直接找一次 ——
-    # 两条都试过才判定"数据源上没有这个文件"（与 Java 版 fetchImageUrls 同一顺序）
+    # 两条都试过才判定"数据源上没有这个文件"
     normalized = {entry["from"]: entry["to"] for entry in query_obj.get("normalized") or []}
     urls: dict[str, str] = {}
     for title in titles:

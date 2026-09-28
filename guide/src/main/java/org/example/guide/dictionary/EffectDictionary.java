@@ -1,4 +1,4 @@
-package org.example.guide.crawler;
+package org.example.guide.dictionary;
 
 import java.util.Map;
 import java.util.Set;
@@ -18,11 +18,15 @@ import java.util.Set;
  * 已知库里出现过的熟食变体只有
  * {@code HUNGER_COOKED} / {@code BONUS_COOKED} / {@code POISON_COOKED} /
  * {@code SPORES_COOKED} / {@code THORNS_COOKED} 五个，全部有对应的基础 code。
+ *
+ * <p><b>这份字典是状态效果中文名的唯一一处。</b> 采集只往 {@code effect} 列写 {@code code} 与数值
+ * （列里没有 {@code nameZh}），中文名是接口组装响应时现查的 —— 所以数据源新增一个状态时，
+ * 该看见的是响应里多了一个 {@code nameZh} 为空的元素，不是 500。
  */
 public final class EffectDictionary {
 
     /**
-     * 熟食变体的后缀。采集侧用它区分生值与熟值（见 {@code CookedEffects}）。
+     * 熟食变体的后缀，采集侧用它区分生值与熟值。
      *
      * <p>默认 private：剥后缀是"响应组装"的活，已经在 {@code pojo/dto/ItemDetailDto} 里做了一次，
      * 不该再从字典这边开一个口子让第二处去剥。
@@ -42,7 +46,7 @@ public final class EffectDictionary {
             Map.entry("THORNS", "荆棘"),
             Map.entry("CURSE", "诅咒"));
 
-    /** 基础 code 的封闭集合。字典本身是 private 的，测试与采集报告用它核对覆盖 */
+    /** 基础 code 的封闭集合。字典本身是 private 的，测试用它核对覆盖 */
     public static final Set<String> BASE_CODES = EFFECT_ZH.keySet();
 
     private EffectDictionary() {

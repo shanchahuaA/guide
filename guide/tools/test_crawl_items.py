@@ -240,7 +240,7 @@ class IconTest(unittest.TestCase):
         self.assertEqual(item_icons.wiki_title("Bugle?"), "File:Bugle?.png")
 
     def test_golden_icon_column_is_reproduced(self):
-        # 金标准里的 icon 列是 Java 采集写进去的；这条把"文件名规则与它同一口径"钉在数据上
+        # 金标准里的 icon 列是重写前的采集写进去的；这条把"文件名规则与它同一口径"钉在数据上
         golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
         diffs = [(item["nameEn"], item["icon"], item_icons.icon_path(item["nameEn"]))
                  for item in golden["items"] if item_icons.icon_path(item["nameEn"]) != item["icon"]]
@@ -337,7 +337,7 @@ class IconTest(unittest.TestCase):
                 {"title": "File:Item 50.png", "imageinfo": [{"url": "https://x/50.png"}]}]}}
 
         urls, failures = item_icons.fetch_direct_urls([f"Item {i}" for i in range(51)], http_json=fake_http)
-        self.assertEqual(len(calls), 3)     # 51 个标题分两包，第一包按 Java 侧口径重试一次
+        self.assertEqual(len(calls), 3)     # 51 个标题分两包，第一包失败后重试一次
         self.assertEqual([f["nameEn"] for f in failures], [f"Item {i}" for i in range(50)])
         self.assertIn("被 Cloudflare 拦下", failures[0]["reason"])
         self.assertEqual(urls, {"Item 50": "https://x/50.png"})

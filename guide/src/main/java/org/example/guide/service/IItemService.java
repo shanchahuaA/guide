@@ -35,7 +35,4 @@ public interface IItemService extends IService<Item> {
 
     /** 按关键词检索名称(中/英)，前端搜索用 */
     List<Item> searchItems(String keyword);
-
-    /** 爬虫批量灌数据，已存在(按 nameEn)则更新，否则插入 */
-    boolean batchImportItems(List<Item> items);
 }

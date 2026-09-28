@@ -3,14 +3,17 @@
     PEAK 图鉴后端 HTTP 冒烟验收脚本（issue #17 / 父票 #11 的「测试决定」）。
 
 .DESCRIPTION
-    对**运行中的后端**发真实请求，一次穿过控制器、采集、转换、持久层、静态资源映射，
-    用「已知答案断言」给转换逻辑做端到端回归保护。
+    对**运行中的后端**发真实请求，一次穿过控制器、持久层、静态资源映射、缓存与鉴权，
+    用「已知答案断言」给接口层做端到端回归保护。
+
+    ⚠️ **采集不在应用里**（#25）：应用只读库对外服务，采集是 `guide/tools/crawl_items.py`
+    那一条命令。所以跑本脚本之前要先跑一次采集，否则断言反映的只是库里现有的那批数据。
 
     断言分四组：
-      1. POST /admin/crawl        —— 采集报告的统计与明细
+      1. POST /admin/crawl        —— 采集入口已摘除（应用没有写入口）
       2. GET  /testItemList       —— 全量列表的已知答案断言（转换逻辑的端到端回归）
       3. GET  /icons/Hot_Dog.png  —— 图标静态路径是 200 PNG
-      4. GET  /api/items|tags|biomes —— 小程序契约：筛选收窄、模糊查询、按 slug 取详情
+      4. GET  /api/items|tags|biomes —— 小程序契约：一次返全量、按 slug 取详情、字典端点
 
     全部断言打印 PASS/FAIL 明细，最后汇总退出码：全过 0，有 FAIL 非 0。
 
@@ -20,12 +23,11 @@
 .PARAMETER TimeoutSeconds
     等待后端 ready 的上限，默认 180 秒（后端冷启动约 10 秒，留足余量）。
 
-.PARAMETER CrawlTimeoutSeconds
-    POST /admin/crawl 的单项超时，默认 600 秒。真实采集要拉数据源全量行、
-    约 3 包页面源文、134 张图标，实测约 60 秒，但数据源在境外，抖动时会更久。
-
 .EXAMPLE
-    先起后端（工作目录必须是 guide/，图标要落到 guide/icons/）：
+    先跑采集落库（工作目录必须是 guide/，图标要落到 guide/icons/）：
+        cd guide && python tools/crawl_items.py
+
+    再起后端：
         cd guide && mvn -o spring-boot:run
 
     另开一个终端，在仓库根跑：
@@ -34,21 +36,18 @@
 .EXAMPLE
     换端口：
         powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -BaseUrl http://localhost:9090
-
-.NOTES
-    数据源被 Cloudflare 拦死时本脚本变红是**正确信号**（触发离线导入降级预案），不是误报。
 #>
 [CmdletBinding()]
 param(
     [string] $BaseUrl = 'http://localhost:8080',
-    [int]    $TimeoutSeconds = 180,
-    [int]    $CrawlTimeoutSeconds = 600
+    [int]    $TimeoutSeconds = 180
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# 采集报告里的 fetchedRows 是整数下限断言值：wiki 增删物品不误报，故意不用精确值 134
+# 列表行数的整数下限断言值：wiki 增删物品不误报，故意不用精确值 134
+# （全量口径 134 由第 4 组的 /api/items 严格钉住）
 $MIN_ROWS = 130
 
 $BaseUrl = $BaseUrl.TrimEnd('/')
@@ -337,89 +336,22 @@ if (-not (Wait-BackendReady)) {
     exit 1
 }
 
-# ── 第 1 组：采集报告 ────────────────────────────────────────────────────────
+# ── 第 1 组：采集入口已摘除 ──────────────────────────────────────────────────
 
-Section '1. POST /admin/crawl — 采集报告'
+Section '1. POST /admin/crawl — 采集入口已摘除'
 
-Write-Host ("  触发真实采集，最长等 " + $CrawlTimeoutSeconds + " 秒（数据源在境外，拉全量+134 张图标）…")
-$crawl = Invoke-Json 'POST' '/admin/crawl' $CrawlTimeoutSeconds
-
-Assert-True ($crawl.Ok -and $crawl.Status -eq 200) '采集接口 HTTP 200' `
-    ("实际 status=" + $crawl.Status + " error=" + $crawl['Error'])
-
-if (-not ($crawl.Ok -and $crawl.Status -eq 200)) {
-    Write-Host ''
-    Write-Host '采集接口没通，后面的列表断言没有意义，直接收尾。' -ForegroundColor Red
-    Write-Host ("错误：" + $crawl['Error'])
-    exit 1
-}
-
-$report = $crawl.Json
-
-# 报告原样留档一份：这是演示日"当场指出使用痕迹"的道具
-Write-Host ''
-Write-Host '  采集报告 JSON：' -ForegroundColor DarkGray
-Write-Host ('    ' + ($report | ConvertTo-Json -Compress -Depth 8)) -ForegroundColor DarkGray
-
-$fetchedRows      = Get-Field $report 'fetchedRows'
-$successCount     = Get-Field $report 'successCount'
-$iconSuccessCount = Get-Field $report 'iconSuccessCount'
-# As-Array：报告里这三个数组字段为空时长度是 0，用于断言与逐条打印
-$failures         = As-Array (Get-Field $report 'failures')
-$iconFailures     = As-Array (Get-Field $report 'iconFailures')
-$warnings         = As-Array (Get-Field $report 'warnings')
-$fetchError       = Get-Field $report 'fetchError'
-$wikitextError    = Get-Field $report 'wikitextError'
-
-# 数据源被拦时的明确提示 —— 这正是票面设计的"正确信号"，不硬绕
-if ($null -ne $fetchError -and $fetchError -ne '') {
-    Write-Host ''
-    Write-Host '  ┌─ 数据源疑似不可达/被拦 ─────────────────────────────────────┐' -ForegroundColor Magenta
-    Write-Host ("  │ fetchError: " + $fetchError)
-    Write-Host '  │ 这是正确信号，不是脚本误报：触发离线导入降级预案' -ForegroundColor Magenta
-    Write-Host '  │ （见 docs/分工与目标清单.md §6 风险与降级预案）'
-    Write-Host '  └─────────────────────────────────────────────────────────────┘' -ForegroundColor Magenta
-}
-
-Assert-True (($null -eq $fetchError) -or ($fetchError -eq '')) `
-    'fetchError 为空（拉取阶段没挂）' ("fetchError=" + $fetchError)
-Assert-GreaterOrEqual $fetchedRows $MIN_ROWS "fetchedRows ≥ $MIN_ROWS"
-Assert-GreaterOrEqual $successCount $MIN_ROWS "successCount ≥ $MIN_ROWS"
-
-$failureList = As-Array $failures
-if ($failureList.Count -eq 0) {
-    Add-Pass 'failures 为空'
-} else {
-    # 票面要求"为空**或列明**"：这里逐条打印，但断言本身仍然记 FAIL ——
-    # 有落库失败就该当场看见，而不是被"已列明"糊过去
-    Add-Fail 'failures 为空' ("有 " + $failureList.Count + " 条落库失败，明细如下")
-    foreach ($f in $failureList) {
-        Write-Host ("           page=" + (Get-Field $f 'page') + " nameEn=" + (Get-Field $f 'nameEn') + " reason=" + (Get-Field $f 'reason')) -ForegroundColor Red
-    }
-}
-
-Assert-True (($null -eq $wikitextError) -or ($wikitextError -eq '')) `
-    'wikitextError 为空（页面源文管道通了）' ("wikitextError=" + $wikitextError)
-Assert-GreaterOrEqual $iconSuccessCount $MIN_ROWS "iconSuccessCount ≥ $MIN_ROWS"
-
-$iconFailureList = As-Array $iconFailures
-if ($iconFailureList.Count -eq 0) {
-    Add-Pass 'iconFailures 为空'
-} else {
-    Add-Fail 'iconFailures 为空' ("有 " + $iconFailureList.Count + " 张图标失败，明细如下")
-    foreach ($f in $iconFailureList) {
-        Write-Host ("           nameEn=" + (Get-Field $f 'nameEn') + " reason=" + (Get-Field $f 'reason')) -ForegroundColor Red
-    }
-}
-
-# warnings 只要求"打印"，不构成 FAIL：字典未知取值是数据源变了，恰好是这条通道要暴露的东西
-$warningList = As-Array $warnings
-if ($warningList.Count -eq 0) {
-    Add-Note 'warnings 为空（字典没有未知取值）'
-} else {
-    Add-Note ("warnings 有 " + $warningList.Count + " 条：")
-    foreach ($w in $warningList) { Write-Host ("           " + $w) -ForegroundColor DarkYellow }
-}
+# 采集自 #25 起是应用**外面**的一条命令（guide/tools/crawl_items.py：拉取 → 转换 → 落库 →
+# 删缓存 key），应用只读库对外服务。这一组钉住的就是"应用里不再有第二套采集实现、
+# 也没有手动触发它的入口"。
+#
+# ⚠️ 用 404 而不是"非 200"：入口被摘掉后 /admin/crawl 落到静态资源处理器，
+# Spring 给的是 404 NoResourceFoundException（实测），写死 404 才能发现"入口又被加回来、
+# 但换了条路径或换了个动词"这类漂移。
+#
+# 数据本身不在这里验：库里的内容由第 2 组（/testItemList 的已知答案）与第 3 组（图标）负责。
+Write-Host '  采集是应用外面的命令：先跑 guide/tools/crawl_items.py 落库，再跑本脚本（见 scripts/README.md）'
+$crawl = Invoke-Json 'POST' '/admin/crawl' 30
+Assert-Equal $crawl.Status 404 'POST /admin/crawl 返回 404（手动触发采集的入口已移除）'
 
 # ── 第 2 组：全量列表的已知答案断言 ──────────────────────────────────────────
 
@@ -594,7 +526,7 @@ Assert-True ($all.Ok -and $all.Status -eq 200) '/api/items HTTP 200' `
 
 $allItems = As-Array (Get-Field (Get-Data $all) 'items')
 
-# 全量口径就是 134（CONTEXT.md 图鉴条目节）。这一条**不设容差**：第 1 组的 fetchedRows 用 ≥130
+# 全量口径就是 134（CONTEXT.md 图鉴条目节）。这一条**不设容差**：第 2 组的 MIN_ROWS 用 ≥130
 # 是怕 wiki 增删物品造成误报，而"图鉴有多少条"是产品口径本身，变了就该当场看见
 Assert-Equal $allItems.Count 134 '/api/items 返回全量 134 条'
 
@@ -1239,10 +1171,10 @@ if (-not $cacheReachable) {
     $beforeEvictJson = $all.Json | ConvertTo-Json -Depth 10 -Compress
 
     # 删 key 走 redis-cli，不再打那个 POST /cache/item-all/evict 端点 ——
-    # 那个端点是破坏性动作却落在全放行的 `/** = anon` 下（Shiro 收口方案只覆盖
-    # `/admin/**`，不覆盖 `/cache/**`，所以它不会"以后自然收口"），已停用映射。
+    # 那个端点是破坏性动作却落在全放行的 `/** = anon` 下，不会"以后自然收口"，已停用映射。
     # 验收本来就是"看 key 在不在、删掉再看回填"，redis-cli 两条命令的事，
-    # 不需要一个常驻接口代劳。连接用 Spring Boot 默认值 127.0.0.1:6379
+    # 不需要一个常驻接口代劳 —— 采集脚本删 key 走的也是同一条路（#25）。
+    # 连接用 Spring Boot 默认值 127.0.0.1:6379
     # （两份 yml 都没有配 spring.data.redis.host/port，实现就是靠默认值连上的；
     # application.yml 里只多了 timeout / connect-timeout 两个超时项，不改变连哪台）。
     $redisDel = & $script:RedisCli DEL 'guide:item:all' 2>&1

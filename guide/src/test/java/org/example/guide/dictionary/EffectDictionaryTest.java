@@ -1,4 +1,4 @@
-package org.example.guide.crawler;
+package org.example.guide.dictionary;
 
 import org.junit.jupiter.api.Test;
 
