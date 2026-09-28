@@ -1,14 +1,16 @@
-"""图鉴采集：拉取 + 页面源文 + 落库闭环（票 #22 / #23）。
+"""图鉴采集：拉取 + 页面源文 + 图标本地化 + 落库闭环（票 #22 / #23 / #24）。
 
 从数据源 Cargo 表拉全量**结构化**字段，再从页面源文取**只有散文里才有**的那半边，
-转成图鉴条目按 nameEn upsert 进 `item` 表，写完应用侧立刻能读到。
+把图标下到后端对外暴露的目录，转成图鉴条目按 nameEn upsert 进 `item` 表，写完应用侧立刻能读到。
 
 - **结构化半边**（#22）：标签、生食状态效果、重量；
 - **页面源文半边**（#23，见 `page_source.py`）：熟食覆写值 / 可烹饪判据、描述、成就。
   数值解析不出来时该条进失败明细，不静默退回公式；描述取不到时该条照常入库。
+- **图标**（#24，见 `item_icons.py`）：直链走 `api.php`，落盘到后端暴露的同一个目录，
+  `icon` 列存相对路径 —— 路径与文件名规则都不变，应用与小程序都不用改。
 
-本票仍**不碰图标**（#24）：icon 列原值保留。description_zh / name_zh 是「对照表回填」的地盘，
-一个字都不动 —— 这既是"已有中文名保留"的实现，也是"不碰中文名"的落实。
+description_zh / name_zh 是「对照表回填」的地盘，一个字都不动 —— 这既是"已有中文名保留"的实现，
+也是"不碰中文名"的落实。
 
 落库后删掉采集影响的三个缓存 key（图鉴全量 / 问答 / 题库）——「应用可见」的最后一环。
 与 Java 采集的 `CrawlerServiceImpl.evictItemCache()` 同一口径；用户连对进度（`quiz:progress`）
@@ -16,10 +18,10 @@
 
 用法::
 
-    # 真跑一次全量采集并落库（结构化 + 页面源文，需要联网）
+    # 真跑一次全量采集并落库（结构化 + 页面源文 + 图标，需要联网）
     python guide/tools/crawl_items.py
 
-    # 只拉取 + 转换，与金标准比对，不写库（差异会被逐条列出，有差异时退出码非 0）
+    # 只拉取 + 转换，与金标准比对，不写库、不下图标（差异会被逐条列出，有差异时退出码非 0）
     python guide/tools/crawl_items.py --check
 
     # 离线复跑：Cargo 与页面源文都从本地读（#21 冻结的语料目录）
@@ -31,6 +33,7 @@
 
     GUIDE_DB_HOST/PORT/USER/PASSWORD/NAME        默认 127.0.0.1:3306/root/空/peak_guide
     GUIDE_REDIS_HOST/PORT/PASSWORD/DB            默认 127.0.0.1:6379/无密码/0
+    GUIDE_ICON_DIR                               默认 guide/icons（后端对外暴露的那个目录）
 """
 
 import argparse
@@ -44,6 +47,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+import item_icons
 import page_source
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -388,6 +392,8 @@ def convert(row: CargoRow, params: page_source.CookParams) -> tuple[dict, list[s
     item = {
         "nameEn": name_en,
         "weight": row.weight,
+        # 图标路径由英文名现算：文件名规则与 Java 版的 IconFileNames 同一口径（见 item_icons）
+        "icon": item_icons.icon_path(name_en),
         "tag": build_tags(row, type_values, cooked, unknown),
         "effect": build_raw_effects(row) + cooked,
     }
@@ -529,9 +535,10 @@ def persist(items: list[dict], failures: list[dict]) -> int:
     表上没有 name_en 唯一索引（唯一真相是 pojo/Item.java，仓库里没有 DDL），
     所以照 Java 版的做法：先按 name_en 查 id，命中就更新、否则插入。
 
-    只写 weight / tag / effect / description / achievement 五列：name_zh、description_zh、
-    icon 是「对照表回填」与 #24 的地盘，一个字都不动 —— 这既是"已有中文名保留"的实现，
-    也是"不碰中文名与图标"的落实。
+    只写 weight / icon / tag / effect / description / achievement 六列：name_zh、
+    description_zh 是「对照表回填」的地盘，一个字都不动 —— 这既是"已有中文名保留"的实现，
+    也是"不碰中文名"的落实。icon 是 #24 的地盘：某张图标没下成功时这里是 NULL，
+    条目照常落库、图标留空（与 Java 版同口径）。
     """
     import pymysql
 
@@ -547,15 +554,15 @@ def persist(items: list[dict], failures: list[dict]) -> int:
                     effect_json = json.dumps(item["effect"], ensure_ascii=False)
                     if existing:
                         cur.execute(
-                            "UPDATE item SET weight = %s, tag = %s, effect = %s,"
+                            "UPDATE item SET weight = %s, icon = %s, tag = %s, effect = %s,"
                             " description = %s, achievement = %s WHERE id = %s",
-                            (item["weight"], tag_json, effect_json,
+                            (item["weight"], item["icon"], tag_json, effect_json,
                              item["description"], item["achievement"], existing["id"]))
                     else:
                         cur.execute(
-                            "INSERT INTO item (name_en, weight, tag, effect, description, achievement)"
-                            " VALUES (%s, %s, %s, %s, %s, %s)",
-                            (item["nameEn"], item["weight"], tag_json, effect_json,
+                            "INSERT INTO item (name_en, weight, icon, tag, effect, description, achievement)"
+                            " VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                            (item["nameEn"], item["weight"], item["icon"], tag_json, effect_json,
                              item["description"], item["achievement"]))
                 # 逐条提交：一次 rollback 只该退掉失败的那一条，而不是把先前成功的行一起退掉
                 conn.commit()
@@ -665,7 +672,7 @@ def golden_count(golden_path: Path) -> int | None:
 
 
 def compare_with_golden(items: list[dict], golden_path: Path) -> dict:
-    """逐条比对 tag / effect / weight / description / achievement 五列；差异全部列出。"""
+    """逐条比对 icon / weight / tag / effect / description / achievement 六列；差异全部列出。"""
     golden = json.loads(golden_path.read_text(encoding="utf-8"))
     by_name = {item["nameEn"]: item for item in golden["items"]}
 
@@ -677,7 +684,7 @@ def compare_with_golden(items: list[dict], golden_path: Path) -> dict:
             diffs.append({"nameEn": name, "kind": "金标准里没有这条",
                           "reason": "数据源新增条目，待重跑 --step1 更新金标准"})
             continue
-        for fieldname in ("tag", "effect", "weight", "description", "achievement"):
+        for fieldname in ("icon", "tag", "effect", "weight", "description", "achievement"):
             if not _same(item[fieldname], expected[fieldname]):
                 diffs.append({
                     "nameEn": name,
@@ -770,8 +777,8 @@ def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    parser = argparse.ArgumentParser(description="图鉴采集：拉取 + 页面源文 + 落库闭环（#22/#23）")
-    parser.add_argument("--check", action="store_true", help="只转换并与金标准比对，不写库")
+    parser = argparse.ArgumentParser(description="图鉴采集：拉取 + 页面源文 + 图标本地化 + 落库闭环（#22/#23/#24）")
+    parser.add_argument("--check", action="store_true", help="只转换并与金标准比对，不写库、不下图标")
     parser.add_argument("--golden", type=Path, default=DEFAULT_GOLDEN, help="金标准快照路径")
     parser.add_argument("--items-file", type=Path, help="从本地 cargo 快照读结构化行（离线复跑）")
     parser.add_argument("--wikitext-dir", type=Path, help="从本地语料目录读页面源文（离线复跑）")
@@ -785,7 +792,7 @@ def main() -> int:
         items, warnings, failures = crawl(rows, wikitext_by_page)
     except Exception as exc:
         report = {"fetchError": _failure_reason(exc), "fetchedRows": 0, "warnings": [],
-                  "failures": [], "successCount": 0}
+                  "failures": [], "iconFailures": [], "successCount": 0, "iconSuccessCount": 0}
         print(json.dumps(report, ensure_ascii=False, indent=1))
         if args.report:
             _write(args.report, report)
@@ -798,6 +805,30 @@ def main() -> int:
         print("警告：" + warning)
     for failure in failures:
         print(f"失败：page={failure['page']} display={failure['nameEn']} 原因={failure['reason']}")
+
+    # 图标只在真跑那一趟下：--check 是离线比对，不下图标也不写库
+    icon_result = item_icons.Result()
+    if not args.check:
+        icon_dir = Path(os.environ.get("GUIDE_ICON_DIR", item_icons.DEFAULT_DIRECTORY))
+        displays = list(dict.fromkeys(item["nameEn"] for item in items))
+        try:
+            icon_result = item_icons.download_all(displays, icon_dir)
+        except Exception as exc:
+            # 整体性故障（例如图标目录建不出来）也进报告，采集继续走完
+            warnings.append("图标本地化整体失败:" + _failure_reason(exc))
+        # 这张没下成功 → 图标留空（条目照常落库），既不中断整批也不回滚旁边下好的那些。
+        # convert() 里那个值是"由英文名算出来的路径"，只够 --check 比对用；真跑以这里的下载结果为准
+        for item in items:
+            item["icon"] = icon_result.path_by_display.get(item["nameEn"])
+
+        print(f"图标：目标 {len(displays)} 张，成功 {len(icon_result.path_by_display)} 张，"
+              f"失败 {len(icon_result.failures)} 张（落到 {icon_dir}）")
+        warnings.extend(icon_result.warnings)
+
+    for warning in icon_result.warnings:
+        print("警告：" + warning)
+    for failure in icon_result.failures:
+        print(f"图标失败：display={failure['nameEn']} 原因={failure['reason']}")
 
     if args.check:
         result = compare_with_golden(items, args.golden)
@@ -821,14 +852,16 @@ def main() -> int:
     evict_warnings = evict_caches()
     warnings.extend(evict_warnings)
     report = {"fetchedRows": len(items) + len(failures), "fetchError": None,
-              "successCount": success, "failures": failures, "warnings": warnings}
-    print(f"\n落库成功 {success} 条（写 weight / tag / effect / description / achievement 五列，"
-          f"中文名、中文描述、图标原值保留）")
+              "successCount": success, "failures": failures,
+              "iconSuccessCount": len(icon_result.path_by_display), "iconFailures": icon_result.failures,
+              "warnings": warnings}
+    print(f"\n落库成功 {success} 条（写 weight / icon / tag / effect / description / achievement 六列，"
+          f"中文名、中文描述原值保留）")
     for warning in evict_warnings:
         print("警告：" + warning)
     if args.report:
         _write(args.report, report)
-    return 0 if not failures else 1
+    return 0 if not failures and not icon_result.failures else 1
 
 
 def _write(path: Path, payload: dict) -> None:
