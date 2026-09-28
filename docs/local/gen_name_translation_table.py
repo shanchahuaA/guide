@@ -3,7 +3,7 @@
 生成「名称翻译对照表」工作文件（docs/local/name-translation.CSV，不进仓库）。
 
 只读本地快照，不发任何网络请求：
-- 条目英文名：Cargo 全量快照（134 行）的 display 原值（对齐 CargoItemRow 的 display / 字段别名 page）
+- 条目英文名：Cargo 全量快照（134 行）的 display 原值（字段别名 page）
 - 标签字典：TagDictionary.java 的六张 Map 直读（type/biome/rarity/source/location/flag）
 
 生成物带 UTF-8 BOM，Excel 直接双击不乱码。
@@ -15,7 +15,7 @@ import os
 import re
 
 SNAPSHOT = os.path.expandvars(r"%TEMP%\cargo_items.json")
-DICT_JAVA = r"guide/src/main/java/org/example/guide/crawler/TagDictionary.java"
+DICT_JAVA = r"guide/src/main/java/org/example/guide/dictionary/TagDictionary.java"
 OUT = r"docs/local/name-translation.CSV"
 
 DIMENSIONS = [

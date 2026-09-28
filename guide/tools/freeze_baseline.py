@@ -1,10 +1,16 @@
 """冻结重写基线（issue #21）。
 
-一次跑出三样产出，全程**不改** Java 采集代码：
+一次跑出三样产出，全程**不改**应用的任何代码：
 
 1. 金标准快照 —— 库里 134 条中「采集产出的字段」按英文名升序落成 JSON（进仓库）。
 2. 页面源文语料 —— 134 个条目对应页面的 wikitext 抓到本地目录（不进仓库）。
-3. 容错命中普查 —— 拿语料把 `crawler/ItemPageParser` / `WikitextUtil` 里的各项防御逐条数一遍。
+3. 容错命中普查 —— 拿语料把解析器里的各项防御逐条数一遍。
+
+⚠️ **这份工具是历史产物，其中的 `--step3` 尤其如此。** 它当初的对照物是应用里那版 Java 解析器
+（`ItemPageParser` / `WikitextUtil`）—— 本文件把它的扫描算法原样重写了一遍，好让普查数字能在
+不联网、不改应用的前提下复现。那份 Java 代码已随 #25 删除，所以下面各处
+「与 `ItemPageParser.X` 同一算法」说的都是**历史上**那版；今天真正跑采集的解析器是
+`page_source.py`（用 `mwparserfromhell`，见它的文件头说明）。
 
 用法::
 
@@ -29,13 +35,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SNAPSHOT = REPO_ROOT / "guide" / "src" / "test" / "resources" / "crawler" / "golden-items.json"
 
 WIKI_API = "https://peak.wiki.gg/api.php"
-# 与 crawler/WikiApiClient.USER_AGENT 同一个：伪装 Googlebot 是绕过 Cloudflare 的实测通道
+# 伪装 Googlebot 是绕过 Cloudflare 的实测通道（重写时照搬的原口径，实测过的）
 USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
 
-# 与 WikiApiClient.WIKITEXT_TITLES_PER_REQUEST 一致（MediaWiki 对普通用户的上限）
+# MediaWiki 对普通用户的上限：一次最多查 50 个标题
 TITLES_PER_REQUEST = 50
 
-# 与 crawler/ItemPageParser.INFOBOX_TEMPLATES 一致
+# 与 ItemPageParser.INFOBOX_TEMPLATES 一致
 INFOBOX_TEMPLATES = {"infoboxitem", "iteminfobox"}
 # 与 ItemPageParser.NAME_KEYS 一致
 NAME_KEYS = ("display", "name")
@@ -255,7 +261,7 @@ def step1(snapshot_path: Path):
 MYSTICAL_ARCHIVE = "User:Westgrass/PEAK Wiki/Archive/Mystical"
 
 # Windows 文件名里建不出来的字符（`?` 是实测会遇到的那个：数据源上有 File:Bugle?.png）。
-# 与 crawler/IconFileNames.UNSAFE 同一个思路：本地名统一换成下划线，映射记进 index.json。
+# 与 utils/IconFileNames 同一个思路：本地名统一换成下划线，映射记进 index.json。
 UNSAFE_FILE_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
@@ -268,7 +274,7 @@ def corpus_path(corpus_dir: Path, name_en: str) -> Path:
 
 
 def page_candidates(name_en: str):
-    """页面名候选，按 WikiApiClient 的取法：先 _pageName，再 display，最后神秘物品的人工存档页。"""
+    """页面名候选：先 _pageName，再 display，最后神秘物品的人工存档页。"""
     return [name_en, MYSTICAL_ARCHIVE + "/" + name_en]
 
 

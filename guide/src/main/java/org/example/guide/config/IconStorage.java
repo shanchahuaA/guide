@@ -1,4 +1,4 @@
-package org.example.guide.crawler;
+package org.example.guide.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,11 +10,13 @@ import java.nio.file.Paths;
  * 图标存在哪、以及它对外长什么 URL。
  *
  * 目录默认是后端进程工作目录下的 {@code icons/}(用 {@code mvn spring-boot:run} 从 guide/ 启动
- * 就是 {@code guide/icons/}),该目录进 .gitignore —— 图标是二进制,采集随时能再生成一份。
+ * 就是 {@code guide/icons/})。**该目录随仓库发布**(见 #24):克隆下来就有一份图标,
+ * 采集跑起来按同样的文件名覆盖它们。
  *
- * <p>写盘的一方({@link ItemIconDownloader})和对外暴露的一方
- * ({@code WebMvcConfig} 的静态资源映射)都从这里取路径。两边各写一份默认值迟早会对不上,
- * 那种故障是"文件写到了一个地方、HTTP 去另一个地方找",最难查。
+ * <p>写盘的一方是应用**外面**的采集脚本({@code guide/tools/item_icons.py},
+ * 目录由 {@code GUIDE_ICON_DIR} 指定),对外暴露的一方是 {@code WebMvcConfig} 的静态资源映射。
+ * 两边各写一份默认值迟早会对不上,那种故障是"文件写到了一个地方、HTTP 去另一个地方找",最难查,
+ * 所以这里的默认值就是采集脚本的默认值。
  */
 @Component
 public class IconStorage {
@@ -22,25 +24,15 @@ public class IconStorage {
     private final Path directory;
     private final String urlPrefix;
 
-    public IconStorage(@Value("${guide.crawler.icon-dir:icons}") String iconDir,
-                       @Value("${guide.crawler.icon-url-prefix:/icons}") String urlPrefix) {
+    public IconStorage(@Value("${guide.icon-dir:icons}") String iconDir,
+                       @Value("${guide.icon-url-prefix:/icons}") String urlPrefix) {
         this.directory = Paths.get(iconDir).toAbsolutePath().normalize();
         this.urlPrefix = normalizeUrlPrefix(urlPrefix);
-    }
-
-    /** 图标落盘目录的绝对路径 */
-    public Path directory() {
-        return directory;
     }
 
     /** 图标对外的 URL 前缀,如 {@code /icons} */
     public String urlPrefix() {
         return urlPrefix;
-    }
-
-    /** 条目 {@code icon} 列里存的相对路径,如 {@code /icons/Hot_Dog.png} */
-    public String urlFor(String fileName) {
-        return urlPrefix + "/" + fileName;
     }
 
     /**

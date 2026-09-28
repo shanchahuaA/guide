@@ -97,24 +97,4 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper,Item> implements IIt
                           .or().like(Item::getNameEn, keyword));
         return baseMapper.selectList(wrapper);
     }
-
-    @Override
-    public boolean batchImportItems(List<Item> items){
-        if (items == null || items.isEmpty()) {
-            return false;
-        }
-        // 按 nameEn 去重：已存在则更新，不存在则插入
-        for (Item item : items) {
-            LambdaQueryWrapper<Item> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Item::getNameEn, item.getNameEn());
-            Item exist = baseMapper.selectOne(wrapper);
-            if (exist != null) {
-                item.setId(exist.getId());
-                baseMapper.updateById(item);
-            } else {
-                baseMapper.insert(item);
-            }
-        }
-        return true;
-    }
  }

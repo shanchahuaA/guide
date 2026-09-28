@@ -22,7 +22,7 @@ import java.util.List;
  * 读不到就让上层去生成（见 {@code QuizServiceImpl.next}）。缓存组件只负责存取与失效。
  *
  * <p>不设 TTL：题库的正确性只取决于图鉴数据，图鉴变了走 {@link #evictAll()}
- * （采集跑完，与图鉴 key 一起删）。
+ * （采集脚本跑完与图鉴 key 一起删 —— 应用内没有调用方，见 CONTEXT.md「缓存」）。
  */
 @Component
 public class QuizBankCache {
@@ -71,8 +71,9 @@ public class QuizBankCache {
     }
 
     /**
-     * 删掉全部等级题库。采集跑完调它（{@code CrawlerServiceImpl}）—— 题面依据的是图鉴数据，
-     * 图鉴换了旧题库里的题就可能问到一个已经改过的数值。
+     * 删掉全部等级题库 —— 题面依据的是图鉴数据，图鉴换了旧题库里的题就可能问到一个已经改过的数值。
+     *
+     * <p>与 {@link AnswerCache#evictAll()} 同理：应用内没有调用方，删 key 的是采集脚本。
      */
     public void evictAll() {
         try {

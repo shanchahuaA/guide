@@ -100,8 +100,10 @@ public class ItemCache {
     }
 
     /**
-     * 删掉唯一的那个 key。采集跑完调它（{@code CrawlerServiceImpl.evictItemCache}），
-     * 下一次请求自然回源到采集后的新数据 —— 不用重启应用。
+     * 删掉唯一的那个 key —— 删完之后下一次请求自然回源到新数据，不用重启应用。
+     *
+     * <p>触发它的是应用**外面**的采集脚本（{@code guide/tools/crawl_items.py} 落库后直接删
+     * Redis 里的这个 key），所以应用里没有调用方；口径两边一致，见 CONTEXT.md「缓存」。
      */
     public void evict() {
         try {

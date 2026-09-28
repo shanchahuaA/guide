@@ -1,18 +1,22 @@
-package org.example.guide.crawler;
+package org.example.guide.dictionary;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 标签中文字典，写死在采集代码里（取值来自 issue #11 的定稿清单）。
+ * 标签中文字典（取值来自 issue #11 的定稿清单）。
  *
  * 两条不变式:
  * 1. value 一律保留数据源原值,零转换 —— 图鉴里的每个标签都能直接对回数据源;
- * 2. 字典里查不到的取值**不丢弃** —— value 照存、nameZh 留空,由采集报告给出警告。
- *    这样数据源新增一个生态或稀有度时只是报告里多一条警告,不会把整批采集炸掉。
+ * 2. 字典里查不到的取值**不丢弃** —— value 照存、nameZh 留空。这样数据源新增一个生态或
+ *    稀有度时只是响应里多一个没中文名的标签,不会把接口炸掉。
  *
- * 按维度分开写是刻意的,同一处地方可能在多个维度里各出现一次
+ * <p>采集脚本 {@code guide/tools/crawl_items.py} 里有一份**同口径的副本**:标签的
+ * {@code nameZh} 是采集落库时写进 JSON 列的,那一步在应用启动之前,用不上这个类。
+ * 两份分叉的后果是「{@code /api/tags} 说的和条目里的标签对不上」,改字典要一起改。
+ *
+ * <p>按维度分开写是刻意的,同一处地方可能在多个维度里各出现一次
  * (例如 Airport / Peak / Scout Statue 既是生态也可能是来源),中文名重复是有意的:
  * 字典的形状要跟定稿清单一一对得上,不做跨维度归并。
  */

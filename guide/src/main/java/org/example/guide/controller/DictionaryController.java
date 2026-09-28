@@ -1,6 +1,6 @@
 package org.example.guide.controller;
 
-import org.example.guide.crawler.TagDictionary;
+import org.example.guide.dictionary.TagDictionary;
 import org.example.guide.utils.BaseResult;
 import org.example.guide.utils.ResultCodeEnum;
 import org.springframework.web.bind.annotation.GetMapping;

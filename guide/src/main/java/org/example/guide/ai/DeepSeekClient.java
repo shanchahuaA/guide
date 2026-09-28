@@ -26,7 +26,7 @@ import java.util.Map;
  * 是模型的思考过程、不是答案（可能是英文、可能半途改主意、可能直接泄漏系统提示词）。
  * 一并读进去就是把"草稿纸"当答案回给小程序。
  *
- * <p>配置项与既有的 {@code guide.crawler.*} 同一命名习惯：{@code guide.ai.base-url} / {@code .model}。
+ * <p>配置项与既有的 {@code guide.avatar-*} 同一命名习惯：{@code guide.ai.base-url} / {@code .model}。
  * {@code enabled} 不在这里读 —— 那是路由层的开关（本类只负责"真调一次"这个动作），
  * 关掉时根本没有调用方，见 {@code TeachServiceImpl.ask}。
  */

@@ -1,6 +1,6 @@
 package org.example.guide.ai;
 
-import org.example.guide.crawler.TagDictionary;
+import org.example.guide.dictionary.TagDictionary;
 import org.example.guide.pojo.Effect;
 import org.example.guide.pojo.Item;
 import org.example.guide.pojo.ItemTag;

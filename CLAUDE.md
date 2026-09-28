@@ -23,11 +23,11 @@ Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 
 能跑的：
 
-- **Java 采集管道**（`crawler/` 包）：`POST /admin/crawl` 触发，返回 `CrawlReport`。
-  **当前无鉴权** —— Shiro 收口 `/admin/**` 后自然生效；收口时别把 `/icons/**` 一起收进去
-  （图标要匿名可拉，`WebMvcConfig` 的类注释里写了这条警告）。
-- **134 条真实数据已落库**，`name_zh` 已回填 134/134。连跑多次采集幂等
-  （按 `nameEn` upsert，见 `ItemServiceImpl.batchImportItems`）。
+- **采集 = 应用外面的一条命令**（`guide/tools/crawl_items.py`，Python）：拉取 → 页面源文 →
+  图标本地化 → 按 `nameEn` upsert 落库 → 删缓存 key。**应用里没有采集代码，也没有触发它的
+  入口** —— `POST /admin/crawl` 已删（打它回 404），应用只读库对外服务。
+  理由见 `docs/adr/0001-采集搬出应用进程.md`；用法见仓库根 `README.md` 的「采集数据」。
+- **134 条真实数据已落库**，`name_zh` 已回填 134/134。连跑多次采集幂等（脚本按 `nameEn` upsert）。
 - **MyBatis-Plus 数据访问**：`ItemMapper` / `UserMapper` 继承 `BaseMapper`，
   `@MapperScan("org.example.guide.mapper")` 挂在 `GuideApplication` 上。
 - 统一响应包（`utils/BaseResult` + `ResultCodeEnum`）与全局异常（`ExceptionAutoUtil`）。
@@ -53,8 +53,10 @@ Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 两条事实：
 
 - **仓库里没有建表 SQL**，表结构的唯一真相是 `pojo/Item.java`（见下一节）。
-- GitHub Issues `#20`–`#25` 是"把 Java 采集改写成 Python"的待办线（**行为保持**是硬约束），
-  与上面几项并行推进。
+- GitHub Issues `#20`–`#25` 是"把 Java 采集改写成 Python"那条线。
+  **行为保持是硬约束**：改写后的脚本写出的六列与 Java 版逐字段一致，靠金标准快照 +
+  `crawl_items.py --check` 比对（`guide/src/test/resources/crawler/golden-items.json`）。
+  #25 之后仓库里只剩 Python 一套。
 
 ## 常用命令
 
@@ -69,10 +71,17 @@ cd guide && mvn -o spring-boot:run
 cd guide && mvn test
 cd guide && mvn -Dtest=GuideApplicationTests test    # 单个测试类
 
+# 采集（Python；后端不必在跑，采集直接写库 + 删缓存 key）
+cd guide && python tools/crawl_items.py              # 真跑一次全量采集并落库
+cd guide && python tools/crawl_items.py --check      # 只转换、与金标准比对，不写库不下图
+cd guide && python tools/test_crawl_items.py         # 采集脚本自己的单测（stdlib unittest）
+
 # HTTP 冒烟验收（后端已在跑时，另开一个终端、在仓库根跑）
 powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 ```
 
+- 采集的外部连接走环境变量：`GUIDE_DB_*`、`GUIDE_REDIS_*`、`GUIDE_ICON_DIR`（默认值见
+  `crawl_items.py` 的文件头）；依赖 `pymysql`（写库）与 `mwparserfromhell`（解析页面源文）。
 - 数据源的 url / 账号 / 密码可在 `application-local.yml` 里覆盖（`spring.profiles.include: local`）。
   该文件已 gitignore，且**仓库里没有 `.example` 模板** —— 换机器要照 `application.yml` 的键自己补一份。
 - `scripts/smoke-test.ps1` 存为**带 BOM 的 UTF-8**：Windows PowerShell 5.1 读无 BOM 的 UTF-8
@@ -83,25 +92,28 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 两个平级模块：`guide/`（Spring Boot 后端，Maven）与 `guide-mini/`（小程序，不在 Maven 构建里）。
 
 **后端分层**：`controller` → `service`(+`impl`) → `mapper` → `pojo`(+`dto`)；
-`config/` 放 Shiro 与静态资源映射；`utils/` 放统一响应包与全局异常。
+`config/` 放 Shiro、静态资源映射与头像/图标目录；`utils/` 放统一响应包、全局异常与计算字段；
+`dictionary/` 放标签与状态效果的中文字典；`cache/` 放三个 Redis 缓存组件；`ai/` 放 DeepSeek 调用。
 `mapper-locations` 指向 `classpath:mapper/*.xml`，但**仓库里没有任何 XML** ——
 查询全走 `BaseMapper` 与 `LambdaQueryWrapper`。
 
-**采集管道**（`crawler/` 包，由 `service/impl/CrawlerServiceImpl` 串起来）。
-读这个包时按下面的顺序理解；它的出口只有一个 `CrawlReport`，
-而 `CrawlReport` 的字段就是 `scripts/smoke-test.ps1` 的断言对象。
+**采集脚本**（`guide/tools/`，Python；**应用里没有采集代码**）。读这几个文件时按下面的顺序理解，
+它的出口是一份报告（`--report` 落到文件，否则打到标准输出）：
+`fetchedRows` / `successCount` / `failures` / `iconSuccessCount` / `iconFailures` / `warnings`，
+以及拉取、页面源文两个阶段各自的错误字段。
 
-| 类 | 职责 |
+| 文件 | 职责 |
 |---|---|
-| `WikiApiClient` | 只走 `api.php`（HTML 页面有 Cloudflare JS 挑战）；结构化数据与页面源文都从这儿取 |
-| `ItemPageParser` | 认 `{{Infobox item}}`；描述与成就同源 |
-| `CookedEffects` | 熟食口径：熟食饱食 = 生值 × 2、加成 × 1.5，无生值给 10；仅食物参与判定 |
-| `ItemConverter` | 五维标签 + `flag` + 生食效果；多值拆分在应用层做 |
-| `TagDictionary` | 标签/生态的中文名；**未知取值照存并警告**，不炸整批 |
-| `ItemIconDownloader` / `IconStorage` | 图标下到本地目录，条目只存相对路径 |
+| `crawl_items.py` | 编排：拉取 → 页面源文 → 转换 → 图标 → 落库 → 删缓存 key；`--check` 只转换并比对金标准 |
+| `page_source.py` | 认 `{{Infobox item}}`；熟食覆写值（熟食饱食 = 生值 × 2、加成 × 1.5，无生值给 10）+ 描述 + 成就 |
+| `item_icons.py` | 图标下到 `guide/icons/`；文件名规则与 `utils/IconFileNames` 同一套白名单 |
+| `freeze_baseline.py` | 冻结重写基线：金标准快照 + 离线语料（#21） |
+| `test_crawl_items.py` | 纯函数与假 HTTP 接缝的单测（`python tools/test_crawl_items.py`） |
 
-`CrawlerServiceImpl.evictItemCache()` 现在是**空占位**（注释指明等缓存接入）——
-接 Redis 时在这里挂"采集完删 key"。
+采集写库时**只写六列**（`weight` / `icon` / `tag` / `effect` / `description` / `achievement`），
+`name_zh` 与 `description_zh` 是「对照表回填」的地盘，一个字都不动。
+跑完删三个缓存 key（图鉴全量 / 问答 / 题库）——这就是 `cache/` 里那几个 `evict*` 方法的调用方，
+只不过那个调用方现在在应用外面。
 
 ## 数据模型（改 `Item` 前必读）
 

@@ -55,7 +55,7 @@ MANUAL = {
     # 游戏词条键是 Coconut Half。
     "HALF-COCONUT": "半边椰子",
     # Bugle?：数据源标记 removed=1 的被删物品。产品决定是图鉴照常收录游戏里已经看不到
-    # 的东西，条目在 flag 维度带 removed 旗标（ItemConverter 已实现），所以名字照填。
+    # 的东西，条目在 flag 维度带 removed 旗标（采集写进 tag，接口与详情都据此渲染），所以名字照填。
     # 游戏把 BUGLE 译作「喇叭」，这里按用户定稿用「号角」。
     "BUGLE?": "号角",
     # Cooked Bird：游戏没有独立词条，熟度靠 COOKED_* 前缀模板拼
